@@ -25,7 +25,9 @@ router.get(p.getbyrptday, async (req: Request, res: Response) => {
 
     const { reportday } = req.params;
     var day: Date = new Date(reportday);
-    day.setHours(day.getHours() + 8);
+    if (day.getHours()==0) {
+        day.setHours(day.getHours() + 8);    
+    }
     const dayrpts = await dayrptService.getDayrptByReportDay(day);
     return res.status(OK).json({ dayrpts });
 });
@@ -51,8 +53,12 @@ router.get(p.getbycode, async (req: Request, res: Response) => {
     var enddate:Date=new Date(endday);
     
     //修车UTC存储问题
-    begindate.setHours(begindate.getHours()+8)
-    enddate.setHours(enddate.getHours()+8)
+    if (begindate.getHours()==0) {
+        begindate.setHours(begindate.getHours()+8)    
+    }
+    if (enddate.getHours()==0) {
+        enddate.setHours(enddate.getHours()+8)    
+    }
 
     const dayrpts = await dayrptService.getDayrptByCondition(begindate,enddate,stockcode);
     return res.status(OK).json({ dayrpts });
