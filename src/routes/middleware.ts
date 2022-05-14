@@ -1,7 +1,7 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, NextFunction } from 'express';
 
-import { UserRoles } from '@models/user-model';
+import { UserRoles } from '@routes/user-router';
 import { cookieProps } from '@routes/auth-router';
 import jwtUtil from '@util/jwt-util';
 

@@ -79,3 +79,8 @@ router.delete(p.delete, async (req: Request, res: Response) => {
 
 // Export default
 export default router;
+
+export enum UserRoles {
+    Admin,
+    Standard,
+}
