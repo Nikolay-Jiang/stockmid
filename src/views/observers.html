@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>添加股票到观察</title>
+        <link rel="stylesheet" type="text/css" href="/stylesheets/users.css" />
+    </head>
+    <body>
+
+        <!-- Add observer -->
+        <div class="users-column add-user-col">
+            <div class="column-header">Add Stock to observer:</div>
+            <div>
+                <input id="stockName-input" placeholder="StockCode">
+            </div>
+            <div>
+                <input id="rate-input" placeholder="涨跌%">
+            </div>
+            <div>
+                <input id="rateprice-input" placeholder="涨跌金额" value="0.5">
+            </div>
+            <div>
+                <input id="tradevol-input" placeholder="交易量" value="-1">
+            </div>
+            <div>
+                <button id="add-stock-btn">添加</button>
+            </div>
+        </div>
+
+        <!-- Display observers -->
+        <div class="users-column">
+            <div class="column-header">股票列表:</div>
+            <div id="all-stocks-anchor"></div>
+        </div>
+
+
+
+    </body>
+    <script src="scripts/http.js"></script>
+    <script src="scripts/observers.js"></script>
+</html>
