@@ -73,6 +73,7 @@ async function getAll(): Promise<t_StockDayReport[]> {
  * @returns 
  */
  async function getAllbyReportDay(reportday:Date): Promise<t_StockDayReport[]> {
+    console.log(reportday);
     return await prisma.t_StockDayReport.findMany({
         where:{
             ReportDay:reportday,

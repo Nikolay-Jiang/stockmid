@@ -1,8 +1,6 @@
-import StatusCodes from 'http-status-codes';
+import StatusCodes, { TOO_MANY_REQUESTS } from 'http-status-codes';
 import { Request, Response, Router } from 'express';
-import daylogService from '@services/daylog-service';
-
-
+import dayrptService from '@services/dayrpt-service';
 
 
 // Constants
@@ -15,9 +13,8 @@ export const p = {
 } as const;
 
 
-
 /**
- * Get all daylog by condition.
+ * Get all dayrpt by condition.
  */
  router.get(p.getbyconditicon, async (req: Request, res: Response) => {
 
@@ -33,8 +30,13 @@ export const p = {
         enddate.setHours(enddate.getHours()+8)    
     }
 
-    const daylogs = await daylogService.getDaylogByCondition(begindate,enddate,stockcode);
-    return res.status(OK).json({ daylogs });
+    var dayrpt=await dayrptService.getDayrptByCondition(begindate,enddate,stockcode)
+    if (dayrpt==null) {
+        return;
+    }
+    // dayrpt.sort((a,b)=>parseFloat(a!.RatePrice.toString())-b!.RatePrice);
+
+
 });
 
 

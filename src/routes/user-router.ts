@@ -17,6 +17,7 @@ export const p = {
     add: '/add',
     update: '/update',
     delete: '/delete/:id',
+    getone:'/getone/:username',
 } as const;
 
 
@@ -26,6 +27,16 @@ export const p = {
  */
 router.get(p.get, async (_: Request, res: Response) => {
     const users = await userService.getAll();
+    return res.status(OK).json({users});
+});
+
+
+/**
+ * Get one user.
+ */
+router.get(p.getone, async (req: Request, res: Response) => {
+    const { username } = req.params;
+    const users = await userService.getOne(username);
     return res.status(OK).json({users});
 });
 
@@ -72,7 +83,7 @@ router.delete(p.delete, async (req: Request, res: Response) => {
         throw new ParamMissingError();
     }
     // Fetch data
-    await userService.delete(String(id));
+    await userService.deleteOne(String(id));
     return res.status(OK).end();
 });
 

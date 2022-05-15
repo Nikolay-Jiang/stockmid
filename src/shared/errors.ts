@@ -33,6 +33,15 @@ export class UserNotFoundError extends CustomError {
     }
 }
 
+export class StockNotFoundError extends CustomError {
+
+    public static readonly Msg = 'A Stock with the given id does not exists in the database.';
+    public static readonly HttpStatus = HttpStatusCodes.NOT_FOUND;
+
+    constructor() {
+        super(UserNotFoundError.Msg, UserNotFoundError.HttpStatus);
+    }
+}
 
 export class UnauthorizedError extends CustomError {
 

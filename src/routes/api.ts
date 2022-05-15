@@ -14,9 +14,9 @@ const apiRouter = Router();
 
 // Add api routes
 apiRouter.use('/auth', authRouter);
-apiRouter.use('/users', adminMw, userRouter);
-apiRouter.use('/observers', adminMw,observerRouter);
-apiRouter.use('/mylist', adminMw,mylistRouter);
+apiRouter.use('/users', userRouter);
+apiRouter.use('/observers', observerRouter);
+apiRouter.use('/mylist', mylistRouter);
 apiRouter.use('/dayrpt', dayrptRouter);
 apiRouter.use('/stock', sinastockRouter);
 apiRouter.use('/daylog', daylogRouter);

@@ -14,7 +14,7 @@ async function getOne(username: string): Promise<t_User | null> {
       UserName: username,
     },
   })
-  
+
   if (user != null) {
     if (!user.IsEnabled) {
       return null
@@ -102,10 +102,13 @@ async function update(user: t_User): Promise<void> {
  * @returns 
  */
 async function deleteOne(id: string): Promise<void> {
-  const deleteUser = await prisma.t_User.delete({
+  const deleteUser = await prisma.t_User.update({
     where: {
       UserID: id,
     },
+    data: {
+      IsEnabled: false
+    }
   })
 }
 

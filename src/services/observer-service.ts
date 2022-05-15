@@ -63,3 +63,4 @@ export default {
     updateOne,
     delete: deleteOne,
 } as const;
+

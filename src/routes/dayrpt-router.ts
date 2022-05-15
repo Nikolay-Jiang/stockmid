@@ -1,6 +1,7 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
 import dayrptService from '@services/dayrpt-service';
+import stocknameService from '@services/stockname-service';
 
 
 
@@ -61,7 +62,13 @@ router.get(p.getbycode, async (req: Request, res: Response) => {
     }
 
     const dayrpts = await dayrptService.getDayrptByCondition(begindate,enddate,stockcode);
-    return res.status(OK).json({ dayrpts });
+    const mName=await stocknameService.getOne(stockcode)
+    var stockname;
+    if (mName!=null) {
+        stockname=mName.StockName;
+    }
+
+    return res.status(OK).json({stockname, dayrpts });
 });
 
 
