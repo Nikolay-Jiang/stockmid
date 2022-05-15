@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 
 /**
- * Get all condition.
+ * Get one
  * 
  * @returns 
  */
@@ -15,8 +15,18 @@ async function getOne(stockcode: string): Promise<t_StockNameList | null> {
     });
 }
 
+/**
+ * Get all stockName.
+ * 
+ * @returns 
+ */
+ async function getAll(): Promise<t_StockNameList[]> {
+    return await prisma.t_StockNameList.findMany();
+}
+
 
 // Export default
 export default {
-    getOne
+    getOne,
+    getAll
 } as const;
