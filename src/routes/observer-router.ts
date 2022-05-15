@@ -13,10 +13,10 @@ const { CREATED, OK } = StatusCodes;
 
 // Paths
 export const p = {
-    get: '/all',
-    add: '/add',
+    get: '/all/:userid',
+    add: '/add/',
     update: '/update',
-    delete: '/delete/:stockcode',
+    delete: '/delete/:stockcode/:userid',
 } as const;
 
 
@@ -25,8 +25,7 @@ export const p = {
  * Get all observers.
  */
 router.get(p.get, async (req: Request, res: Response) => {
-
-    var userid = await GetUserID(req);
+    const { userid } = req.params;
     const observers = await observerService.getAll(userid);
     return res.status(OK).json({ observers });
 });
@@ -37,14 +36,10 @@ router.get(p.get, async (req: Request, res: Response) => {
  */
 router.post(p.add, async (req: Request, res: Response) => {
     const { observer } = req.body;
-    console.log(req.body)
     // Check param
     if (!observer) {
         throw new ParamMissingError();
     }
-    var userid = await GetUserID(req);
-    observer.UserID = userid;
-    console.log(observer)
     // Fetch data
     await observerService.addOne(observer);
     return res.status(CREATED).end();
@@ -72,13 +67,12 @@ router.put(p.update, async (req: Request, res: Response) => {
  * Delete one observer.
  */
 router.delete(p.delete, async (req: Request, res: Response) => {
-    const { stockcode } = req.params;
-    console.log(req.params);
+    const { stockcode,userid } = req.params;
+
     // Check param
     if (!stockcode) {
         throw new ParamMissingError();
     }
-    var userid = await GetUserID(req);
     // Fetch data
     await observerService.delete(userid, String(stockcode));
     return res.status(OK).end();
