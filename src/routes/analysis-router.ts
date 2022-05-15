@@ -16,29 +16,64 @@ export const p = {
 /**
  * Get all dayrpt by condition.
  */
- router.get(p.getbyconditicon, async (req: Request, res: Response) => {
+router.get(p.getbyconditicon, async (req: Request, res: Response) => {
 
-    const { startday,endday, stockcode } = req.params;
-    var begindate:Date=new Date(startday);
-    var enddate:Date=new Date(endday);
-    
+    const { startday, endday, stockcode } = req.params;
+    var begindate: Date = new Date(startday);
+    var enddate: Date = new Date(endday);
+
     //修车UTC存储问题
-    if (begindate.getHours()==0) {
-        begindate.setHours(begindate.getHours()+8)    
+    if (begindate.getHours() == 0) {
+        begindate.setHours(begindate.getHours() + 8)
     }
-    if (enddate.getHours()==0) {
-        enddate.setHours(enddate.getHours()+8)    
+    if (enddate.getHours() == 0) {
+        enddate.setHours(enddate.getHours() + 8)
     }
 
-    var dayrpt=await dayrptService.getDayrptByCondition(begindate,enddate,stockcode)
-    if (dayrpt==null) {
+    var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
+    if (dayrpts == null) {
         return;
     }
-    // dayrpt.sort((a,b)=>parseFloat(a!.RatePrice.toString())-b!.RatePrice);
+    dayrpts.sort((a, b) => Number(a!.RatePrice) - Number(b!.RatePrice));
 
+    var RPMin: number = Number(dayrpts[0].RatePrice);
+    var RPMax: number = Number(dayrpts[dayrpts.length - 1].RatePrice);
 
+    var MaxDay: number = dayrpts.length;
+    var rateanalysisdata: Array<rateAnalysis> = [];
+    for (let index = 0; index < dayrpts.length; index++) {
+        const element = dayrpts[index];
+        rateanalysisdata[index] = new rateAnalysis();
+        rateanalysisdata[index].maxday = MaxDay;
+        rateanalysisdata[index].rateprice = Number(element.RatePrice);
+        rateanalysisdata[index].maxvalue = Number(element.RatePrice) * MaxDay;
+        rateanalysisdata[index].maxvalue.toFixed(2);
+        rateanalysisdata[index].reportday = element.ReportDay;
+        // console.log(element.RatePrice + "|" + MaxDay + "|" );
+        MaxDay--;
+    }
+    rateanalysisdata = rateanalysisdata.sort((a, b) => a.maxvalue - b.maxvalue);
+
+    var txtresult: string = "分析数据：\r\n"
+    txtresult += "查询期内共有：" + dayrpts.length + "条日报数据\r\n";
+    txtresult += "振额分析：\r\n";
+    txtresult += "最小振额：" + RPMin + ",日期：" + convertDatetoStr(dayrpts[0].ReportDay);
+    txtresult += "最大振幅： " + RPMax + ",日期：" + convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay);
+    txtresult += "\r\n最佳振幅： " + rateanalysisdata[dayrpts.length - 1].rateprice + " 计算值：" + rateanalysisdata[dayrpts.length - 1].maxday + "|" + rateanalysisdata[dayrpts.length - 1].maxvalue;
+    
+    return res.status(OK).json({ txtresult, rateanalysisdata });
 });
 
+function convertDatetoStr(date: Date): string {
+    return date.toISOString().split('T')[0]
+}
+
+class rateAnalysis {
+    rateprice!: number;
+    maxday!: number;
+    maxvalue!: number;
+    reportday!: Date;
+}
 
 
 // Export default
