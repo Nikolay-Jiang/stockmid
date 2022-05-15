@@ -17,8 +17,22 @@ async function getOne(stockcode: string): Promise<t_StockNameList> {
     return stock;
 }
 
+/**
+ * getall
+ * @returns 
+ */
+ async function getAll(): Promise<t_StockNameList[]> {
+    const stocks = await stocknameRepo.getAll();
+    if (!stocks) {
+        throw new StockNotFoundError();
+    }
+    return stocks;
+}
+
+
 
 // Export default
 export default {
     getOne,
+    getAll,
 } as const;
