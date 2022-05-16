@@ -92,7 +92,7 @@ async function getAll(): Promise<t_StockDayReport[]> {
             StockCode:stockcode,
             ReportDay:{
                 gte:startdate,
-                lt:enddate
+                lte:enddate
             }
         }
     });
