@@ -3,6 +3,7 @@ import authService from '@services/auth-service';
 import { ParamMissingError } from '@shared/errors';
 import { Request, Response, Router } from 'express';
 import StatusCodes from 'http-status-codes';
+import { token } from 'morgan';
 
 
 // Constants
@@ -34,7 +35,7 @@ export const cookieProps = Object.freeze({
  * Login a user.
  */
 router.post(p.login, async (req: Request, res: Response) => {
-    // Check email and password present
+    // Check username and password present
     const { username, password } = req.body;
     if (!(username && password)) {
         throw new ParamMissingError();
@@ -42,16 +43,16 @@ router.post(p.login, async (req: Request, res: Response) => {
 
     try {
         // Get jwt
-        const jwt = await authService.login(username, password);
+        const token = await authService.login(username, password);
         // Add jwt to cookie
         const { key, options } = cookieProps;
-        res.cookie(key, jwt, options);
+        res.cookie(key, token, options);
     } catch (error) {
         throw new ParamMissingError();
     }
 
     // Return
-    return res.status(OK).end();
+    return res.status(OK).json({ token });
 });
 
 
