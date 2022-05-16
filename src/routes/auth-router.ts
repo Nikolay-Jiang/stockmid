@@ -35,14 +35,14 @@ export const cookieProps = Object.freeze({
  */
 router.post(p.login, async (req: Request, res: Response) => {
     // Check email and password present
-    const { email, password } = req.body;
-    if (!(email && password)) {
+    const { username, password } = req.body;
+    if (!(username && password)) {
         throw new ParamMissingError();
     }
 
     try {
         // Get jwt
-        const jwt = await authService.login(email, password);
+        const jwt = await authService.login(username, password);
         // Add jwt to cookie
         const { key, options } = cookieProps;
         res.cookie(key, jwt, options);
