@@ -43,14 +43,14 @@ router.post(p.login, async (req: Request, res: Response) => {
 
     try {
         // Get jwt
-        const token = await authService.login(username, password);
+        const jwt = await authService.login(username, password);
         // Add jwt to cookie
         const { key, options } = cookieProps;
-        res.cookie(key, token, options);
+        res.cookie(key, jwt, options);
     } catch (error) {
-        throw new ParamMissingError();
+        throw error;
     }
-
+    const token = req.signedCookies[cookieProps.key];
     // Return
     return res.status(OK).json({ token });
 });
