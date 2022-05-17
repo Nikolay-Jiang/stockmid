@@ -1,6 +1,7 @@
 import StatusCodes, { TOO_MANY_REQUESTS } from 'http-status-codes';
 import { Request, Response, Router } from 'express';
 import dayrptService from '@services/dayrpt-service';
+import { t_StockDayReport } from '@prisma/client';
 
 
 // Constants
@@ -31,14 +32,15 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
 
     var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
-    if (dayrpts == null || dayrpts.length==0) {
+    if (dayrpts == null || dayrpts.length == 0) {
         return;
     }
+    var boll = await bollCalc(dayrpts);
+
     dayrpts.sort((a, b) => Number(a!.RatePrice) - Number(b!.RatePrice));
 
     var RPMin: number = Number(dayrpts[0].RatePrice);
     var RPMax: number = Number(dayrpts[dayrpts.length - 1].RatePrice);
-    var MA: number = 0;
 
     var MaxDay: number = dayrpts.length;
     var rateanalysisdata: Array<rateAnalysis> = [];
@@ -50,13 +52,14 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
         rateanalysisdata[index].maxvalue = Number((Number(element.RatePrice) * MaxDay).toFixed(2));
         rateanalysisdata[index].reportday = element.ReportDay;
         // console.log(element.RatePrice + "|" + MaxDay + "|" );
-        MA+=Number(element.TodayClosePrice);
 
         MaxDay--;
     }
     rateanalysisdata = rateanalysisdata.sort((a, b) => a.maxvalue - b.maxvalue);
 
-    MA=Number((MA/dayrpts.length).toFixed(2));
+
+    console.log("|" + boll.ma);
+
 
     var txtresult: string = "分析数据：\r\n"
     txtresult += "查询期内共有：" + dayrpts.length + "条日报数据\r\n";
@@ -64,7 +67,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     txtresult += "最小振额：" + RPMin + ",日期：" + convertDatetoStr(dayrpts[0].ReportDay);
     txtresult += "最大振幅： " + RPMax + ",日期：" + convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay);
     txtresult += "\r\n最佳振幅： " + rateanalysisdata[dayrpts.length - 1].rateprice + " 计算值：" + rateanalysisdata[dayrpts.length - 1].maxday + "|" + rateanalysisdata[dayrpts.length - 1].maxvalue;
-    txtresult += "\r\nMA:"+MA;
+    txtresult += "\r\nMA:" + boll.ma + "|STA:" + boll.sta + "|UP:" + boll.up + "|DOWN:" + boll.down;
     return res.status(OK).json({ txtresult, rateanalysisdata });
 });
 
@@ -72,11 +75,39 @@ function convertDatetoStr(date: Date): string {
     return date.toISOString().split('T')[0]
 }
 
+async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
+    var mBollData = new bolldata();
+    if (dayrpts.length == 0) {
+        return mBollData;
+    }
+    var sumClose = dayrpts.reduce((c, R) => c + Number(R.TodayClosePrice), 0)
+    mBollData.ma = Number((sumClose / dayrpts.length).toFixed(2));
+    var staTemp: number = 0;
+    for (let index = 0; index < dayrpts.length; index++) {
+        const element = dayrpts[index];
+        staTemp += Math.pow(Number(element.TodayClosePrice) - mBollData.ma, 2);
+    }
+    mBollData.sta = Number(Math.sqrt(staTemp / (dayrpts.length - 1)).toFixed(2))
+    mBollData.up = Number((mBollData.ma + mBollData.sta * 2).toFixed(2));
+    mBollData.down = Number((mBollData.ma - mBollData.sta * 2).toFixed(2));
+
+    return mBollData;
+
+}
+
+
 class rateAnalysis {
     rateprice!: number;
     maxday!: number;
     maxvalue!: number;
     reportday!: Date;
+}
+
+class bolldata {
+    sta!: number;
+    up!: number;
+    down!: number;
+    ma!: number;
 }
 
 
