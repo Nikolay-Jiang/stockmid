@@ -22,7 +22,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     var begindate: Date = new Date(startday);
     var enddate: Date = new Date(endday);
 
-    //修车UTC存储问题
+    //修正UTC问题
     if (begindate.getHours() == 0) {
         begindate.setHours(begindate.getHours() + 8)
     }
@@ -31,7 +31,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
 
     var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
-    if (dayrpts == null) {
+    if (dayrpts == null || dayrpts.length==0) {
         return;
     }
     dayrpts.sort((a, b) => Number(a!.RatePrice) - Number(b!.RatePrice));
@@ -56,7 +56,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
     rateanalysisdata = rateanalysisdata.sort((a, b) => a.maxvalue - b.maxvalue);
 
-    MA=Number((MA/rateAnalysis.length).toFixed(2));
+    MA=Number((MA/dayrpts.length).toFixed(2));
 
     var txtresult: string = "分析数据：\r\n"
     txtresult += "查询期内共有：" + dayrpts.length + "条日报数据\r\n";
@@ -64,7 +64,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     txtresult += "最小振额：" + RPMin + ",日期：" + convertDatetoStr(dayrpts[0].ReportDay);
     txtresult += "最大振幅： " + RPMax + ",日期：" + convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay);
     txtresult += "\r\n最佳振幅： " + rateanalysisdata[dayrpts.length - 1].rateprice + " 计算值：" + rateanalysisdata[dayrpts.length - 1].maxday + "|" + rateanalysisdata[dayrpts.length - 1].maxvalue;
-    txtresult += "MA:"+MA;
+    txtresult += "\r\nMA:"+MA;
     return res.status(OK).json({ txtresult, rateanalysisdata });
 });
 
