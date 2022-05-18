@@ -36,7 +36,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
         return;
     }
     var boll = await bollCalc(dayrpts);
-
+    var rsi = await rsiCalc(dayrpts);
     dayrpts.sort((a, b) => Number(a!.RatePrice) - Number(b!.RatePrice));
 
     var RPMin: number = Number(dayrpts[0].RatePrice);
@@ -57,10 +57,6 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
     rateanalysisdata = rateanalysisdata.sort((a, b) => a.maxvalue - b.maxvalue);
 
-
-    console.log("|" + boll.ma);
-
-
     var txtresult: string = "分析数据：\r\n"
     txtresult += "查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
@@ -68,6 +64,14 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     txtresult += "最大振幅： " + RPMax + ",日期：" + convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay);
     txtresult += "\r\n最佳振幅： " + rateanalysisdata[dayrpts.length - 1].rateprice + " 计算值：" + rateanalysisdata[dayrpts.length - 1].maxday + "|" + rateanalysisdata[dayrpts.length - 1].maxvalue;
     txtresult += "\r\nMA:" + boll.ma + "|STA:" + boll.sta + "|UP:" + boll.up + "|DOWN:" + boll.down;
+    if (rsi.rsi7 != -1) {
+        txtresult += "RSI分析：\r\n";
+        txtresult += rsi.analysis;
+        txtresult += "\r\nRSI7:" + rsi.rsi7 + "|rs:" + rsi.relativestrength7.toFixed(2) + "|UPavg:" + rsi.up7avg.toFixed(2) + "|DOWNavg:" + rsi.down7avg.toFixed(2);
+        txtresult += "\r\nRSI14:" + rsi.rsi14 + "|rs:" + rsi.relativestrength14.toFixed(2) + "|UPavg:" + rsi.up14avg.toFixed(2) + "|DOWNavg:" + rsi.down14avg.toFixed(2);
+    }
+
+
     return res.status(OK).json({ txtresult, rateanalysisdata });
 });
 
@@ -77,21 +81,85 @@ function convertDatetoStr(date: Date): string {
 
 async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
     var mBollData = new bolldata();
+    var dayrptsCopy = [...dayrpts];
+
     if (dayrpts.length == 0) {
         return mBollData;
     }
-    var sumClose = dayrpts.reduce((c, R) => c + Number(R.TodayClosePrice), 0)
-    mBollData.ma = Number((sumClose / dayrpts.length).toFixed(2));
+    if (dayrpts.length > 20) {
+        dayrptsCopy = dayrptsCopy.slice(dayrptsCopy.length - 20, dayrptsCopy.length);
+    }
+
+    // console.log(dayrptsCopy.length + "|" + dayrptsCopy[dayrptsCopy.length-1].ReportDay.toUTCString());
+
+    var sumClose = dayrptsCopy.reduce((c, R) => c + Number(R.TodayClosePrice), 0)
+    mBollData.ma = Number((sumClose / dayrptsCopy.length).toFixed(2));
     var staTemp: number = 0;
-    for (let index = 0; index < dayrpts.length; index++) {
-        const element = dayrpts[index];
+    for (let index = 0; index < dayrptsCopy.length; index++) {
+        const element = dayrptsCopy[index];
         staTemp += Math.pow(Number(element.TodayClosePrice) - mBollData.ma, 2);
     }
-    mBollData.sta = Number(Math.sqrt(staTemp / (dayrpts.length - 1)).toFixed(2))
+    mBollData.sta = Number(Math.sqrt(staTemp / (dayrptsCopy.length - 1)).toFixed(2))
     mBollData.up = Number((mBollData.ma + mBollData.sta * 2).toFixed(2));
     mBollData.down = Number((mBollData.ma - mBollData.sta * 2).toFixed(2));
 
     return mBollData;
+
+}
+
+async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
+    var mRsiData = new rsidata();
+    mRsiData.rsi7 = -1;
+    mRsiData.rsi14 = -1;
+    if (dayrpts.length == 0 || dayrpts.length < 7) {
+        return mRsiData;
+    }
+    var dayrptsCopy = [...dayrpts];
+
+    if (dayrptsCopy.length > 15) {
+        dayrptsCopy = dayrptsCopy.slice(dayrptsCopy.length - 15, dayrptsCopy.length);
+    }
+
+    var upSum = 0;
+    var downSum = 0;
+    for (let index = 1; index < dayrptsCopy.length; index++) {
+        const element = dayrptsCopy[index];
+        var iTemp = Number(element.TodayClosePrice) - Number(dayrptsCopy[index - 1].TodayClosePrice);
+        if (iTemp >= 0) {
+            upSum += iTemp;
+        } else {
+            downSum += Math.abs(iTemp);
+        }
+        if (index == 7) {
+            mRsiData.up7avg = upSum / 7;
+            mRsiData.down7avg = downSum / 7;
+            mRsiData.relativestrength7 = mRsiData.up7avg / mRsiData.down7avg;
+            mRsiData.rsi7 = Number((100 - 100 / (mRsiData.relativestrength7 + 1)).toFixed(2));
+        }
+
+        if (index == 14) {
+            mRsiData.up14avg = upSum / 14;
+            mRsiData.down14avg = downSum / 14;
+            mRsiData.relativestrength14 = mRsiData.up14avg / mRsiData.down14avg;
+            mRsiData.rsi14 = Number((100 - 100 / (mRsiData.relativestrength14 + 1)).toFixed(2));
+        }
+    }
+    //  文字结论
+    if (mRsiData.rsi14 == -1) {
+        return mRsiData;
+    }
+
+    if (mRsiData.rsi7 < 20) { mRsiData.analysis = "RS7 处于极弱，超卖" }
+    if (mRsiData.rsi7 > 20 && mRsiData.rsi7 < 50) { mRsiData.analysis = "RS7 处于弱区" }
+    if (mRsiData.rsi7 > 50 && mRsiData.rsi7 < 80) { mRsiData.analysis = "RS7 处于强区" }
+    if (mRsiData.rsi7 > 80) { mRsiData.analysis = "RS7 处于极强，超买" }
+
+
+    if (mRsiData.rsi7 > mRsiData.rsi14) { mRsiData.analysis += "|多头市场" }
+    if (mRsiData.rsi7 < mRsiData.rsi14) { mRsiData.analysis += "|空头市场" }
+
+    return mRsiData;
+
 
 }
 
@@ -108,6 +176,18 @@ class bolldata {
     up!: number;
     down!: number;
     ma!: number;
+}
+
+class rsidata {
+    rsi7: number = -1;
+    up7avg: number = -1;
+    down7avg: number = -1;
+    relativestrength7: number = -1;
+    rsi14: number = -1;
+    up14avg: number = -1;
+    down14avg: number = -1;
+    relativestrength14: number = -1;
+    analysis: string = "";
 }
 
 
