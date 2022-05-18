@@ -67,8 +67,8 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     if (rsi.rsi7 != -1) {
         txtresult += "RSI分析：\r\n";
         txtresult += rsi.analysis;
-        txtresult += "\r\nRSI7:" + rsi.rsi7 + "|rs:" + rsi.relativestrength7.toFixed(2) + "|UPavg:" + rsi.up7avg.toFixed(2) + "|DOWNavg:" + rsi.down7avg.toFixed(2);
-        txtresult += "\r\nRSI14:" + rsi.rsi14 + "|rs:" + rsi.relativestrength14.toFixed(2) + "|UPavg:" + rsi.up14avg.toFixed(2) + "|DOWNavg:" + rsi.down14avg.toFixed(2);
+        txtresult += "\r\nRSI7:" + rsi.rsi7 + "|rs:" + rsi.relativestrength7.toFixed(4) + "|UPavg:" + rsi.up7avg.toFixed(4) + "|DNavg:" + rsi.down7avg.toFixed(4);
+        txtresult += "\r\nRSI14:" + rsi.rsi14 + "|rs:" + rsi.relativestrength14.toFixed(2) + "|UPavg:" + rsi.up14avg.toFixed(2) + "|DNavg:" + rsi.down14avg.toFixed(2);
     }
 
 
@@ -121,7 +121,10 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
     }
 
     var upSum = 0;
+    var upSum7 = 0;
     var downSum = 0;
+    var downSum7 = 0;
+    var iCount7=0;
     for (let index = 1; index < dayrptsCopy.length; index++) {
         const element = dayrptsCopy[index];
         var iTemp = Number(element.TodayClosePrice) - Number(dayrptsCopy[index - 1].TodayClosePrice);
@@ -130,20 +133,33 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
         } else {
             downSum += Math.abs(iTemp);
         }
-        if (index == 7) {
-            mRsiData.up7avg = upSum / 7;
-            mRsiData.down7avg = downSum / 7;
-            mRsiData.relativestrength7 = mRsiData.up7avg / mRsiData.down7avg;
-            mRsiData.rsi7 = Number((100 - 100 / (mRsiData.relativestrength7 + 1)).toFixed(2));
+
+        if (index >= (dayrptsCopy.length - 7)) {
+            if (iTemp >= 0) {
+                upSum7 += iTemp;
+            } else {
+                downSum7 += Math.abs(iTemp);
+            }
+            iCount7++;
         }
 
-        if (index == 14) {
-            mRsiData.up14avg = upSum / 14;
-            mRsiData.down14avg = downSum / 14;
-            mRsiData.relativestrength14 = mRsiData.up14avg / mRsiData.down14avg;
-            mRsiData.rsi14 = Number((100 - 100 / (mRsiData.relativestrength14 + 1)).toFixed(2));
+
+        if (index == (dayrptsCopy.length - 1)) {
+            mRsiData.up7avg = upSum7 / 7;
+            mRsiData.down7avg = downSum7 / 7;
+            mRsiData.relativestrength7 = mRsiData.up7avg / mRsiData.down7avg;
+            mRsiData.rsi7 = Number((100 - 100 / (mRsiData.relativestrength7 + 1)).toFixed(2));
+
+            if (dayrptsCopy.length > 14) {
+                mRsiData.up14avg = upSum / 14;
+                mRsiData.down14avg = downSum / 14;
+                mRsiData.relativestrength14 = mRsiData.up14avg / mRsiData.down14avg;
+                mRsiData.rsi14 = Number((100 - 100 / (mRsiData.relativestrength14 + 1)).toFixed(2));
+            }
+
         }
     }
+    console.log(iCount7+"|"+dayrptsCopy[0].ReportDay.toUTCString() );
     //  文字结论
     if (mRsiData.rsi14 == -1) {
         return mRsiData;
