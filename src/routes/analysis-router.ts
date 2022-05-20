@@ -109,14 +109,15 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     var RPMin: number = Number(dayrpts[0].RatePrice);
     var RPMax: number = Number(dayrpts[dayrpts.length - 1].RatePrice);
     var bestPrice: number = rateanalysisdata[dayrpts.length - 1].rateprice
+    var bb: number = (Number(mStock.CurrentPrice) - boll.down) / (boll.up - boll.down);
     var txtresult = "";
     txtresult += "\r\n数据分析：\r\n"
     txtresult += "      查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
     txtresult += `      最佳振幅：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}\r\n`
     txtresult += `      最小振额："${RPMin} 最大振幅：${RPMax}\r\n`;
-    txtresult += `布林指标：`;
-    txtresult += `      UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} `
+    txtresult += `布林指标：\r\n`;
+    txtresult += `      UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}`
     if (rsi.rsi7 != -1) {
         txtresult += "\r\nRSI分析：\r\n";
         txtresult += `      ${rsi.analysis}\r\n`;
