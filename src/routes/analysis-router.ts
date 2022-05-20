@@ -3,6 +3,7 @@ import { Request, Response, Router } from 'express';
 import { t_StockDayReport, Prisma } from '@prisma/client';
 import dayrptService from '@services/dayrpt-service';
 import sinaService from '@services/sinastock-service';
+import { Stock } from '@repos/sinastock-repo';
 
 
 // Constants
@@ -37,20 +38,24 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
         return;
     }
 
+    var txtresult: string = ""
     var mStock = await sinaService.getone(stockcode);
-    if (isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
-        if (todaydate.getHours() > 9 && todaydate.getHours() < 15) {
-            var mdayrpttoday = await GetTodayDayRpt(todaydate, stockcode)
-            console.log("sameday");
-            dayrpts.push(mdayrpttoday);
-        }
-    }
     var boll = await bollCalc(dayrpts);
     var rsi = await rsiCalc(dayrpts);
+
+    if (isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
+        if (todaydate.getHours() > 9 && todaydate.getHours() < 15) {
+            var mdayrpttoday = await GetTodayDayRpt(todaydate, stockcode, mStock)
+
+            dayrpts.push(mdayrpttoday);
+            console.log("sameday", dayrpts[dayrpts.length - 1].ReportDay.toUTCString());
+            txtresult += getRealTxt(mStock, boll, rsi);
+        }
+    }
+
     dayrpts.sort((a, b) => Number(a!.RatePrice) - Number(b!.RatePrice));
 
-    var RPMin: number = Number(dayrpts[0].RatePrice);
-    var RPMax: number = Number(dayrpts[dayrpts.length - 1].RatePrice);
+
 
     var MaxDay: number = dayrpts.length;
     var rateanalysisdata: Array<rateAnalysis> = [];
@@ -67,10 +72,43 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
     rateanalysisdata = rateanalysisdata.sort((a, b) => a.maxvalue - b.maxvalue);
 
-    var txtresult: string = ""
-    txtresult += `[B]实时行情[/B]：现价：${mStock.CurrentPrice} 最高：${mStock.TodayMaxPrice} 最低：${mStock.TodayMinPrice}|`;
-    txtresult += `BOLL|UP:${boll.up} MID:${boll.ma} DN:${boll.down}|RSI|RSI7:${rsi.rsi7} RSI14:${rsi.rsi14} `
+    txtresult += GetTable();
 
+
+    return res.status(OK).json({ txtresult, rateanalysisdata });
+});
+
+function convertDatetoStr(date: Date): string {
+    return date.toISOString().split('T')[0]
+}
+
+function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
+    var txtresult: string = "";
+    var colorCurrent = "gray";
+    var colorbollup = "black";
+    var colorbolldown = "black";
+    if (Number(mStock.CurrentPrice) > Number(mStock.TodayOpeningPrice)) { colorCurrent = "red"; }
+    if (Number(mStock.CurrentPrice) < Number(mStock.TodayOpeningPrice)) { colorCurrent = "green"; }
+
+    if (Number(mStock.TodayMaxPrice) > Number(boll.up)) { colorbollup = "red"; }
+    if (Number(mStock.TodayMinPrice) < Number(boll.down)) { colorbolldown = "green"; }
+
+    txtresult += `[B][size=3]实时[/size]：[/B] \r\n`;
+    txtresult += `[B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] 最高：${mStock.TodayMaxPrice} 最低：${mStock.TodayMinPrice}[/B]|\r\n`;
+    txtresult += `BOLL|UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color]`;
+    if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
+        txtresult += `[B]${rsi.analysis}[/B]`
+        txtresult += `RSI7:${rsi.rsi7} RSI14:${rsi.rsi14}`;
+    }
+
+    return txtresult;
+}
+
+function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis[], boll: bolldata, rsi: rsidata) {
+
+    var RPMin: number = Number(dayrpts[0].RatePrice);
+    var RPMax: number = Number(dayrpts[dayrpts.length - 1].RatePrice);
+    var txtresult = "";
     txtresult += "\r\n分析数据：\r\n"
     txtresult += "查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
@@ -84,13 +122,56 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
         txtresult += "\r\nRSI7:" + rsi.rsi7 + "|rs:" + rsi.relativestrength7.toFixed(4) + "|UPavg:" + rsi.up7avg.toFixed(4) + "|DNavg:" + rsi.down7avg.toFixed(4);
         txtresult += "\r\nRSI14:" + rsi.rsi14 + "|rs:" + rsi.relativestrength14.toFixed(2) + "|UPavg:" + rsi.up14avg.toFixed(2) + "|DNavg:" + rsi.down14avg.toFixed(2);
     }
+}
 
+function GetTable(): string {
+    var txt: string = "";
+    txt += "<table border=\"2\" bordercolor=\"black\" width=\"300\" cellspacing=\"0\" cellpadding=\"5\">"
+    txt += "   <tr>";
+    txt += "  <td rowspan=\"3\">实时</td>";
+    txt += "        <td>现价</td>";
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "    </tr>"
+    txt += "    <tr>"
+    txt += "        <!-- <td></td> -->"
+    txt += "        <td>最低</td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "    </tr>"
+    txt += "    <tr>"
+    txt += "        <!-- <td></td> -->"
+    txt += "        <td>最高</td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "        <td></td>"
+    txt += "    </tr>"
+    txt += "</table>"
 
-    return res.status(OK).json({ txtresult, rateanalysisdata });
-});
-
-function convertDatetoStr(date: Date): string {
-    return date.toISOString().split('T')[0]
+    return txt;
 }
 
 async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
@@ -200,8 +281,8 @@ function isSameDay(d1: Date, d2: Date): boolean {
 }
 
 
-async function GetTodayDayRpt(today: Date, stockcode: string): Promise<t_StockDayReport> {
-    var mStock = await sinaService.getone(stockcode);
+async function GetTodayDayRpt(today: Date, stockcode: string, mStock: Stock): Promise<t_StockDayReport> {
+
     var fRatePrice = Number(mStock.TodayMaxPrice) - Number(mStock.TodayMinPrice);
     var fRatetemp = (fRatePrice / Number(mStock.TodayMinPrice)).toFixed(2);
     var tradingpriceAvg = (Number(mStock.TradingPrice) / Number(mStock.TradingVolume)).toFixed(2);
