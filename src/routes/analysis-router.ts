@@ -72,7 +72,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
     rateanalysisdata = rateanalysisdata.sort((a, b) => a.maxvalue - b.maxvalue);
 
-    txtresult += GetTable();
+    txtresult += getAnalyTxt(dayrpts, rateanalysisdata, boll, rsi, mStock);
 
 
     return res.status(OK).json({ txtresult, rateanalysisdata });
@@ -104,18 +104,18 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     return txtresult;
 }
 
-function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis[], boll: bolldata, rsi: rsidata) {
+function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis[], boll: bolldata, rsi: rsidata, mStock: Stock) {
 
     var RPMin: number = Number(dayrpts[0].RatePrice);
     var RPMax: number = Number(dayrpts[dayrpts.length - 1].RatePrice);
+    var bestPrice: number = rateanalysisdata[dayrpts.length - 1].rateprice
     var txtresult = "";
     txtresult += "\r\n分析数据：\r\n"
     txtresult += "查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
-    txtresult += "最小振额：" + RPMin + ",日期：" + convertDatetoStr(dayrpts[0].ReportDay);
-    txtresult += "最大振幅： " + RPMax + ",日期：" + convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay);
-    txtresult += "\r\n最佳振幅： " + rateanalysisdata[dayrpts.length - 1].rateprice + " 计算值：" + rateanalysisdata[dayrpts.length - 1].maxday + "|" + rateanalysisdata[dayrpts.length - 1].maxvalue;
-    txtresult += "\r\nMA:" + boll.ma + "|STA:" + boll.sta + "|UP:" + boll.up + "|DOWN:" + boll.down;
+    txtresult += `最佳振幅：${bestPrice}| 现价UP: ${Number(mStock.CurrentPrice) + bestPrice} | 现价DN：${Number(mStock.CurrentPrice) - bestPrice}`
+    txtresult += `\r\n 最小振额："${RPMin}|最大振幅：${RPMax}`;
+    txtresult += `\r\n布林：${boll} UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} `;
     if (rsi.rsi7 != -1) {
         txtresult += "\r\nRSI分析：\r\n";
         txtresult += rsi.analysis;
@@ -124,55 +124,6 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     }
 }
 
-function GetTable(): string {
-    var txt: string = "";
-    txt += "<table border=\"2\" bordercolor=\"black\" width=\"300\" cellspacing=\"0\" cellpadding=\"5\">"
-    txt += "   <tr>";
-    txt += "  <td rowspan=\"3\">实时</td>";
-    txt += "        <td>现价</td>";
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "    </tr>"
-    txt += "    <tr>"
-    txt += "        <!-- <td></td> -->"
-    txt += "        <td>最低</td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "    </tr>"
-    txt += "    <tr>"
-    txt += "        <!-- <td></td> -->"
-    txt += "        <td>最高</td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "        <td></td>"
-    txt += "    </tr>"
-    txt += "</table>"
-
-    return txt;
-}
 
 async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
     var mBollData = new bolldata();
