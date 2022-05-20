@@ -1,7 +1,8 @@
-import StatusCodes, { TOO_MANY_REQUESTS } from 'http-status-codes';
+import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
+import { t_StockDayReport, Prisma } from '@prisma/client';
 import dayrptService from '@services/dayrpt-service';
-import { t_StockDayReport } from '@prisma/client';
+import sinaService from '@services/sinastock-service';
 
 
 // Constants
@@ -22,7 +23,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     const { startday, endday, stockcode } = req.params;
     var begindate: Date = new Date(startday);
     var enddate: Date = new Date(endday);
-
+    var todaydate: Date = new Date();
     //修正UTC问题
     if (begindate.getHours() == 0) {
         begindate.setHours(begindate.getHours() + 8)
@@ -34,6 +35,15 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
     if (dayrpts == null || dayrpts.length == 0) {
         return;
+    }
+
+    var mStock = await sinaService.getone(stockcode);
+    if (isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
+        if (todaydate.getHours() > 9 && todaydate.getHours() < 15) {
+            var mdayrpttoday = await GetTodayDayRpt(todaydate, stockcode)
+            console.log("sameday");
+            dayrpts.push(mdayrpttoday);
+        }
     }
     var boll = await bollCalc(dayrpts);
     var rsi = await rsiCalc(dayrpts);
@@ -57,7 +67,11 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
     rateanalysisdata = rateanalysisdata.sort((a, b) => a.maxvalue - b.maxvalue);
 
-    var txtresult: string = "分析数据：\r\n"
+    var txtresult: string = ""
+    txtresult += `[B]实时行情[/B]：现价：${mStock.CurrentPrice} 最高：${mStock.TodayMaxPrice} 最低：${mStock.TodayMinPrice}|`;
+    txtresult += `BOLL|UP:${boll.up} MID:${boll.ma} DN:${boll.down}|RSI|RSI7:${rsi.rsi7} RSI14:${rsi.rsi14} `
+
+    txtresult += "\r\n分析数据：\r\n"
     txtresult += "查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
     txtresult += "最小振额：" + RPMin + ",日期：" + convertDatetoStr(dayrpts[0].ReportDay);
@@ -65,7 +79,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     txtresult += "\r\n最佳振幅： " + rateanalysisdata[dayrpts.length - 1].rateprice + " 计算值：" + rateanalysisdata[dayrpts.length - 1].maxday + "|" + rateanalysisdata[dayrpts.length - 1].maxvalue;
     txtresult += "\r\nMA:" + boll.ma + "|STA:" + boll.sta + "|UP:" + boll.up + "|DOWN:" + boll.down;
     if (rsi.rsi7 != -1) {
-        txtresult += "RSI分析：\r\n";
+        txtresult += "\r\nRSI分析：\r\n";
         txtresult += rsi.analysis;
         txtresult += "\r\nRSI7:" + rsi.rsi7 + "|rs:" + rsi.relativestrength7.toFixed(4) + "|UPavg:" + rsi.up7avg.toFixed(4) + "|DNavg:" + rsi.down7avg.toFixed(4);
         txtresult += "\r\nRSI14:" + rsi.rsi14 + "|rs:" + rsi.relativestrength14.toFixed(2) + "|UPavg:" + rsi.up14avg.toFixed(2) + "|DNavg:" + rsi.down14avg.toFixed(2);
@@ -124,7 +138,7 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
     var upSum7 = 0;
     var downSum = 0;
     var downSum7 = 0;
-    var iCount7=0;
+    var iCount7 = 0;
     for (let index = 1; index < dayrptsCopy.length; index++) {
         const element = dayrptsCopy[index];
         var iTemp = Number(element.TodayClosePrice) - Number(dayrptsCopy[index - 1].TodayClosePrice);
@@ -159,16 +173,16 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
 
         }
     }
-    console.log(iCount7+"|"+dayrptsCopy[0].ReportDay.toUTCString() );
+    console.log(iCount7 + "|" + dayrptsCopy[0].ReportDay.toUTCString());
     //  文字结论
     if (mRsiData.rsi14 == -1) {
         return mRsiData;
     }
 
-    if (mRsiData.rsi7 < 20) { mRsiData.analysis = "RS7 处于极弱，超卖" }
-    if (mRsiData.rsi7 > 20 && mRsiData.rsi7 < 50) { mRsiData.analysis = "RS7 处于弱区" }
-    if (mRsiData.rsi7 > 50 && mRsiData.rsi7 < 80) { mRsiData.analysis = "RS7 处于强区" }
-    if (mRsiData.rsi7 > 80) { mRsiData.analysis = "RS7 处于极强，超买" }
+    if (mRsiData.rsi7 < 20) { mRsiData.analysis = "RSI7 极弱，超卖" }
+    if (mRsiData.rsi7 > 20 && mRsiData.rsi7 < 50) { mRsiData.analysis = "RSI7 弱区" }
+    if (mRsiData.rsi7 > 50 && mRsiData.rsi7 < 80) { mRsiData.analysis = "RSI7 强区" }
+    if (mRsiData.rsi7 > 80) { mRsiData.analysis = "RSI7 极强，超买" }
 
 
     if (mRsiData.rsi7 > mRsiData.rsi14) { mRsiData.analysis += "|多头市场" }
@@ -178,6 +192,44 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
 
 
 }
+
+function isSameDay(d1: Date, d2: Date): boolean {
+    return d1.getFullYear() === d2.getFullYear() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getDate() === d2.getDate();
+}
+
+
+async function GetTodayDayRpt(today: Date, stockcode: string): Promise<t_StockDayReport> {
+    var mStock = await sinaService.getone(stockcode);
+    var fRatePrice = Number(mStock.TodayMaxPrice) - Number(mStock.TodayMinPrice);
+    var fRatetemp = (fRatePrice / Number(mStock.TodayMinPrice)).toFixed(2);
+    var tradingpriceAvg = (Number(mStock.TradingPrice) / Number(mStock.TradingVolume)).toFixed(2);
+
+    var mDayrptToday: t_StockDayReport = {
+        StockCode: stockcode,
+        ReportDay: today,
+        TodayOpenPrice: new Prisma.Decimal(mStock.TodayOpeningPrice),
+        TodayMaxPrice: new Prisma.Decimal(mStock.TodayMaxPrice),
+        TodayMinPrice: new Prisma.Decimal(mStock.TodayMinPrice),
+        TodayClosePrice: new Prisma.Decimal(mStock.CurrentPrice),
+        Rate: new Prisma.Decimal(fRatetemp),
+        RatePrice: new Prisma.Decimal(Number(mStock.TodayMaxPrice) - Number(mStock.TodayMinPrice)),
+        Memo: "",
+        TradingVol: new Prisma.Decimal(mStock.TradingVolume),
+        TradingPrice: new Prisma.Decimal(mStock.TradingPrice),
+        TradingPriceAvg: new Prisma.Decimal(tradingpriceAvg),
+        MA: new Prisma.Decimal(-1),
+        bollUP: new Prisma.Decimal(-1),
+        bollDown: new Prisma.Decimal(-1),
+        RSI7: new Prisma.Decimal(-1),
+        RSI14: new Prisma.Decimal(-1)
+
+    }
+
+    return mDayrptToday
+}
+
 
 
 class rateAnalysis {
