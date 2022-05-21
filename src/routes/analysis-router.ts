@@ -96,11 +96,11 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
 
 
     txtresult += `[size=${title}][B]实时：[/B][/size] \r\n`;
-    txtresult += `[B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] 今高：${mStock.TodayMaxPrice} 今低：${mStock.TodayMinPrice}[/B]|\r\n`;
-    txtresult += `BOLL|UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color]`;
+    txtresult += `&emsp;&emsp;[B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}[/B]\r\n`;
+    txtresult += `&emsp;&emsp;[B]BOLL|UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color][/B]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
-        txtresult += `\r\n [B]${rsi.analysis}[/B]`
-        txtresult += `\t RSI7:${rsi.rsi7} RSI14:${rsi.rsi14}`;
+        txtresult += `\r\n&emsp;&emsp; [B]${rsi.analysis}[/B]`
+        txtresult += ` &nbsp;&nbsp; RSI(7):${rsi.rsi7} &nbsp;&nbsp; RSI(14):${rsi.rsi14}`;
     }
 
     return txtresult;
@@ -116,7 +116,7 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
 
     var txtresult = "";
     txtresult += `\r\n[b][size=${title}] 数据分析[/size][/b]：\r\n`
-    txtresult += "&nbsp;&nbsp;&nbsp;&nbsp;查询期内共有：" + dayrpts.length + "条日报数据\r\n";
+    txtresult += "&emsp;&emsp;查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
     txtresult += `      最佳振幅：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}\r\n`
     txtresult += `      最小振额："${RPMin} 最大振幅：${RPMax}\r\n`;
