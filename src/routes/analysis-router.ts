@@ -89,7 +89,7 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     var colorCurrent = "gray";
     var colorbollup = "black";
     var colorbolldown = "black";
-    var rateprice = Number(mStock.TodayMaxPrice) - Number(mStock.TodayMaxPrice);
+    var rateprice = Number(mStock.TodayMaxPrice) - Number(mStock.TodayMinPrice);
     if (Number(mStock.CurrentPrice) > Number(mStock.TodayOpeningPrice)) { colorCurrent = "red"; }
     if (Number(mStock.CurrentPrice) < Number(mStock.TodayOpeningPrice)) { colorCurrent = "green"; }
 
@@ -98,8 +98,8 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
 
 
     txtresult += `[size=${titleSize}][B]实时数据：[/B][/size] \r\n`;
-    txtresult += `&emsp;&emsp;[size=${txtSize}][B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}[/B][/size]`;
-    txtresult += `&nbsp; 振额：${rateprice.toFixed(2)}`;
+    txtresult += `&emsp;&emsp;[size=${txtSize}][B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}`;
+    txtresult += `&nbsp; 振额：${rateprice.toFixed(2)}[/B][/size]`;
     txtresult += `&emsp;&emsp;[size=${txtSize}][B]BOLL：UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color][/B][/size]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
         txtresult += `&emsp;&emsp; [size=${txtSize}][B]${rsi.analysis}[/B]`
