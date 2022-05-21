@@ -9,6 +9,7 @@ import { Stock } from '@repos/sinastock-repo';
 // Constants
 const router = Router();
 const { CREATED, OK } = StatusCodes;
+const title = "36px";
 
 // Paths
 export const p = {
@@ -93,12 +94,13 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     if (Number(mStock.TodayMaxPrice) > Number(boll.up)) { colorbollup = "red"; }
     if (Number(mStock.TodayMinPrice) < Number(boll.down)) { colorbolldown = "green"; }
 
-    txtresult += `[size=200px]实时：[/size] \r\n`;
-    txtresult += `[B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] 最高：${mStock.TodayMaxPrice} 最低：${mStock.TodayMinPrice}[/B]|\r\n`;
+
+    txtresult += `[size=${title}][B]实时：[/B][/size] \r\n`;
+    txtresult += `[B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] 今高：${mStock.TodayMaxPrice} 今低：${mStock.TodayMinPrice}[/B]|\r\n`;
     txtresult += `BOLL|UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
-        txtresult += `[B]${rsi.analysis}[/B]`
-        txtresult += `RSI7:${rsi.rsi7} RSI14:${rsi.rsi14}`;
+        txtresult += `\r\n [B]${rsi.analysis}[/B]`
+        txtresult += `\t RSI7:${rsi.rsi7} RSI14:${rsi.rsi14}`;
     }
 
     return txtresult;
@@ -111,10 +113,10 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     var bestPrice: number = rateanalysisdata[dayrpts.length - 1].rateprice
     var bb: number = (Number(mStock.CurrentPrice) - boll.down) / (boll.up - boll.down);
     bb = bb * 100;
-    
+
     var txtresult = "";
     txtresult += "\r\n数据分析：\r\n"
-    txtresult += "      查询期内共有：" + dayrpts.length + "条日报数据\r\n";
+    txtresult += "\t查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
     txtresult += `      最佳振幅：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}\r\n`
     txtresult += `      最小振额："${RPMin} 最大振幅：${RPMax}\r\n`;
