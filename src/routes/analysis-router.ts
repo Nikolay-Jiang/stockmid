@@ -118,14 +118,12 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     var txtresult = "";
     txtresult += `\r\n[b][size=${titleSize}] 历史数据：[/size][/b]\r\n`
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]查询期内共有：${dayrpts.length}条日报数据[/size][/b]\r\n`;
-    txtresult += `&emsp;&emsp;[b][size=${txtSize}]振额分析：最佳振幅：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}`
-    txtresult += `&emsp;最小振额："${RPMin} &nbsp;最大振幅：${RPMax}[/size][/b]\r\n`;
-    txtresult += `&emsp;&emsp;布林指标：UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}`
+    txtresult += `&emsp;&emsp;[b][size=${txtSize}]振额分析：最佳振额：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}`
+    txtresult += `&emsp;最小振额：${RPMin} &nbsp;最大振幅：${RPMax}[/size][/b]\r\n`;
+    txtresult += `&emsp;&emsp;[b][size=${txtSize}]布林指标：UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}[/size][/b]`
     if (rsi.rsi7 != -1) {
-        txtresult += "\r\nRSI分析：\r\n";
-        txtresult += `      ${rsi.analysis}\r\n`;
-        txtresult += "      RSI7:" + rsi.rsi7 + "|rs:" + rsi.relativestrength7.toFixed(4) + "|UPavg:" + rsi.up7avg.toFixed(4) + "|DNavg:" + rsi.down7avg.toFixed(4) + "\r\n";
-        txtresult += "      RSI14:" + rsi.rsi14 + "|rs:" + rsi.relativestrength14.toFixed(2) + "|UPavg:" + rsi.up14avg.toFixed(2) + "|DNavg:" + rsi.down14avg.toFixed(2) + "\r\n";
+        txtresult += "\r\n&emsp;&emsp;[b][size=${txtSize}]RSI分析：";
+        txtresult += `${rsi.analysis} ;&emsp; RSI(7):${rsi.rsi7} &nbsp; RSI(14)：${rsi.rsi14}[/size][/b] \r\n`;
     }
 
     return txtresult;
