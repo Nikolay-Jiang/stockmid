@@ -93,7 +93,7 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     if (Number(mStock.TodayMaxPrice) > Number(boll.up)) { colorbollup = "red"; }
     if (Number(mStock.TodayMinPrice) < Number(boll.down)) { colorbolldown = "green"; }
 
-    txtresult += `[B][size=3]实时[/size]：[/B] \r\n`;
+    txtresult += `[size=3][B]实时：[/B][/size] \r\n`;
     txtresult += `[B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] 最高：${mStock.TodayMaxPrice} 最低：${mStock.TodayMinPrice}[/B]|\r\n`;
     txtresult += `BOLL|UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
@@ -110,6 +110,8 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     var RPMax: number = Number(dayrpts[dayrpts.length - 1].RatePrice);
     var bestPrice: number = rateanalysisdata[dayrpts.length - 1].rateprice
     var bb: number = (Number(mStock.CurrentPrice) - boll.down) / (boll.up - boll.down);
+    bb = bb * 100;
+    
     var txtresult = "";
     txtresult += "\r\n数据分析：\r\n"
     txtresult += "      查询期内共有：" + dayrpts.length + "条日报数据\r\n";
