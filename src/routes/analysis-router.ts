@@ -115,8 +115,8 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     bb = bb * 100;
 
     var txtresult = "";
-    txtresult += "\r\n数据分析：\r\n"
-    txtresult += "\t查询期内共有：" + dayrpts.length + "条日报数据\r\n";
+    txtresult += `\r\n[b][size=${title}] 数据分析[/size][/b]：\r\n`
+    txtresult += "&nbsp;&nbsp;&nbsp;&nbsp;查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
     txtresult += `      最佳振幅：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}\r\n`
     txtresult += `      最小振额："${RPMin} 最大振幅：${RPMax}\r\n`;
