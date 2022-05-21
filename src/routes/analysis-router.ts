@@ -122,7 +122,7 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     txtresult += `&emsp;最小振额：${RPMin} &nbsp;最大振幅：${RPMax}[/size][/b]\r\n`;
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]布林指标：UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}[/size][/b]`
     if (rsi.rsi7 != -1) {
-        txtresult += "\r\n&emsp;&emsp;[b][size=${txtSize}]RSI分析：";
+        txtresult += `\r\n&emsp;&emsp;[b][size=${txtSize}]RSI分析：`;
         txtresult += `${rsi.analysis} ;&emsp; RSI(7):${rsi.rsi7} &nbsp; RSI(14)：${rsi.rsi14}[/size][/b] \r\n`;
     }
 
