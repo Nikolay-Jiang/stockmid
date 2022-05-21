@@ -106,8 +106,8 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
         if (rsi.rsi7>rsi.rsi14 ) { colorRsi = "red"; }
         if (rsi.rsi7<rsi.rsi14 ) { colorRsi = "green"; }
-        txtresult += `&emsp;&emsp;[backcolor=${colorRsi}] [size=${txtSize}][B]${rsi.analysis}[/B]`
-        txtresult += `&nbsp;&nbsp;[B] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[/B][/size][/backcolor]`;
+        txtresult += `&emsp;&emsp; [size=${txtSize}][B]${rsi.analysis}[/B]`
+        txtresult += `&nbsp;&nbsp;[B][backcolor=${colorRsi}] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[/backcolor][/B][/size]`;
     }
 
     return txtresult;
