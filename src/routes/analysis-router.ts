@@ -118,8 +118,8 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     var txtresult = "";
     txtresult += `\r\n[b][size=${titleSize}] 历史数据：[/size][/b]\r\n`
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]查询期内共有：${dayrpts.length}条日报数据[/size][/b]\r\n`;
-    txtresult += `&emsp;&emsp;[b][size=${txtSize}]振额分析：最佳振额：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}`
-    txtresult += `&emsp;最小振额：${RPMin} &nbsp;最大振幅：${RPMax}[/size][/b]\r\n`;
+    txtresult += `&emsp;&emsp;[b][size=${txtSize}]振额分析：最佳：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} &nbsp; 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}|`
+    txtresult += `&emsp;最小：${RPMin} &nbsp;最大：${RPMax}[/size][/b]\r\n`;
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]布林指标：UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}[/size][/b]`
     if (rsi.rsi7 != -1) {
         txtresult += `\r\n&emsp;&emsp;[b][size=${txtSize}]RSI分析：`;
@@ -216,10 +216,10 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
         return mRsiData;
     }
 
-    if (mRsiData.rsi7 < 20) { mRsiData.analysis = "RSI(7) 极弱，超卖" }
+    if (mRsiData.rsi7 <= 20) { mRsiData.analysis = "RSI(7) 极弱，超卖" }
     if (mRsiData.rsi7 > 20 && mRsiData.rsi7 < 50) { mRsiData.analysis = "RSI(7) 弱区" }
-    if (mRsiData.rsi7 > 50 && mRsiData.rsi7 < 80) { mRsiData.analysis = "RSI(7) 强区" }
-    if (mRsiData.rsi7 > 80) { mRsiData.analysis = "RSI(7) 极强，超买" }
+    if (mRsiData.rsi7 >= 50 && mRsiData.rsi7 < 80) { mRsiData.analysis = "RSI(7) 强区" }
+    if (mRsiData.rsi7 >= 80) { mRsiData.analysis = "RSI(7) 极强，超买" }
 
 
     if (mRsiData.rsi7 > mRsiData.rsi14) { mRsiData.analysis += "|多头市场" }
