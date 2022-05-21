@@ -9,7 +9,8 @@ import { Stock } from '@repos/sinastock-repo';
 // Constants
 const router = Router();
 const { CREATED, OK } = StatusCodes;
-const title = "36px";
+const titleSize = "36px";
+const txtSize="18px";
 
 // Paths
 export const p = {
@@ -95,12 +96,12 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     if (Number(mStock.TodayMinPrice) < Number(boll.down)) { colorbolldown = "green"; }
 
 
-    txtresult += `[size=${title}][B]实时：[/B][/size] \r\n`;
-    txtresult += `&emsp;&emsp;[B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}[/B]\r\n`;
-    txtresult += `&emsp;&emsp;[B]BOLL|UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color][/B]`;
+    txtresult += `[size=${titleSize}][B]实时：[/B][/size] \r\n`;
+    txtresult += `&emsp;&emsp;[size=${txtSize}][B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}[/B][/size]`;
+    txtresult += `&emsp;&emsp;[size=${txtSize}][B]BOLL：UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color][/B][/size]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
-        txtresult += `\r\n&emsp;&emsp; [B]${rsi.analysis}[/B]`
-        txtresult += ` &nbsp;&nbsp; RSI(7):${rsi.rsi7} &nbsp;&nbsp; RSI(14):${rsi.rsi14}`;
+        txtresult += `&emsp;&emsp; [size=${txtSize}][B]${rsi.analysis}[/B]`
+        txtresult += `&nbsp;&nbsp;[B] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[/B][/size]`;
     }
 
     return txtresult;
@@ -115,7 +116,7 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     bb = bb * 100;
 
     var txtresult = "";
-    txtresult += `\r\n[b][size=${title}] 数据分析[/size][/b]：\r\n`
+    txtresult += `\r\n[b][size=${titleSize}] 数据分析[/size][/b]：\r\n`
     txtresult += "&emsp;&emsp;查询期内共有：" + dayrpts.length + "条日报数据\r\n";
     txtresult += "振额分析：\r\n";
     txtresult += `      最佳振幅：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}\r\n`
@@ -219,10 +220,10 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
         return mRsiData;
     }
 
-    if (mRsiData.rsi7 < 20) { mRsiData.analysis = "RSI7 极弱，超卖" }
-    if (mRsiData.rsi7 > 20 && mRsiData.rsi7 < 50) { mRsiData.analysis = "RSI7 弱区" }
-    if (mRsiData.rsi7 > 50 && mRsiData.rsi7 < 80) { mRsiData.analysis = "RSI7 强区" }
-    if (mRsiData.rsi7 > 80) { mRsiData.analysis = "RSI7 极强，超买" }
+    if (mRsiData.rsi7 < 20) { mRsiData.analysis = "RSI(7) 极弱，超卖" }
+    if (mRsiData.rsi7 > 20 && mRsiData.rsi7 < 50) { mRsiData.analysis = "RSI(7) 弱区" }
+    if (mRsiData.rsi7 > 50 && mRsiData.rsi7 < 80) { mRsiData.analysis = "RSI(7) 强区" }
+    if (mRsiData.rsi7 > 80) { mRsiData.analysis = "RSI(7) 极强，超买" }
 
 
     if (mRsiData.rsi7 > mRsiData.rsi14) { mRsiData.analysis += "|多头市场" }
