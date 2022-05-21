@@ -10,7 +10,7 @@ import { Stock } from '@repos/sinastock-repo';
 const router = Router();
 const { CREATED, OK } = StatusCodes;
 const titleSize = "36px";
-const txtSize="18px";
+const txtSize = "18px";
 
 // Paths
 export const p = {
@@ -96,7 +96,7 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     if (Number(mStock.TodayMinPrice) < Number(boll.down)) { colorbolldown = "green"; }
 
 
-    txtresult += `[size=${titleSize}][B]实时：[/B][/size] \r\n`;
+    txtresult += `[size=${titleSize}][B]实时数据：[/B][/size] \r\n`;
     txtresult += `&emsp;&emsp;[size=${txtSize}][B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}[/B][/size]`;
     txtresult += `&emsp;&emsp;[size=${txtSize}][B]BOLL：UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color][/B][/size]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
@@ -116,13 +116,11 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     bb = bb * 100;
 
     var txtresult = "";
-    txtresult += `\r\n[b][size=${titleSize}] 数据分析[/size][/b]：\r\n`
-    txtresult += "&emsp;&emsp;查询期内共有：" + dayrpts.length + "条日报数据\r\n";
-    txtresult += "振额分析：\r\n";
-    txtresult += `      最佳振幅：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}\r\n`
-    txtresult += `      最小振额："${RPMin} 最大振幅：${RPMax}\r\n`;
-    txtresult += `布林指标：\r\n`;
-    txtresult += `      UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}`
+    txtresult += `\r\n[b][size=${titleSize}] 历史数据：[/size][/b]\r\n`
+    txtresult += `&emsp;&emsp;[b][size=${txtSize}]查询期内共有：${dayrpts.length}条日报数据[/size][/b]\r\n`;
+    txtresult += `&emsp;&emsp;[b][size=${txtSize}]振额分析：最佳振幅：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} | 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}`
+    txtresult += `&emsp;最小振额："${RPMin} &nbsp;最大振幅：${RPMax}[/size][/b]\r\n`;
+    txtresult += `&emsp;&emsp;布林指标：UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}`
     if (rsi.rsi7 != -1) {
         txtresult += "\r\nRSI分析：\r\n";
         txtresult += `      ${rsi.analysis}\r\n`;
