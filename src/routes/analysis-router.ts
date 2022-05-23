@@ -53,8 +53,12 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
 
             rsi = await rsiCalc(dayrpts);
 
-            console.log("sameday", dayrpts[dayrpts.length - 1].ReportDay.toUTCString());
+            console.log("sameday", convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay), dayrpts.length);
             txtresult += getRealTxt(mStock, boll, rsi);
+            
+            rsi.rsi7 = Number(dayrpts[dayrpts.length - 2].RSI7);
+            rsi.rsi14 = Number(dayrpts[dayrpts.length - 2].RSI14);
+
         }
     }
 
