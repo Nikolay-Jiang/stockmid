@@ -46,7 +46,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     var rsi = await rsiCalc(dayrpts);
 
     if (isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
-        if (todaydate.getHours() > 9 && todaydate.getHours() < 15) {
+        if (todaydate.getHours() >= 9 && todaydate.getHours() <= 15) {
             var mdayrpttoday = await GetTodayDayRpt(todaydate, stockcode, mStock)
 
             dayrpts.push(mdayrpttoday);
@@ -89,14 +89,14 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     var colorCurrent = "gray";
     var colorbollup = "black";
     var colorbolldown = "black";
-    var colorRsi="white";
+    var colorRsi = "white";
     var rateprice = Number(mStock.TodayMaxPrice) - Number(mStock.TodayMinPrice);
     if (Number(mStock.CurrentPrice) > Number(mStock.TodayOpeningPrice)) { colorCurrent = "red"; }
     if (Number(mStock.CurrentPrice) < Number(mStock.TodayOpeningPrice)) { colorCurrent = "green"; }
 
     if (Number(mStock.TodayMaxPrice) > Number(boll.up)) { colorbollup = "red"; }
     if (Number(mStock.TodayMinPrice) < Number(boll.down)) { colorbolldown = "green"; }
-    
+
 
 
     txtresult += `[size=${titleSize}][B]实时数据：[/B][/size] \r\n`;
@@ -104,8 +104,8 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     txtresult += `&nbsp; 振额：${rateprice.toFixed(2)}[/B][/size]`;
     txtresult += `&emsp;&emsp;[size=${txtSize}][B]BOLL：UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color][/B][/size]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
-        if (rsi.rsi7>rsi.rsi14 ) { colorRsi = "red"; }
-        if (rsi.rsi7<rsi.rsi14 ) { colorRsi = "green"; }
+        if (rsi.rsi7 > rsi.rsi14) { colorRsi = "red"; }
+        if (rsi.rsi7 < rsi.rsi14) { colorRsi = "green"; }
         txtresult += `&emsp;&emsp; [size=${txtSize}][B]${rsi.analysis}[/B]`
         txtresult += `&nbsp;&nbsp;[B][bgcolor=${colorRsi}] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[/bgcolor][/B][/size]`;
     }
