@@ -50,10 +50,14 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
             var mdayrpttoday = await GetTodayDayRpt(todaydate, stockcode, mStock)
 
             dayrpts.push(mdayrpttoday);
+
+            rsi = await rsiCalc(dayrpts);
+
             console.log("sameday", dayrpts[dayrpts.length - 1].ReportDay.toUTCString());
             txtresult += getRealTxt(mStock, boll, rsi);
         }
     }
+
 
     dayrpts.sort((a, b) => Number(a!.RatePrice) - Number(b!.RatePrice));
 
@@ -102,12 +106,12 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata): string {
     txtresult += `[size=${titleSize}][B]实时数据：[/B][/size] \r\n`;
     txtresult += `&emsp;&emsp;[size=${txtSize}][B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}`;
     txtresult += `&nbsp; 振额：${rateprice.toFixed(2)}[/B][/size]`;
-    txtresult += `&emsp;&emsp;[size=${txtSize}][B]BOLL：UP:[color=${colorbollup}]${boll.up}[/color] MID:${boll.ma} DN:[color=${colorbolldown}]${boll.down}[/color][/B][/size]`;
+    txtresult += `&emsp;&emsp;[size=${txtSize}][B]BOLL：上:[color=${colorbollup}]${boll.up}[/color]&nbsp;中:${boll.ma}&nbsp;下:[color=${colorbolldown}]${boll.down}[/color][/B][/size]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
         if (rsi.rsi7 > rsi.rsi14) { colorRsi = "red"; }
         if (rsi.rsi7 < rsi.rsi14) { colorRsi = "green"; }
         txtresult += `&emsp;&emsp; [size=${txtSize}][B]${rsi.analysis}[/B]`
-        txtresult += `&nbsp;&nbsp;[B][bgcolor=${colorRsi}] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[/bgcolor][/B][/size]`;
+        txtresult += `&nbsp;&nbsp;[B][color=${colorRsi}] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[color][/B][/size]`;
     }
 
     return txtresult;
