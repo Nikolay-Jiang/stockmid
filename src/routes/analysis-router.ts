@@ -51,13 +51,11 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
 
             dayrpts.push(mdayrpttoday);
 
-            rsi = await rsiCalc(dayrpts);
+            let rsiReal = await rsiCalc(dayrpts);
 
             console.log("sameday", convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay), dayrpts.length);
-            txtresult += getRealTxt(mStock, boll, rsi);
-            
-            rsi.rsi7 = Number(dayrpts[dayrpts.length - 2].RSI7);
-            rsi.rsi14 = Number(dayrpts[dayrpts.length - 2].RSI14);
+            txtresult += getRealTxt(mStock, boll, rsiReal);
+
 
         }
     }
@@ -132,12 +130,12 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     var txtresult = "";
     txtresult += `\r\n[b][size=${titleSize}] 历史数据：[/size][/b]\r\n`
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]查询期内共有：${dayrpts.length}条日报数据[/size][/b]\r\n`;
-    txtresult += `&emsp;&emsp;[b][size=${txtSize}]振额分析：最佳：${bestPrice}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} &nbsp; 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}|`
-    txtresult += `&emsp;最小：${RPMin} &nbsp;最大：${RPMax}[/size][/b]\r\n`;
+    txtresult += `&emsp;&emsp;[b][size=${txtSize}]振额分析：最佳：${bestPrice.toFixed(2)}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} &nbsp; 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}|`
+    txtresult += `&emsp;最小：${RPMin.toFixed(2)} &nbsp;最大：${RPMax.toFixed(2)}[/size][/b]\r\n`;
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]布林指标：UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}[/size][/b]`
     if (rsi.rsi7 != -1) {
         txtresult += `\r\n&emsp;&emsp;[b][size=${txtSize}]RSI分析：`;
-        txtresult += `${rsi.analysis} ;&emsp; RSI(7):${rsi.rsi7} &nbsp; RSI(14)：${rsi.rsi14}[/size][/b] \r\n`;
+        txtresult += `${rsi.analysis} ;&emsp; RSI(7):${rsi.rsi7} &nbsp; RSI(14)：${rsi.rsi14}&nbsp; |&nbsp;  RSI(14)预期：${rsi.rsi14expect} [/size][/b] \r\n`;
     }
 
     return txtresult;
@@ -190,9 +188,14 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
     var downSum = 0;
     var downSum7 = 0;
     var iCount7 = 0;
+    var iCount14 = 0;
     for (let index = 1; index < dayrptsCopy.length; index++) {
         const element = dayrptsCopy[index];
         var iTemp = Number(element.TodayClosePrice) - Number(dayrptsCopy[index - 1].TodayClosePrice);
+        if (index == 1) {
+            mRsiData.rsi14expect = iTemp;
+        }
+
         if (iTemp >= 0) {
             upSum += iTemp;
         } else {
@@ -208,6 +211,7 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
             iCount7++;
         }
 
+        iCount14++;
 
         if (index == (dayrptsCopy.length - 1)) {
             mRsiData.up7avg = upSum7 / 7;
@@ -220,11 +224,12 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
                 mRsiData.down14avg = downSum / 14;
                 mRsiData.relativestrength14 = mRsiData.up14avg / mRsiData.down14avg;
                 mRsiData.rsi14 = Number((100 - 100 / (mRsiData.relativestrength14 + 1)).toFixed(2));
+                mRsiData.rsi14expect = mRsiData.rsi14expect + Number(element.TodayClosePrice);//预测第二天良好值
             }
 
         }
     }
-    console.log(iCount7 + "|" + dayrptsCopy[0].ReportDay.toUTCString());
+    console.log(mRsiData.rsi14expect);
     //  文字结论
     if (mRsiData.rsi14 == -1) {
         return mRsiData;
@@ -303,6 +308,7 @@ class rsidata {
     down7avg: number = -1;
     relativestrength7: number = -1;
     rsi14: number = -1;
+    rsi14expect: number = -1;
     up14avg: number = -1;
     down14avg: number = -1;
     relativestrength14: number = -1;
