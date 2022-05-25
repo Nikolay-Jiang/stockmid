@@ -3,7 +3,7 @@ import authService from '@services/auth-service';
 import { ParamMissingError } from '@shared/errors';
 import { Request, Response, Router } from 'express';
 import StatusCodes from 'http-status-codes';
-import { token } from 'morgan';
+
 
 
 // Constants
@@ -14,6 +14,7 @@ const { OK } = StatusCodes;
 export const p = {
     login: '/login',
     logout: '/logout',
+    
 } as const;
 
 // Cookie Properties

@@ -8,6 +8,8 @@ import sinastockRouter from './sinastock-router';
 import daylogRouter from './daylog-router';
 import stocknameRouter from './stockname-router';
 import analysisRouter from './analysis-router';
+import simRouter from './simtrade-router';
+import { adminMw } from './middleware';
 
 
 // Init
@@ -23,6 +25,7 @@ apiRouter.use('/stock', sinastockRouter);
 apiRouter.use('/daylog', daylogRouter);
 apiRouter.use('/stockname', stocknameRouter);
 apiRouter.use('/analysis', analysisRouter);
+apiRouter.use('/sim', simRouter);
 
 // Export default
 export default apiRouter;

@@ -5,7 +5,7 @@ document.addEventListener('click', function (event) {
         var emailInput = document.getElementById('email-input');
         var pwdInput = document.getElementById('pwd-input');
         var data = {
-            email: emailInput.value,
+            username: emailInput.value,
             password: pwdInput.value
         };
         Http.Post('/api/auth/login', data)

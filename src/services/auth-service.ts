@@ -28,15 +28,16 @@ async function login(username: string, password: string): Promise<string> {
         id: user.UserID,
         name: user.UserName,
         role: user.RoleID,
+        LoginDate: new Date(),
     });
 }
 
-async function ChangePwd(password:string):Promise<string> {
-    return await bcrypt.hash(password,10);
+async function ChangePwd(password: string): Promise<string> {
+    return await bcrypt.hash(password, 10);
 }
 
 
 // Export default
 export default {
-    login,ChangePwd
+    login, ChangePwd
 } as const;
