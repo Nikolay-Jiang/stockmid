@@ -3,11 +3,15 @@ import { t_StockDayReport, Prisma } from '@prisma/client'
 
 
 export var isMpatton: boolean = false;
-export var txtOP="";
+export var isWpatton: boolean = false;
+export var iCountW: number = 0;
+
+
+export var txtOP = "";
 
 
 function isAdd(dayrpts: t_StockDayReport[], index: number): boolean {
-    txtOP="";
+    txtOP = "";
     var eleCurr = dayrpts[index];
     var eleYesterday = dayrpts[index - 1];
     // var eleBeforeyes = dayrpts[index - 2];
@@ -28,15 +32,47 @@ function isAdd(dayrpts: t_StockDayReport[], index: number): boolean {
     if (isMpatton) { return false }
 
 
+    if (isWpatton && todayRSI7 >= 50) {
+        isWpatton = false;
+        iCountW = 0;
+    }
+
+    if (isWpatton && iCountW < 2) {
+        if (todayRSI7 < yesRSI7) {//W2 下跌
+            iCountW = 0;
+            isWpatton = false;
+            return false;
+        }
+        iCountW++;
+        return true;
+    }
+    if (iCountW >= 2) {
+        iCountW == 0;
+        isWpatton = false;
+    }
+
+    if (isW(dayrpts, index)) {
+        isWpatton = true;
+        iCountW++;
+        txtOP = "W 通道"
+        return true;
+    }
+
+
+
+    if (todayRSI7 < 20) {
+        return false;
+    }
+
     //RSI 双升
-    if (todayRSI14 > yesRSI14 && todayRSI7 > yesRSI7) { txtOP="双升"; return true; }
+    if (todayRSI14 > yesRSI14 && todayRSI7 > yesRSI7) { txtOP = "双升"; return true; }
 
     return false
 }
 
 
 function isReduce(dayrpts: t_StockDayReport[], index: number): boolean {
-    txtOP="";
+    // txtOP = "";
     var eleCurr = dayrpts[index];
     var eleYesterday = dayrpts[index - 1];
     // var eleBeforeyes = dayrpts[index - 2];
@@ -55,10 +91,12 @@ function isReduce(dayrpts: t_StockDayReport[], index: number): boolean {
     //超卖情况
     if (todayRSI7 < 20) { return false; }
 
+    if (isWpatton) { return false; }
+
     if (todayRSI7 >= 50) {
         isMpatton = isM(dayrpts, index);
         if (isMpatton) {//M 右侧第一次减仓
-            txtOP="M 右侧第一次出现"
+            txtOP = "M 右侧第一次出现"
             return true;
         }
     }
@@ -68,19 +106,34 @@ function isReduce(dayrpts: t_StockDayReport[], index: number): boolean {
     }
 
     //忽略处于 M右侧的状态
-    if (isMpatton) { txtOP="M 右侧"; return false; }
+    if (isMpatton) { txtOP = "M 右侧"; return false; }
 
 
 
     if (todayRSI14 > yesRSI14 && todayRSI7 > yesRSI7 && isStrong7) {//RSI 双升 7强 短期高位
-        if (isRecentHigh(dayrpts, index, 2)) { txtOP="双升 RSI7 强 3天内高位"; return true; }
+        // if (yesRSI7 < 50 && todayRSI7 >= 50 && yesRSI14 < 50 && todayRSI14 > 50) {//弱转强
+        //     return false;
+        // }
+        if (isRecentHigh(dayrpts, index, 2)) { txtOP = "双升 RSI7 强 3天内高位"; return true; }
+    }
+
+    if (todayRSI14 > yesRSI14 && todayRSI7 > yesRSI7) {//RSI 双升  3日高位
+        if (isRecentHigh(dayrpts, index, 5)) { txtOP = "双升 RSI7 强 3天内高位"; return true; }
     }
 
     //RSI 双降
-    if (todayRSI14 < yesRSI14 && todayRSI7 < yesRSI7) {txtOP="双降";  return true; }
+    if (todayRSI14 < yesRSI14 && todayRSI7 < yesRSI7) { txtOP = "双降"; return true; }
 
     //RSI14 单降
-    if (todayRSI14 < yesRSI14 && todayRSI7 >= yesRSI7) {txtOP="RSI 14 单降"; return true; }
+    if (todayRSI14 < yesRSI14 && todayRSI7 >= yesRSI7) {
+        if (yesRSI7 < 50 && todayRSI7 >= 50 && todayRSI7 > todayRSI14) {//RSI7 十字
+            return false;
+        }
+        // if (Math.abs(todayRSI14-yesRSI14)<=0.5) {//偏差小于1忽略
+        //     return false
+        // }
+        txtOP = "RSI 14 单降"; return true;
+    }
 
     return false
 }
@@ -122,8 +175,8 @@ function isM(dayrpts: t_StockDayReport[], index: number): boolean {
 
 
 
-    var iMax = dayrpts.findIndex(x => Number(x.RSI7) == Number(dayrpsTemp[dayrpsTemp.length - 1].RSI7));
-    var iMaxsec = dayrpts.findIndex(x => Number(x.RSI7) == Number(dayrpsTemp[dayrpsTemp.length - 2].RSI7));
+    var iMax = dayrptsCopy.findIndex(x => Number(x.RSI7) == Number(dayrpsTemp[dayrpsTemp.length - 1].RSI7));
+    var iMaxsec = dayrptsCopy.findIndex(x => Number(x.RSI7) == Number(dayrpsTemp[dayrpsTemp.length - 2].RSI7));
 
     if (Number(dayrpsTemp[dayrpsTemp.length - 2].RSI7) < 50) { return false; }
     if (iMax < 0 || iMaxsec < 0) { return false; }//没找到
@@ -137,6 +190,66 @@ function isM(dayrpts: t_StockDayReport[], index: number): boolean {
     else {
         iFirst = iMax;
         iSec = iMaxsec;
+    }
+
+    if (iFirst == 0) {
+        return false;
+    }
+
+
+    return true;
+}
+
+function isW(dayrpts: t_StockDayReport[], index: number): boolean {
+    var eleCurr = dayrpts[index];
+    var eleYesterday = dayrpts[index - 1];
+
+    var todayRSI7 = Number(eleCurr.RSI7)
+    var yesRSI7 = Number(eleYesterday.RSI7)
+    var iFirst = 0;//第一峰
+    var iSec = 0;//第二峰
+    var dayrptsCopy = dayrpts.slice(0, index);
+
+    if (dayrptsCopy.length < 5) {
+        return false;
+    }
+    if (dayrptsCopy.length > 7) {
+        dayrptsCopy = dayrptsCopy.slice(dayrptsCopy.length - 7, dayrptsCopy.length);
+    }
+
+
+    //获得两个< 20 的峰值 并计算是否符合W
+    if (yesRSI7 >= 20) { return false }
+    if (todayRSI7 <= yesRSI7) { return false; }//当天下降
+
+    var dayrpsTemp = [...dayrptsCopy]
+    dayrpsTemp.sort((a, b) => Number(a!.RSI7) - Number(b!.RSI7));
+
+    var iCurr = dayrptsCopy.findIndex(x => Number(x.RSI7) == yesRSI7);
+
+
+    var iMin = dayrptsCopy.findIndex(x => Number(x.RSI7) == Number(dayrpsTemp[0].RSI7));
+    var iMinsec = dayrptsCopy.findIndex(x => Number(x.RSI7) == Number(dayrpsTemp[1].RSI7));
+
+    if (iMin != iCurr) {
+        iMinsec = iCurr
+    }
+    console.log(eleCurr.ReportDay.toDateString(), iMin, iMinsec, Number(dayrptsCopy[iMin].RSI7), Number(dayrptsCopy[iMinsec].RSI7))
+
+    if (Number(dayrptsCopy[iMinsec].RSI7) > 20) { return false; }//两个指标都应当 <= 20
+
+    if (iMin < 0 || iMinsec < 0) { return false; }//没找到
+
+    if (iMin + 1 == iMinsec || iMinsec + 1 == iMin || iMin == iMinsec) { return false; }//处理指标紧邻的情况
+
+
+    if (iMin > iMinsec) {
+        iFirst = iMinsec;
+        iSec = iMin;
+    }
+    else {
+        iFirst = iMin;
+        iSec = iMinsec;
     }
 
     if (iFirst == 0) {

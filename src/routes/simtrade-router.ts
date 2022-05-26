@@ -4,7 +4,7 @@ import { t_StockDayReport, Prisma } from '@prisma/client';
 import dayrptService from '@services/dayrpt-service';
 import sinaService from '@services/sinastock-service';
 import simService from '@services/simtrade-service';
-import { isMpatton, stockOP } from '@services/simtrade-service';
+import { isMpatton, stockOP, txtOP, isWpatton } from '@services/simtrade-service';
 
 
 // Constants
@@ -17,7 +17,8 @@ var lastReductPrice: number = 0;
 // var isMpatton = false;
 var iCountGood = 0;
 var iCountBad = 0;
-
+var iCountBadForAdd = 0;
+var iCountBadForReduce = 0;
 // Paths
 export const p = {
     getbyconditicon: '/allbycondition/:startday/:endday/:stockcode',
@@ -43,9 +44,13 @@ router.get(p.statistics, async (req: Request, res: Response) => {
     var CurrentVol = initVol;//当前持股数
     var CurrentMoney = initMoney;//可用现金
     var CurrentTotalMoney = 0; //当前总资产
+    var iCountAdd = 0;
+    var iCountReduce = 0;
 
     iCountGood = 0;
     iCountBad = 0;
+    iCountBadForAdd = 0;
+    iCountBadForReduce = 0;
 
     var txtresult: string = "";
     var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
@@ -109,22 +114,27 @@ router.get(p.statistics, async (req: Request, res: Response) => {
 
         switch (+myoper) {
             case stockOP.add:
+                var n = 1;
                 if (CurrentMoney > (onceVol * Number(element.TradingPriceAvg))) {
-                    CurrentVol += onceVol;
-                    CurrentMoney = CurrentMoney - onceVol * Number(element.TradingPriceAvg);
+                    if (CurrentVol == 0) { n = 3; }
+                    CurrentVol += n * onceVol;
+                    CurrentMoney = CurrentMoney - n * onceVol * Number(element.TradingPriceAvg);
                     lastAddPrice = Number(element.TradingPriceAvg)
+                    iCountAdd++;
                 }
                 break;
             case stockOP.buy:
                 if (CurrentMoney >= (k * onceVol * Number(element.TradingPriceAvg))) {
                     CurrentVol += (k * onceVol);
                     CurrentMoney = CurrentMoney - k * onceVol * Number(element.TradingPriceAvg);
+                    iCountAdd++;
                 } else { console.log("买入资金不足") }
                 break;
             case stockOP.sell:
                 if (CurrentVol >= k * onceVol) {
                     CurrentVol -= (k * onceVol);
                     CurrentMoney = CurrentMoney + k * onceVol * Number(element.TradingPriceAvg);
+                    iCountReduce++;
                 } else {
                     CurrentVol = 0;
                     CurrentMoney = CurrentMoney + CurrentVol * Number(element.TradingPriceAvg);
@@ -136,6 +146,7 @@ router.get(p.statistics, async (req: Request, res: Response) => {
                     CurrentMoney = CurrentMoney + onceVol * reducePrice;
                     lastReductPrice = Number(element.TradingPriceAvg);
                     lastAddPrice = 0;
+                    iCountReduce++;
                 }
                 break;
             default:
@@ -144,14 +155,14 @@ router.get(p.statistics, async (req: Request, res: Response) => {
         choose = GetChooseEval(dayrpts, index, myoper);
         CurrentTotalMoney = CurrentMoney + CurrentVol * Number(element.TradingPriceAvg);
         if (myoper != stockOP.hold) {
-            console.log(element.ReportDay.toDateString(), myoper, CurrentMoney, reducePrice, CurrentVol, CurrentTotalMoney, CurrentTotalMoney - initTotalMoney, choose, isMpatton);
+            console.log(element.ReportDay.toDateString(), myoper, CurrentMoney, reducePrice, CurrentVol, CurrentTotalMoney, CurrentTotalMoney - initTotalMoney, choose, isMpatton, isWpatton, txtOP);
         }
 
     }
     var temp = CurrentTotalMoney - initTotalMoney;
     var temprate = ((temp / initTotalMoney) * 100).toFixed(2);
     var tempStat = ((iCountGood / (iCountGood + iCountBad)) * 100).toFixed(2) + "%";
-    console.log(temp, ((temp / initTotalMoney) * 100).toFixed(2), iCountGood, iCountBad, tempStat);
+    console.log(temp, ((temp / initTotalMoney) * 100).toFixed(2), iCountGood, iCountBad, tempStat, iCountBadForAdd, iCountAdd, iCountBadForReduce, iCountReduce);
 
     return res.status(OK).json({ temp, temprate, tempStat });
 });
@@ -196,12 +207,16 @@ function GetChooseEval(dayrps: t_StockDayReport[], index: number, myoper: stockO
         else {
             todayPrice = Number(dayrps[index].TodayMinPrice);
             if (tomorrowPrice > todayPrice) { iCountGood++; return "good" }
-            else { iCountBad++; return "bad" }
+            else { iCountBad++; iCountBadForAdd++; return "bad" }
         }
     }
     if (myoper == stockOP.reduce || myoper == stockOP.sell) {
         if (tomorrowPrice <= todayPrice) { iCountGood++; return "good" }
-        else { iCountBad++; return "bad" }
+        else {
+            tomorrowPrice = Number(dayrps[index + 1].TodayMinPrice);
+            if (tomorrowPrice <= todayPrice) { iCountGood++; return "good" }
+            else { iCountBad++; iCountBadForReduce++; return "bad" }
+        }
     }
 
     return "";

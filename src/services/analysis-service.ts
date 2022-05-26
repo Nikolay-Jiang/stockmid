@@ -45,7 +45,7 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: t_Stoc
         txtresult += `&nbsp;&nbsp;[B][color=${colorRsi}] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[color][/B][/size]`;
     }
     if (myoper != stockOP.hold) {
-        txtresult += `\r\n[size=${txtSize}][B]RSI建议：`
+        txtresult += `\r\n&emsp;&emsp; [size=${txtSize}][B]RSI建议：`
         if (myoper == stockOP.reduce) {
             txtresult += `卖出`
         }
