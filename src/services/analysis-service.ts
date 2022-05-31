@@ -66,8 +66,11 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: t_Stoc
  */
 function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis[], boll: bolldata, rsi: rsidata, mStock: Stock): string {
 
-    var RPMin: number = Number(dayrpts[0].RatePrice);
-    var RPMax: number = Number(dayrpts[dayrpts.length - 1].RatePrice);
+    var dayrptsCopy = [...dayrpts];
+    dayrptsCopy.sort((a, b) => Number(a!.RatePrice) - Number(b!.RatePrice));
+
+    var RPMin: number = Number(dayrptsCopy[0].RatePrice);
+    var RPMax: number = Number(dayrptsCopy[dayrpts.length - 1].RatePrice);
     var bestPrice: number = rateanalysisdata[dayrpts.length - 1].rateprice
     var bb: number = (Number(mStock.CurrentPrice) - boll.down) / (boll.up - boll.down);
     bb = bb * 100;
@@ -166,6 +169,7 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
         var iTemp = Number(element.TodayClosePrice) - Number(dayrptsCopy[index - 1].TodayClosePrice);
         if (index == 1) {
             mRsiData.rsi14expect = iTemp;
+
         }
 
         if (iTemp >= 0) {
@@ -175,6 +179,8 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
         }
 
         if (index >= (dayrptsCopy.length - 7)) {
+            if (index == dayrptsCopy.length - 7) {mRsiData.rsi7expect = iTemp;}
+
             if (iTemp >= 0) {
                 upSum7 += iTemp;
             } else {
@@ -190,6 +196,7 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
             mRsiData.down7avg = downSum7 / 7;
             mRsiData.relativestrength7 = mRsiData.up7avg / mRsiData.down7avg;
             mRsiData.rsi7 = Number((100 - 100 / (mRsiData.relativestrength7 + 1)).toFixed(2));
+            mRsiData.rsi7expect = mRsiData.rsi7expect + Number(element.TodayClosePrice);//预测第二天良好值
 
             if (dayrptsCopy.length > 14) {
                 mRsiData.up14avg = upSum / 14;
@@ -197,11 +204,12 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
                 mRsiData.relativestrength14 = mRsiData.up14avg / mRsiData.down14avg;
                 mRsiData.rsi14 = Number((100 - 100 / (mRsiData.relativestrength14 + 1)).toFixed(2));
                 mRsiData.rsi14expect = mRsiData.rsi14expect + Number(element.TodayClosePrice);//预测第二天良好值
+
             }
 
         }
     }
-    console.log(mRsiData.rsi14expect);
+    // console.log(mRsiData.rsi14expect);
     //  文字结论
     if (mRsiData.rsi14 == -1) {
         return mRsiData;
@@ -249,9 +257,17 @@ async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
 
 }
 
+function isSameDay(d1: Date, d2: Date): boolean {
+    return d1.getFullYear() === d2.getFullYear() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getDate() === d2.getDate();
+}
+
+
 
 export class rsidata {
     rsi7: number = -1;
+    rsi7expect: number = -1;
     up7avg: number = -1;
     down7avg: number = -1;
     relativestrength7: number = -1;
@@ -278,6 +294,8 @@ export class bolldata {
 }
 
 
+
+
 // Export default
 export default {
     rsiCalc,
@@ -286,5 +304,6 @@ export default {
     bollCalc,
     GetTodayDayRpt,
     GetRateData,
+    isSameDay,
 
 } as const;

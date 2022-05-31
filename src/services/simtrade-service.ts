@@ -23,8 +23,8 @@ function isAdd(dayrpts: t_StockDayReport[], index: number): boolean {
     var isStrong7 = false;
     var isStrong14 = false;
 
-    if (yesRSI7 > 50) { isStrong7 = true; }
-    if (yesRSI14 > 50) { isStrong14 = true; }
+    if (todayRSI7 > 50) { isStrong7 = true; }
+    if (todayRSI14 > 50) { isStrong14 = true; }
 
     if (isMpatton && todayRSI7 < 40) {
         isMpatton = false;
@@ -61,6 +61,9 @@ function isAdd(dayrpts: t_StockDayReport[], index: number): boolean {
 
 
     if (todayRSI7 < 20) {
+        return false;
+    }
+    if (todayRSI7 < 25 && todayRSI14 < 20) {
         return false;
     }
 
@@ -117,8 +120,8 @@ function isReduce(dayrpts: t_StockDayReport[], index: number): boolean {
         if (isRecentHigh(dayrpts, index, 2)) { txtOP = "双升 RSI7 强 3天内高位"; return true; }
     }
 
-    if (todayRSI14 > yesRSI14 && todayRSI7 > yesRSI7) {//RSI 双升  3日高位
-        if (isRecentHigh(dayrpts, index, 5)) { txtOP = "双升 RSI7 强 3天内高位"; return true; }
+    if (todayRSI14 > yesRSI14 && todayRSI7 > yesRSI7) {//RSI 双升  5日高位
+        if (isRecentHigh(dayrpts, index, 5)) { txtOP = "双升 RSI7 强 5天内高位"; return true; }
     }
 
     //RSI 双降
@@ -209,14 +212,12 @@ function isW(dayrpts: t_StockDayReport[], index: number): boolean {
     var iFirst = 0;//第一峰
     var iSec = 0;//第二峰
     var dayrptsCopy = dayrpts.slice(0, index);
-
     if (dayrptsCopy.length < 5) {
         return false;
     }
     if (dayrptsCopy.length > 7) {
         dayrptsCopy = dayrptsCopy.slice(dayrptsCopy.length - 7, dayrptsCopy.length);
     }
-
 
     //获得两个< 20 的峰值 并计算是否符合W
     if (yesRSI7 >= 20) { return false }
@@ -234,11 +235,12 @@ function isW(dayrpts: t_StockDayReport[], index: number): boolean {
     if (iMin != iCurr) {
         iMinsec = iCurr
     }
-    console.log(eleCurr.ReportDay.toDateString(), iMin, iMinsec, Number(dayrptsCopy[iMin].RSI7), Number(dayrptsCopy[iMinsec].RSI7))
+    
+    // console.log(eleCurr.StockCode, eleCurr.ReportDay.toDateString(), iMin, iMinsec, Number(dayrptsCopy[iMin].RSI7), Number(dayrptsCopy[iMinsec].RSI7))
 
-    if (Number(dayrptsCopy[iMinsec].RSI7) > 20) { return false; }//两个指标都应当 <= 20
+    if (Number(dayrptsCopy[iMinsec].RSI7) > 20) { return false; }//一个指标小于20 另一个可以放宽到30
 
-    if (iMin < 0 || iMinsec < 0) { return false; }//没找到
+    if (iMin < 0 || iMinsec < 0) {return false; }//没找到
 
     if (iMin + 1 == iMinsec || iMinsec + 1 == iMin || iMin == iMinsec) { return false; }//处理指标紧邻的情况
 
@@ -253,12 +255,38 @@ function isW(dayrpts: t_StockDayReport[], index: number): boolean {
     }
 
     if (iFirst == 0) {
+        // console.log("step3");
         return false;
     }
 
+    
+    if (isUnderLow(iFirst, iSec, dayrptsCopy)) {
+        // console.log("step4");
+        return false;
+    }
+    // console.log(iFirst, iSec, eleCurr.StockCode,dayrptsCopy[iFirst].RSI7,dayrptsCopy[iSec].RSI7);
 
     return true;
 }
+
+
+//检查RSI7 区段内是否都小于20
+function isUnderLow(iFirst: number, iSec: number, dayrpts: t_StockDayReport[]): boolean {
+    if (dayrpts.length == 0) {
+        return false;
+    }
+
+    for (let index = iFirst; index < iSec; index++) {
+        const CurrentRS7 = Number(dayrpts[index].RSI7);
+        if (CurrentRS7 > 20) {
+            return false
+        }
+    }
+
+    return true
+
+}
+
 
 /*
 * 短期高位判断
@@ -270,7 +298,7 @@ function isRecentHigh(dayrps: t_StockDayReport[], index: number, dayCount: numbe
         dayrpsTemp.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b!.TodayMaxPrice));
 
         if (Number(dayrpsTemp[dayrpsTemp.length - 1].TodayMaxPrice) <= Number(element.TodayMaxPrice)) {
-            console.log("recentHI!!!")
+            // console.log("recentHI!!!")
             return true;
         }
 
@@ -284,7 +312,7 @@ function isRecentHigh(dayrps: t_StockDayReport[], index: number, dayCount: numbe
 * 短期低位判断
 */
 function isRecentLow(dayrps: t_StockDayReport[], index: number, dayCount: number): boolean {
-    if ((index - dayCount) >= 0) {//计算三天
+    if ((index - dayCount) >= 0) {
         var element = dayrps[index];
         var dayrpsTemp = dayrps.slice(index - dayCount, index);
 
@@ -300,12 +328,12 @@ function isRecentLow(dayrps: t_StockDayReport[], index: number, dayCount: number
 }
 
 
-
 // Export default
 export default {
     isAdd,
     isReduce,
     isM,
+    isW,
     isRecentHigh,
     isRecentLow
 } as const;

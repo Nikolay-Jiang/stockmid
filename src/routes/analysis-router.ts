@@ -39,16 +39,15 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
 
     var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
-    if (dayrpts == null || dayrpts.length == 0) {
-        return;
-    }
+    
+    if (dayrpts == null || dayrpts.length == 0) {return res.status(OK).end();}
 
     var txtresult: string = ""
     var mStock = await sinaService.getone(stockcode);
     var boll = await analService.bollCalc(dayrpts);
     var rsi = await analService.rsiCalc(dayrpts);
 
-    if (isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
+    if (analService.isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
         if (todaydate.getHours() >= 9 && todaydate.getHours() <= 15) {
             var mdayrpttoday = await analService.GetTodayDayRpt(todaydate, stockcode, mStock)
 
@@ -76,11 +75,7 @@ function convertDatetoStr(date: Date): string {
 }
 
 
-function isSameDay(d1: Date, d2: Date): boolean {
-    return d1.getFullYear() === d2.getFullYear() &&
-        d1.getMonth() === d2.getMonth() &&
-        d1.getDate() === d2.getDate();
-}
+
 
 
 
