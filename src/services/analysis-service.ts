@@ -83,7 +83,7 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]布林指标：UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}[/size][/b]`
     if (rsi.rsi7 != -1) {
         txtresult += `\r\n&emsp;&emsp;[b][size=${txtSize}]RSI分析：`;
-        txtresult += `${rsi.analysis} ;&emsp; RSI(7):${rsi.rsi7} &nbsp; RSI(14)：${rsi.rsi14}&nbsp; |&nbsp;  RSI(14)预期：${rsi.rsi14expect.toFixed(2)} [/size][/b] \r\n`;
+        txtresult += `${rsi.analysis} ;&emsp; RSI(7):${rsi.rsi7} &nbsp; RSI(14)：${rsi.rsi14}&nbsp; |&nbsp;RSI(7)预期：${rsi.rsi7expect} &nbsp;  RSI(14)预期：${rsi.rsi14expect.toFixed(2)} [/size][/b] \r\n`;
     }
 
     return txtresult;
@@ -179,7 +179,7 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
         }
 
         if (index >= (dayrptsCopy.length - 7)) {
-            if (index == dayrptsCopy.length - 7) {mRsiData.rsi7expect = iTemp;}
+            if (index == dayrptsCopy.length - 7) { mRsiData.rsi7expect = iTemp; }
 
             if (iTemp >= 0) {
                 upSum7 += iTemp;
