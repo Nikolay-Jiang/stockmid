@@ -6,6 +6,7 @@ import sinaService from '@services/sinastock-service';
 import simService from '@services/simtrade-service';
 import { isMpatton, stockOP, txtOP, isWpatton } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
+import sinastockService from '@services/sinastock-service';
 
 // Constants
 const router = Router();
@@ -82,7 +83,7 @@ router.get(p.statistics, async (req: Request, res: Response) => {
 
         var myoper: stockOP = stockOP.hold;
 
-        if (simService.isAdd(dayrpts, index)) { myoper = stockOP.add; }
+        if (await simService.isAdd(dayrpts, index)) { myoper = stockOP.add; }
 
         // if (isBuy(dayrpts, index)) { myoper = stockOP.buy }
 
@@ -105,53 +106,80 @@ router.get(p.statistics, async (req: Request, res: Response) => {
 router.get(p.findW, async (req: Request, res: Response) => {
     const { endday } = req.params;
     var enddate: Date = new Date(endday);
-    var yesdate: Date = new Date(endday);
-    var txtresult: string = "";
-    if (enddate.getHours() == 0) { enddate.setHours(enddate.getHours() + 8); }
-    if (yesdate.getHours() == 0) { yesdate.setHours(yesdate.getHours() + 8); }
+    enddate.setHours(8, 0, 0, 0);
+    // var findresults = await simService.findW(enddate);
+    var findresults = await simService.findDoubleRise(enddate);
 
-    //处理周末的情况
-    if (enddate.getDay() == 0) { enddate.setDate(enddate.getDate() - 2); }
-    if (enddate.getDay() == 6) { enddate.setDate(enddate.getDate() - 1); }
-    yesdate.setDate(enddate.getDate() - 1)
-    if (enddate.getDay() == 1) { yesdate.setDate(enddate.getDate() - 3); }
+    var tempCount = findresults.length;
 
-    var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
+    if (findresults.length == 0) { return res.status(OK).end("not find"); }
 
-    if (dayrptsYes.length == 0) { return res.status(OK).end(); }
+    var iCountGood = 0;
+    var iRsi1 = 0;
+    var iRsi2 = 0;
+    var iRsi3 = 0;
+    var iRsi4 = 0;
+    var iRsi5 = 0;
+    var iRsi6 = 0;
+    var iRsi7 = 0;
+    var iRsi8 = 0;
+    var iRsi9 = 0;
 
-    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < 20 && x.RSI7 != null && Number(x.TodayClosePrice) >= 12  && Number(x.RSI7) >= 0);
+    var daytomorrow: Date = new Date(endday);
+    daytomorrow.setDate(enddate.getDate() + 1);
+    daytomorrow.setHours(8, 0, 0, 0);
 
-    if (dayrptsYes.length == 0) { return res.status(OK).end(); }
+    if (daytomorrow.getDay() == 0) { daytomorrow.setDate(daytomorrow.getDate() + 1); }
+    if (daytomorrow.getDay() == 6) { daytomorrow.setDate(daytomorrow.getDate() + 2); }
+
+    var evelendday: Date = new Date(daytomorrow);
+    evelendday.setHours(8, 0, 0, 0);
+    evelendday.setDate(daytomorrow.getDate() + 7);
+
+    findresults = findresults.filter(x => x.rsi7 >= 60);
+
+    for (let index = 0; index < findresults.length; index++) {
+        const element = findresults[index];
+        // if (element.rsi7>70) {continue;}
 
 
-    for (let index = 0; index < dayrptsYes.length; index++) {
-        const element = dayrptsYes[index];
-        var startdate = new Date();
-        startdate.setDate(enddate.getDate() - 25);
+        var dayrpsevel = await dayrptService.getDayrptByCondition(daytomorrow, evelendday, element.stockcode);
 
-        var dayrpts = await dayrptService.getDayrptByCondition(startdate, enddate, element.StockCode)
-        if (dayrpts.length == 0) {
-            continue;
+        if (dayrpsevel.length == 0) { continue }
+        dayrpsevel.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b.TodayMaxPrice));
+
+        var maxprice = Number(dayrpsevel[dayrpsevel.length - 1].TodayMaxPrice);
+
+
+        if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
+            // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
+            element.eval = "good";
+            iCountGood++;
+
+            var stat = parseInt((element.rsi7 / 10).toFixed(2))
+            // console.log(stat)
+            if (stat == 1) { iRsi1++; }
+            if (stat == 2) { iRsi2++; }
+            if (stat == 3) { iRsi3++; }
+            if (stat == 4) { iRsi4++; }
+            if (stat == 5) { iRsi5++; }
+            if (stat == 6) { iRsi6++; }
+            if (stat == 7) { iRsi7++; }
+            if (stat == 8) { iRsi8++; }
+            if (stat == 9) { iRsi9++; }
         }
-        var rsi = await analService.rsiCalc(dayrpts);
-        if (simService.isW(dayrpts, dayrpts.length - 1)) {
-            if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7) {
-                txtresult += `| ${element.StockCode}:${element.TodayClosePrice} W |`
-                
-            }
-            console.log(rsi.rsi7, rsi.rsi14.toFixed(2), element.StockCode)
-
-        }else if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7 && Number(dayrpts[dayrpts.length - 2].RSI14) <= rsi.rsi14 && rsi.rsi7>25) {//双升
-            txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} 双升 |`
+        else {
+            var txtadd = ""
+            if (maxprice > element.price) { txtadd = "low" }
+            console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd)
         }
 
     }
 
-
-    var tempCount = dayrptsYes.length;
-
-    return res.status(OK).json({ yesdate, enddate, tempCount, txtresult });
+    var filterCount = findresults.length;
+    var tempRate = (iCountGood / filterCount * 100).toFixed(2) + "%";
+    console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
+    return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults });
 });
 
 
@@ -163,30 +191,22 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
     enddate.setHours(8, 0, 0, 0);
     yesdate.setHours(8, 0, 0, 0);
 
-
-    // console.log(enddate.toUTCString(),yesdate.toUTCString());
-    // return res.status(OK).end();
-
     //处理周末的情况
-    if (enddate.getDay() == 0) { return res.status(OK).end(); }
-    if (enddate.getDay() == 6) { return res.status(OK).end(); }
+    if (enddate.getDay() == 0) { return res.status(OK).end("周末"); }
+    if (enddate.getDay() == 6) { return res.status(OK).end("周末"); }
 
     yesdate.setDate(enddate.getDate() - 1);
     if (enddate.getDay() == 1) { yesdate.setDate(enddate.getDate() - 3); }
 
 
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
-    if (dayrptsYes.length == 0) { return res.status(OK).end(); }
-
-    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < 20 && x.RSI7 != null && Number(x.TodayClosePrice) >= 12 && Number(x.RSI7) >= 0);
-    if (dayrptsYes.length == 0) {
-        return res.status(OK).end();
-    }
+    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < 30 && x.RSI7 != null && Number(x.TodayClosePrice) >= 14 && Number(x.RSI7) >= 0);
+    if (dayrptsYes.length == 0) { return res.status(OK).end("Yesterday no data"); }
 
 
     for (let index = 0; index < dayrptsYes.length; index++) {
         const element = dayrptsYes[index];
-        var startdate = new Date();
+        var startdate = new Date(enddate);
         startdate.setDate(enddate.getDate() - 25);
 
         //获取当日实时数据
@@ -215,14 +235,14 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
 
 
 
-        if (simService.isW(dayrpts, dayrpts.length - 1)) {
+        if (await simService.isW(dayrpts, dayrpts.length - 1, 30, 29)) {
             if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7) {
-                txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} |`
+                txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} W  |`
             }
             // console.log(rsi.rsi7, rsi.rsi7expect.toFixed(2), element.StockCode)
         }
-        else if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7 && Number(dayrpts[dayrpts.length - 2].RSI14) <= rsi.rsi14 && rsi.rsi7>25) {//双升
-            txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} 双升 |`
+        else if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7 && Number(dayrpts[dayrpts.length - 2].RSI14) <= rsi.rsi14 && rsi.rsi7 > 25) {//双升
+            txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} 双升 |`
         }
 
     }

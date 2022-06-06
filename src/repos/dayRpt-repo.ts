@@ -33,7 +33,7 @@ async function persists(reportday: Date, stockcode: string): Promise<boolean> {
         where: {
             StockCode_ReportDay: {
                 StockCode: stockcode,
-                ReportDay:reportday
+                ReportDay: reportday
             }
         },
     })
@@ -59,40 +59,58 @@ async function getAll(): Promise<t_StockDayReport[]> {
  * 
  * @returns 
  */
- async function getAllbyCode(stockcode:string): Promise<t_StockDayReport[]> {
+async function getAllbyCode(stockcode: string): Promise<t_StockDayReport[]> {
     return await prisma.t_StockDayReport.findMany({
-        where:{
-            StockCode:stockcode,
+        where: {
+            StockCode: stockcode,
         }
     });
 }
 
 /**
- * Get all DayReportByStockCode.
+ * Get all DayReportByReportDay.
  * 
  * @returns 
  */
- async function getAllbyReportDay(reportday:Date): Promise<t_StockDayReport[]> {
+async function getAllbyReportDay(reportday: Date): Promise<t_StockDayReport[]> {
     console.log(reportday);
     return await prisma.t_StockDayReport.findMany({
-        where:{
-            ReportDay:reportday,
+        where: {
+            ReportDay: reportday,
         }
     });
 }
+
+/**
+ * Get all DayReportByReportDay.
+ * 
+ * @returns 
+ */
+async function getAllbyReportDay2(startdate: Date, enddate: Date): Promise<t_StockDayReport[]> {
+    return await prisma.t_StockDayReport.findMany({
+        where: {
+            ReportDay: {
+                gte: startdate,
+                lte: enddate
+            }
+        }
+    });
+}
+
+
 
 /**
  * Get all condition.
  * 
  * @returns 
  */
- async function getAllbyCondition(startdate:Date,enddate:Date,stockcode:string): Promise<t_StockDayReport[]> {
+async function getAllbyCondition(startdate: Date, enddate: Date, stockcode: string): Promise<t_StockDayReport[]> {
     return await prisma.t_StockDayReport.findMany({
-        where:{
-            StockCode:stockcode,
-            ReportDay:{
-                gte:startdate,
-                lte:enddate
+        where: {
+            StockCode: stockcode,
+            ReportDay: {
+                gte: startdate,
+                lte: enddate
             }
         }
     });
@@ -108,5 +126,6 @@ export default {
     getAll,
     getAllbyCode,
     getAllbyReportDay,
-    getAllbyCondition
+    getAllbyCondition,
+    getAllbyReportDay2
 } as const;

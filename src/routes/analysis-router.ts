@@ -59,7 +59,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
             dayrpts[dayrpts.length - 1].RSI14 = new Prisma.Decimal(rsiReal.rsi14);
 
             console.log("sameday", convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay), dayrpts.length);
-            txtresult += analService.getRealTxt(mStock, boll, rsiReal, dayrpts);
+            txtresult += await analService.getRealTxt(mStock, boll, rsiReal, dayrpts);
         }
     }
 
@@ -73,11 +73,6 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
 function convertDatetoStr(date: Date): string {
     return date.toISOString().split('T')[0]
 }
-
-
-
-
-
 
 
 // Export default

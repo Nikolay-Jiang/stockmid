@@ -14,7 +14,7 @@ const txtSize = "18px";
  * @param rsi 
  * @returns 
  */
-function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: t_StockDayReport[]): string {
+async function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: t_StockDayReport[]): Promise<string> {
     var txtresult: string = "";
     var colorCurrent = "gray";
     var colorbollup = "black";
@@ -29,7 +29,7 @@ function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: t_Stoc
     if (Number(mStock.TodayMaxPrice) > Number(boll.up)) { colorbollup = "red"; }
     if (Number(mStock.TodayMinPrice) < Number(boll.down)) { colorbolldown = "green"; }
 
-    if (simService.isAdd(dayrpts, dayrpts.length - 1)) { myoper = stockOP.add; }
+    if (await simService.isAdd(dayrpts, dayrpts.length - 1)) { myoper = stockOP.add; }
 
     if (simService.isReduce(dayrpts, dayrpts.length - 1)) { myoper = stockOP.reduce }
     console.log(myoper, isMpatton, dayrpts[dayrpts.length - 1].RSI7, dayrpts[dayrpts.length - 1].RSI14)
@@ -138,7 +138,10 @@ async function GetTodayDayRpt(today: Date, stockcode: string, mStock: Stock): Pr
         bollUP: new Prisma.Decimal(-1),
         bollDown: new Prisma.Decimal(-1),
         RSI7: new Prisma.Decimal(-1),
-        RSI14: new Prisma.Decimal(-1)
+        RSI14: new Prisma.Decimal(-1),
+        WIDTH: new Prisma.Decimal(-1),
+        BB: new Prisma.Decimal(-1)
+
 
     }
 
