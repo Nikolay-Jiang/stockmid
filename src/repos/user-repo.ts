@@ -64,7 +64,7 @@ async function add(user: t_User): Promise<void> {
 
   const post = await prisma.t_User.create({
     data: {
-      UserID: GetID(),
+      UserID: GetID("UserID"),
       UserName: user.UserName,
       Password: user.Password
     },

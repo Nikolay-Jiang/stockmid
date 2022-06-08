@@ -22,9 +22,8 @@ export function getRandomInt(): number {
     return Math.floor(Math.random() * 1_000_000_000_000);
 };
 
-export function GetID(): string {
-    var sTemp = "User:" +Date.parse(new Date().toString());
-    console.log(sTemp)
+export function GetID(headtxt: string): string {
+    var sTemp = headtxt + ":" + Date.parse(new Date().toString());
     return sTemp
 };
 

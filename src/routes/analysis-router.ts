@@ -17,7 +17,8 @@ const { CREATED, OK } = StatusCodes;
 
 // Paths
 export const p = {
-    getbyconditicon: '/allbycondition/:startday/:endday/:stockcode'
+    getbyconditicon: '/allbycondition/:startday/:endday/:stockcode',
+    getbestrate: '/bestrate/:stockcode/:daycount'
 } as const;
 
 
@@ -39,8 +40,8 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     }
 
     var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
-    
-    if (dayrpts == null || dayrpts.length == 0) {return res.status(OK).end();}
+
+    if (dayrpts == null || dayrpts.length == 0) { return res.status(OK).end(); }
 
     var txtresult: string = ""
     var mStock = await sinaService.getone(stockcode);
@@ -69,6 +70,39 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
 
     return res.status(OK).json({ txtresult, rateanalysisdata });
 });
+
+
+
+/**
+ * Get all dayrpt by condition.
+ */
+router.get(p.getbestrate, async (req: Request, res: Response) => {
+
+    const { daycount, stockcode } = req.params;
+    var iDay = Number(daycount);
+    var enddate: Date = new Date();
+    var begindate: Date = new Date();
+    begindate.setDate(enddate.getDate() - iDay);
+    console.log(enddate.toDateString(), begindate.toDateString());
+    //修正UTC问题
+    if (begindate.getHours() == 0) {
+        begindate.setHours(begindate.getHours() + 8)
+    }
+    if (enddate.getHours() == 0) {
+        enddate.setHours(enddate.getHours() + 8)
+    }
+
+    var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
+    if (dayrpts == null || dayrpts.length == 0) { return res.status(OK).end(); }
+
+    //获取振幅数据
+    var rateanalysisdata = await analService.GetRateData(dayrpts);
+
+    var bestrate: number = rateanalysisdata[rateanalysisdata.length - 1].rateprice;
+
+    return res.status(OK).json({ bestrate, rateanalysisdata });
+});
+
 
 function convertDatetoStr(date: Date): string {
     return date.toISOString().split('T')[0]

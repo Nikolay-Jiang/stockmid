@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { PrismaClient, t_StockDayReport } from '@prisma/client'
 const prisma = new PrismaClient();
 
@@ -73,7 +74,6 @@ async function getAllbyCode(stockcode: string): Promise<t_StockDayReport[]> {
  * @returns 
  */
 async function getAllbyReportDay(reportday: Date): Promise<t_StockDayReport[]> {
-    console.log(reportday);
     return await prisma.t_StockDayReport.findMany({
         where: {
             ReportDay: reportday,
