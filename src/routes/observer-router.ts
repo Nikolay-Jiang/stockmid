@@ -13,10 +13,10 @@ const { CREATED, OK } = StatusCodes;
 
 // Paths
 export const p = {
-    get: '/all/:userid',
+    get: '/all/',
     add: '/add/',
     update: '/update',
-    delete: '/delete/:stockcode/:userid',
+    delete: '/delete/:stockcode/',
 } as const;
 
 
@@ -25,7 +25,7 @@ export const p = {
  * Get all observers.
  */
 router.get(p.get, async (req: Request, res: Response) => {
-    const { userid } = req.params;
+    var userid = await GetUserID(req);
     const observers = await observerService.getAll(userid);
     return res.status(OK).json({ observers });
 });
@@ -51,7 +51,7 @@ router.post(p.add, async (req: Request, res: Response) => {
  */
 router.put(p.update, async (req: Request, res: Response) => {
     const { observer } = req.body;
-
+    
     // Check param
     if (!observer) {
         throw new ParamMissingError();
@@ -67,8 +67,8 @@ router.put(p.update, async (req: Request, res: Response) => {
  * Delete one observer.
  */
 router.delete(p.delete, async (req: Request, res: Response) => {
-    const { stockcode,userid } = req.params;
-
+    const { stockcode } = req.params;
+    var userid = await GetUserID(req);
     // Check param
     if (!stockcode) {
         throw new ParamMissingError();
