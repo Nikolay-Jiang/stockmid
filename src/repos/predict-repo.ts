@@ -26,9 +26,6 @@ async function add(mPredict: t_Predict): Promise<void> {
             Memo: mPredict.Memo
         },
     })
-
-
-    // return orm.saveDb(db);
 }
 
 

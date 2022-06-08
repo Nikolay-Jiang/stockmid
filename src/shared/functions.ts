@@ -23,7 +23,7 @@ export function getRandomInt(): number {
 };
 
 export function GetID(headtxt: string): string {
-    var sTemp = headtxt + ":" + Date.parse(new Date().toString());
+    var sTemp = headtxt + ":" + Date.parse(new Date().toString())+getRandomInt();
     return sTemp
 };
 

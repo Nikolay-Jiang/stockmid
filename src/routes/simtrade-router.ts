@@ -1,12 +1,14 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
-import { t_StockDayReport, Prisma } from '@prisma/client';
+import { t_StockDayReport, Prisma, t_Predict } from '@prisma/client';
 import dayrptService from '@services/dayrpt-service';
 import sinaService from '@services/sinastock-service';
 import simService from '@services/simtrade-service';
 import { isMpatton, stockOP, txtOP, isWpatton } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
+import predictService from '@services/predict-service';
 import sinastockService from '@services/sinastock-service';
+import { type } from 'os';
 
 // Constants
 const router = Router();
@@ -191,6 +193,9 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
     enddate.setHours(8, 0, 0, 0);
     yesdate.setHours(8, 0, 0, 0);
 
+    var preresults: Array<t_Predict> = []
+    var iCountpre = 0;
+
     //处理周末的情况
     if (enddate.getDay() == 0) { return res.status(OK).end("周末"); }
     if (enddate.getDay() == 6) { return res.status(OK).end("周末"); }
@@ -224,6 +229,8 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
         dayrpts.push(mdayrpttoday);
         var rsi = await analService.rsiCalc(dayrpts);
 
+
+
         mdayrpttoday.RSI7 = new Prisma.Decimal(rsi.rsi7);
         mdayrpttoday.RSI14 = new Prisma.Decimal(rsi.rsi14);
 
@@ -237,14 +244,51 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
 
         if (await simService.isW(dayrpts, dayrpts.length - 1, 30, 29)) {
             if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7) {
+                var mPre: t_Predict = {
+                    PredictKey: "",
+                    StockCode: element.StockCode,
+                    PredictTime: new Date(),
+                    Type: "W",
+                    CurrentPrice: mdayrpttoday.TodayClosePrice,
+                    RSI7: mdayrpttoday.RSI7,
+                    RSI14: mdayrpttoday.RSI14,
+                    BackTest: "",
+                    Memo: ""
+                }
+
+                preresults[iCountpre] = mPre;
+                iCountpre++;
+
                 txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} W  |`
+
             }
             // console.log(rsi.rsi7, rsi.rsi7expect.toFixed(2), element.StockCode)
         }
         else if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7 && Number(dayrpts[dayrpts.length - 2].RSI14) <= rsi.rsi14 && rsi.rsi7 > 25) {//双升
+            var mPre: t_Predict = {
+                PredictKey: "",
+                StockCode: element.StockCode,
+                PredictTime: new Date(),
+                Type: "doublerise",
+                CurrentPrice: mdayrpttoday.TodayClosePrice,
+                RSI7: mdayrpttoday.RSI7,
+                RSI14: mdayrpttoday.RSI14,
+                BackTest: "",
+                Memo: ""
+            }
+
+            preresults[iCountpre] = mPre;
+            iCountpre++;
+
             txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} 双升 |`
         }
 
+    }
+    if (preresults.length > 0) {
+        for (let index = 0; index < preresults.length; index++) {
+            const element = preresults[index];
+            predictService.addOne(element);
+        }
     }
 
 
