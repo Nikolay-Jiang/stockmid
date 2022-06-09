@@ -48,8 +48,8 @@ router.post(p.login, async (req: Request, res: Response) => {
         const jwt = await authService.login(username, password);
         token = jwt;
         // Add jwt to cookie
-        const { key, options } = cookieProps;
-        res.cookie(key, jwt, options);
+        // const { key, options } = cookieProps;
+        // res.cookie(key, jwt, options);
     } catch (error) {
         throw error;
     }

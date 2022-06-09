@@ -1,7 +1,7 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
 
-import { GetUserID } from './middleware';
+import { GetUserID, GetUserIDByHeader } from './middleware';
 import observerService from '@services/observer-service';
 import { ParamMissingError } from '@shared/errors';
 
@@ -25,7 +25,9 @@ export const p = {
  * Get all observers.
  */
 router.get(p.get, async (req: Request, res: Response) => {
-    var userid = await GetUserID(req);
+    const { authorization } = req.headers;
+
+    var userid = await GetUserIDByHeader(String(authorization));
     const observers = await observerService.getAll(userid);
     return res.status(OK).json({ observers });
 });
@@ -35,11 +37,13 @@ router.get(p.get, async (req: Request, res: Response) => {
  * Add one observer.
  */
 router.post(p.add, async (req: Request, res: Response) => {
+    const { authorization } = req.headers;
     const { observer } = req.body;
     // Check param
-    if (!observer) {
-        throw new ParamMissingError();
-    }
+    if (!observer) { throw new ParamMissingError(); }
+    var userid = await GetUserIDByHeader(String(authorization));
+    observer.UserID = userid;
+
     // Fetch data
     await observerService.addOne(observer);
     return res.status(CREATED).end();
@@ -51,11 +55,11 @@ router.post(p.add, async (req: Request, res: Response) => {
  */
 router.put(p.update, async (req: Request, res: Response) => {
     const { observer } = req.body;
-    
+    const { authorization } = req.headers;
     // Check param
-    if (!observer) {
-        throw new ParamMissingError();
-    }
+    if (!observer) { throw new ParamMissingError(); }
+
+    var userid = await GetUserIDByHeader(String(authorization));
     observer.UserID = await GetUserID(req);
     // Fetch data
     await observerService.updateOne(observer);
@@ -67,12 +71,11 @@ router.put(p.update, async (req: Request, res: Response) => {
  * Delete one observer.
  */
 router.delete(p.delete, async (req: Request, res: Response) => {
+    const { authorization } = req.headers;
     const { stockcode } = req.params;
-    var userid = await GetUserID(req);
+    var userid = await GetUserIDByHeader(String(authorization));
     // Check param
-    if (!stockcode) {
-        throw new ParamMissingError();
-    }
+    if (!stockcode) { throw new ParamMissingError(); }
     // Fetch data
     await observerService.delete(userid, String(stockcode));
     return res.status(OK).end();

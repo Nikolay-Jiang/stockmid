@@ -58,3 +58,19 @@ export async function GetUserID(req: Request) :Promise<string> {
         
     
 }
+
+export async function GetUserIDByHeader(jwtstr:string) :Promise<string> {
+    
+        if (!jwtstr) {
+            throw Error(jwtNotPresentErr);
+        }
+        // Make sure user role is an admin
+        const clientData = await jwtUtil.decode(jwtstr);
+        if (typeof clientData === 'object' ) {
+            return clientData.id
+        }
+
+        throw Error(jwtNotPresentErr);
+        
+    
+}
