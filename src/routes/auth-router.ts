@@ -14,7 +14,7 @@ const { OK } = StatusCodes;
 export const p = {
     login: '/login',
     logout: '/logout',
-    
+
 } as const;
 
 // Cookie Properties
@@ -42,17 +42,18 @@ router.post(p.login, async (req: Request, res: Response) => {
         throw new ParamMissingError();
     }
 
+    var token: string = "";
     try {
         // Get jwt
         const jwt = await authService.login(username, password);
+        token = jwt;
         // Add jwt to cookie
         const { key, options } = cookieProps;
         res.cookie(key, jwt, options);
     } catch (error) {
         throw error;
     }
-    const token = req.signedCookies[cookieProps.key];
-    // Return
+    
     return res.status(OK).json({ token });
 });
 
