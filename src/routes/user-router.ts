@@ -4,6 +4,7 @@ import { Request, Response, Router } from 'express';
 import userService from '@services/user-service';
 import { ParamMissingError } from '@shared/errors';
 import authService from '@services/auth-service';
+import jwtUtil from '@util/jwt-util';
 
 
 
@@ -17,7 +18,7 @@ export const p = {
     add: '/add',
     update: '/update',
     delete: '/delete/:id',
-    getone:'/getone/:username',
+    getone: '/getone/',
 } as const;
 
 
@@ -27,7 +28,7 @@ export const p = {
  */
 router.get(p.get, async (_: Request, res: Response) => {
     const users = await userService.getAll();
-    return res.status(OK).json({users});
+    return res.status(OK).json({ users });
 });
 
 
@@ -35,9 +36,15 @@ router.get(p.get, async (_: Request, res: Response) => {
  * Get one user.
  */
 router.get(p.getone, async (req: Request, res: Response) => {
-    const { username } = req.params;
-    const users = await userService.getOne(username);
-    return res.status(OK).json({users});
+    // const { username } = req.params;
+    const { authorization } = req.headers;
+    const clientData = await jwtUtil.decode(String(authorization));
+    if (typeof clientData === 'object') {
+        const users = await userService.getOne(clientData.name);
+        return res.status(OK).json({ users });
+    }
+
+    return res.status(OK)
 });
 
 
@@ -46,7 +53,7 @@ router.get(p.getone, async (req: Request, res: Response) => {
  */
 router.post(p.add, async (req: Request, res: Response) => {
     const { user } = req.body;
-    user.Password= await authService.ChangePwd(user.Password);
+    user.Password = await authService.ChangePwd(user.Password);
     console.log(user);
     // Check param
     if (!user) {
