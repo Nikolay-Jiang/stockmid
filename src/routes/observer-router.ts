@@ -26,7 +26,6 @@ export const p = {
  */
 router.get(p.get, async (req: Request, res: Response) => {
     const { authorization } = req.headers;
-
     var userid = await GetUserIDByHeader(String(authorization));
     const observers = await observerService.getAll(userid);
     return res.status(OK).json({ observers });

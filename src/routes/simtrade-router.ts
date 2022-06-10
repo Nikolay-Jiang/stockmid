@@ -7,8 +7,7 @@ import simService from '@services/simtrade-service';
 import { isMpatton, stockOP, txtOP, isWpatton } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
 import predictService from '@services/predict-service';
-import sinastockService from '@services/sinastock-service';
-import { type } from 'os';
+import { Decimal } from '@prisma/client/runtime';
 
 // Constants
 const router = Router();
@@ -109,8 +108,8 @@ router.get(p.findW, async (req: Request, res: Response) => {
     const { endday } = req.params;
     var enddate: Date = new Date(endday);
     enddate.setHours(8, 0, 0, 0);
-    // var findresults = await simService.findW(enddate);
-    var findresults = await simService.findDoubleRise(enddate);
+    var findresults = await simService.findW(enddate);
+    // var findresults = await simService.findDoubleRise(enddate);
 
     var tempCount = findresults.length;
 
@@ -209,81 +208,105 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
     if (dayrptsYes.length == 0) { return res.status(OK).end("Yesterday no data"); }
 
 
-    for (let index = 0; index < dayrptsYes.length; index++) {
-        const element = dayrptsYes[index];
-        var startdate = new Date(enddate);
-        startdate.setDate(enddate.getDate() - 25);
-
-        //获取当日实时数据
-        var mStock = await sinaService.getone(element.StockCode);
-        if (!analService.isSameDay(mStock.SearchTime, enddate)) { continue; }
+    var findresults = await simService.findW(enddate, true);
 
 
+    // for (let index = 0; index < dayrptsYes.length; index++) {
+    //     const element = dayrptsYes[index];
+    //     var startdate = new Date(enddate);
+    //     startdate.setDate(enddate.getDate() - 25);
 
-        var dayrpts = await dayrptService.getDayrptByCondition(startdate, enddate, element.StockCode)
-        if (dayrpts.length == 0) { continue; }
-
-        //实时数据转RPT
-        var mdayrpttoday = await analService.GetTodayDayRpt(enddate, mStock.stockcode, mStock)
-
-        dayrpts.push(mdayrpttoday);
-        var rsi = await analService.rsiCalc(dayrpts);
+    //     //获取当日实时数据
+    //     var mStock = await sinaService.getone(element.StockCode);
+    //     if (!analService.isSameDay(mStock.SearchTime, enddate)) { continue; }
 
 
 
-        mdayrpttoday.RSI7 = new Prisma.Decimal(rsi.rsi7);
-        mdayrpttoday.RSI14 = new Prisma.Decimal(rsi.rsi14);
+    //     var dayrpts = await dayrptService.getDayrptByCondition(startdate, enddate, element.StockCode)
+    //     if (dayrpts.length == 0) { continue; }
 
-        dayrpts[dayrpts.length - 1].RSI7 = mdayrpttoday.RSI7;
-        dayrpts[dayrpts.length - 1].RSI14 = mdayrpttoday.RSI14;
+    //     //实时数据转RPT
+    //     var mdayrpttoday = await analService.GetTodayDayRpt(enddate, mStock.stockcode, mStock)
 
-        console.log(mdayrpttoday.StockCode, mdayrpttoday.RSI7, dayrpts.length, rsi.rsi14);
-        //加入当天实时数据
+    //     // daypts.push(mdayrpttoday);
+    //     var rsi = await analService.rsiCalc(dayrpts);
 
 
 
-        if (await simService.isW(dayrpts, dayrpts.length - 1, 30, 29)) {
-            if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7) {
-                var mPre: t_Predict = {
-                    PredictKey: "",
-                    StockCode: element.StockCode,
-                    PredictTime: new Date(),
-                    Type: "W",
-                    CurrentPrice: mdayrpttoday.TodayClosePrice,
-                    RSI7: mdayrpttoday.RSI7,
-                    RSI14: mdayrpttoday.RSI14,
-                    BackTest: "",
-                    Memo: ""
-                }
+    //     mdayrpttoday.RSI7 = new Prisma.Decimal(rsi.rsi7);
+    //     mdayrpttoday.RSI14 = new Prisma.Decimal(rsi.rsi14);
 
-                preresults[iCountpre] = mPre;
-                iCountpre++;
+    //     dayrpts[dayrpts.length - 1].RSI7 = mdayrpttoday.RSI7;
+    //     dayrpts[dayrpts.length - 1].RSI14 = mdayrpttoday.RSI14;
 
-                txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} W  |`
+    //     console.log(mdayrpttoday.StockCode, mdayrpttoday.RSI7, dayrpts.length, rsi.rsi14);
+    //     //加入当天实时数据
 
-            }
-            // console.log(rsi.rsi7, rsi.rsi7expect.toFixed(2), element.StockCode)
+
+
+    //     if (await simService.isW(dayrpts, dayrpts.length - 1, 30, 29)) {
+    //         if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7) {
+    //             var mPre: t_Predict = {
+    //                 PredictKey: "",
+    //                 StockCode: element.StockCode,
+    //                 PredictTime: new Date(),
+    //                 Type: "W",
+    //                 CurrentPrice: mdayrpttoday.TodayClosePrice,
+    //                 RSI7: mdayrpttoday.RSI7,
+    //                 RSI14: mdayrpttoday.RSI14,
+    //                 BackTest: "",
+    //                 Memo: ""
+    //             }
+
+    //             preresults[iCountpre] = mPre;
+    //             iCountpre++;
+
+    //             txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} W  |`
+
+    //         }
+    //         // console.log(rsi.rsi7, rsi.rsi7expect.toFixed(2), element.StockCode)
+    //     }
+    //     else if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7 && Number(dayrpts[dayrpts.length - 2].RSI14) <= rsi.rsi14 && rsi.rsi7 > 25) {//双升
+    //         var mPre: t_Predict = {
+    //             PredictKey: "",
+    //             StockCode: element.StockCode,
+    //             PredictTime: new Date(),
+    //             Type: "doublerise",
+    //             CurrentPrice: mdayrpttoday.TodayClosePrice,
+    //             RSI7: mdayrpttoday.RSI7,
+    //             RSI14: mdayrpttoday.RSI14,
+    //             BackTest: "",
+    //             Memo: ""
+    //         }
+
+    //         preresults[iCountpre] = mPre;
+    //         iCountpre++;
+
+    //         txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} 双升 |`
+    //     }
+
+    // }
+
+
+    for (let index = 0; index < findresults.length; index++) {
+        const element = findresults[index];
+        var mPre: t_Predict = {
+            PredictKey: "",
+            StockCode: element.stockcode,
+            PredictTime: new Date(),
+            Type: "W",
+            CurrentPrice: new Decimal(element.price),
+            RSI7: new Decimal(element.rsi7),
+            RSI14: new Decimal(element.rsi14),
+            BackTest: "",
+            Memo: ""
         }
-        else if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7 && Number(dayrpts[dayrpts.length - 2].RSI14) <= rsi.rsi14 && rsi.rsi7 > 25) {//双升
-            var mPre: t_Predict = {
-                PredictKey: "",
-                StockCode: element.StockCode,
-                PredictTime: new Date(),
-                Type: "doublerise",
-                CurrentPrice: mdayrpttoday.TodayClosePrice,
-                RSI7: mdayrpttoday.RSI7,
-                RSI14: mdayrpttoday.RSI14,
-                BackTest: "",
-                Memo: ""
-            }
 
-            preresults[iCountpre] = mPre;
-            iCountpre++;
-
-            txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} 双升 |`
-        }
-
+        preresults[iCountpre] = mPre;
+        iCountpre++;
+        txtresult += `| ${element.stockcode}: ${element.price} ${element.rsi7} W  |`
     }
+
     if (preresults.length > 0) {
         for (let index = 0; index < preresults.length; index++) {
             const element = preresults[index];

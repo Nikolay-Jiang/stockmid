@@ -234,6 +234,7 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
 
 async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
     var mBollData = new bolldata();
+    var mDayRpt = dayrpts[dayrpts.length - 1];
     var dayrptsCopy = [...dayrpts];
 
     if (dayrpts.length == 0) {
@@ -255,7 +256,8 @@ async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
     mBollData.sta = Number(Math.sqrt(staTemp / (dayrptsCopy.length - 1)).toFixed(2))
     mBollData.up = Number((mBollData.ma + mBollData.sta * 2).toFixed(2));
     mBollData.down = Number((mBollData.ma - mBollData.sta * 2).toFixed(2));
-
+    mBollData.bb = (Number(mDayRpt.TodayClosePrice) - mBollData.down) / (mBollData.up - mBollData.down);
+    mBollData.width = (mBollData.up - mBollData.down) / mBollData.ma
     return mBollData;
 
 }
@@ -294,6 +296,8 @@ export class bolldata {
     up!: number;
     down!: number;
     ma!: number;
+    width!: number;
+    bb!: number;
 }
 
 

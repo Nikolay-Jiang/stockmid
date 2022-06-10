@@ -2,6 +2,7 @@ import { t_StockDayReport, Prisma } from '@prisma/client'
 // import { Stock } from '@repos/sinastock-repo';
 import dayrptService from '@services/dayrpt-service';
 import analService, { rsidata } from '@services/analysis-service';
+import sinaService from '@services/sinastock-service';
 
 export var isMpatton: boolean = false;
 export var isWpatton: boolean = false;
@@ -215,7 +216,7 @@ function isM(dayrpts: t_StockDayReport[], index: number): boolean {
     return true;
 }
 
-async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: number, RSIavg: number = 21): Promise<boolean> {
+async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: number, RSIavg: number = 21, isIgnoreTremor: boolean = true): Promise<boolean> {
     var eleCurr = dayrpts[index];
     var eleYesterday = dayrpts[index - 1];
 
@@ -231,6 +232,10 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
     if (dayrptsCopy.length < 5) { return false; }
 
     if (dayrptsCopy.length > 7) { dayrptsCopy = dayrptsCopy.slice(dayrptsCopy.length - 7, dayrptsCopy.length); }
+
+    if (!isIgnoreTremor) {
+        if (validTremor(dayrptsCopy)) { console.log("Tremor"); return false; }
+    }
 
 
     // console.log(RSIavg, yesRSI7, last3rsiavg)
@@ -287,6 +292,32 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
     // console.log(iFirst, iSec, eleCurr.StockCode,dayrptsCopy[iFirst].RSI7,dayrptsCopy[iSec].RSI7);
 
     return true;
+}
+
+//检查大幅波动
+function validTremor(dayrpts: t_StockDayReport[], rate: number = 2): boolean {
+    if (dayrpts.length == 0) { return false; }
+    var stockcode = dayrpts[0].StockCode;
+
+    var iTremor = rate + 10;
+
+    //科创板情况
+    if (stockcode.startsWith("sh688")) { iTremor = rate + 20; }
+    if (stockcode.startsWith("sz300")) { iTremor = rate + 20; }
+
+    for (let index = 1; index < dayrpts.length; index++) {
+        const element = dayrpts[index];
+        var yesPrice = Number(dayrpts[index - 1].TodayClosePrice);
+        var todayPrice = Number(dayrpts[index].TodayClosePrice);
+
+        var iRatePrice = todayPrice - yesPrice;
+        var iTemp = iRatePrice / yesPrice
+        if (iTemp >= iTremor) { return true; }
+
+    }
+
+
+    return false;
 }
 
 
@@ -347,7 +378,7 @@ function isRecentLow(dayrps: t_StockDayReport[], index: number, dayCount: number
     return false;
 }
 
-async function findW(enddate: Date): Promise<wresult[]> {
+async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult[]> {
 
     var yesdate: Date = new Date(enddate);
     if (enddate.getHours() == 0) { enddate.setHours(enddate.getHours() + 8); }
@@ -366,6 +397,7 @@ async function findW(enddate: Date): Promise<wresult[]> {
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
     if (dayrptsYes.length == 0) { return wresults; }
+    console.log(yesdate.toDateString())
 
     dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < 30 && x.RSI7 != null && Number(x.TodayClosePrice) >= 15 && Number(x.RSI7) >= 0);
     // dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= 20 && x.RSI7 != null && Number(x.TodayClosePrice) >= 12 && Number(x.RSI7) >= 0);
@@ -378,16 +410,44 @@ async function findW(enddate: Date): Promise<wresult[]> {
 
     if (dayrpts.length == 0) { return wresults; }
 
+
     for (let index = 0; index < dayrptsYes.length; index++) {
         const element = dayrptsYes[index];
-        // var startdate = new Date(enddate);
-        // startdate.setDate(enddate.getDate() - 25);
 
-        // console.log(startdate.toDateString(), enddate.toDateString());
         var dayrptsTemp = dayrpts.filter(x => x.StockCode == element.StockCode);
         if (dayrptsTemp.length == 0) { continue; }
 
-        if (!analService.isSameDay(dayrptsTemp[dayrptsTemp.length - 1].ReportDay, enddate)) { continue; }//排除当日无数据的情况
+        if (needtoday) {
+            //获取当日实时数据
+            var mStock = await sinaService.getone(element.StockCode);
+
+            if (!analService.isSameDay(dayrptsTemp[dayrptsTemp.length - 1].ReportDay, mStock.SearchTime)) {//确认没有当日数据
+                if (analService.isSameDay(mStock.SearchTime, enddate)) {//如果查询日期和最后天相同
+                    //实时数据转RPT
+                    var mdayrpttoday = await analService.GetTodayDayRpt(enddate, mStock.stockcode, mStock)
+
+                    dayrptsTemp.push(mdayrpttoday);
+                    var rsi = await analService.rsiCalc(dayrptsTemp);
+                    var boll = await analService.bollCalc(dayrptsTemp);
+
+                    mdayrpttoday.RSI7 = new Prisma.Decimal(rsi.rsi7);
+                    mdayrpttoday.RSI14 = new Prisma.Decimal(rsi.rsi14);
+                    mdayrpttoday.BB = new Prisma.Decimal(boll.bb);
+                    mdayrpttoday.WIDTH = new Prisma.Decimal(boll.width);
+
+                    dayrpts[dayrpts.length - 1].RSI7 = mdayrpttoday.RSI7;
+                    dayrpts[dayrpts.length - 1].RSI14 = mdayrpttoday.RSI14;
+                    dayrpts[dayrpts.length - 1].BB = mdayrpttoday.BB;
+                    dayrpts[dayrpts.length - 1].WIDTH = mdayrpttoday.WIDTH;
+                }
+            }
+
+        }
+
+        if (!needtoday) {
+            if (!analService.isSameDay(dayrptsTemp[dayrptsTemp.length - 1].ReportDay, enddate)) { continue; }//排除当日无数据的情况    
+        }
+
 
         var todayRSI7 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI7);
         var todayRSI14 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI14);
@@ -402,12 +462,11 @@ async function findW(enddate: Date): Promise<wresult[]> {
 
         if (todayWidth > 0.22) { continue; }
         if (todayBB > 0.55) { continue; }
-        if (bestRate < 0.2) { console.log(bestRate); continue; }
+        if (bestRate < 0.2) { continue; }
 
 
 
-        // var rsi = await analService.rsiCalc(dayrpts);//计算当日RSI
-        if (await isW(dayrptsTemp, dayrptsTemp.length - 1, 30, 29)) {
+        if (await isW(dayrptsTemp, dayrptsTemp.length - 1, 30, 29, false)) {
             if (Number(element.RSI7) <= todayRSI7) {
                 mResult.stockcode = element.StockCode
                 mResult.rsi7 = todayRSI7;
@@ -425,6 +484,22 @@ async function findW(enddate: Date): Promise<wresult[]> {
 
     }
     return wresults;
+}
+
+/*
+* 该算法灵感来源于 300415 从 2022.6.1-2022.6.8 RSI 持续双升 并走出高位的状态
+*/
+async function findYZM(dayrpts: t_StockDayReport[]): Promise<wresult[]> {
+
+    var wresults: Array<wresult> = [];
+    var iResult = 0;
+
+    //RSI7,14   从50+ 平稳上升到 60+ 再上升至 70,且连续穿透上线
+
+    
+
+    return wresults;
+
 }
 
 async function findDoubleRise(enddate: Date): Promise<wresult[]> {
@@ -490,7 +565,7 @@ async function findDoubleRise(enddate: Date): Promise<wresult[]> {
     }
 
     console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
-    
+
     return wresults
 
 }
