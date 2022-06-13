@@ -560,7 +560,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
             if (index > 1) {
                 var temp = parseInt((todayRSI7 / 10).toFixed(2))
-                console.log(temp, element.StockCode)
+                // console.log(temp, element.StockCode)
                 if (iStatus - 1 == temp) {
                     iStatus--;
                     isStar = true;

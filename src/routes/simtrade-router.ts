@@ -237,7 +237,6 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
             iCountGood++;
 
             var stat = parseInt((element.rsi7 / 10).toFixed(2))
-            // console.log(stat)
             if (stat == 1) { iRsi1++; }
             if (stat == 2) { iRsi2++; }
             if (stat == 3) { iRsi3++; }
