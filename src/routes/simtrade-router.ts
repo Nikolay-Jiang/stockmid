@@ -38,7 +38,8 @@ export const p = {
     getbyconditicon: '/allbycondition/:startday/:endday/:stockcode',
     statistics: '/statistics/:startday/:endday/:stockcode',
     findW: '/findw/:endday',
-    findwOnline: '/findwon/'
+    findwOnline: '/findwon/',
+    findyzm: '/findyzm/:endday'
 
 } as const;
 
@@ -137,19 +138,19 @@ router.get(p.findW, async (req: Request, res: Response) => {
     evelendday.setHours(8, 0, 0, 0);
     evelendday.setDate(daytomorrow.getDate() + 7);
 
-    findresults = findresults.filter(x => x.rsi7 >= 60);
+    // findresults = findresults.filter(x => x.rsi7 >= 60);
 
     for (let index = 0; index < findresults.length; index++) {
         const element = findresults[index];
         // if (element.rsi7>70) {continue;}
 
 
-        var dayrpsevel = await dayrptService.getDayrptByCondition(daytomorrow, evelendday, element.stockcode);
+        var dayrpseval = await dayrptService.getDayrptByCondition(daytomorrow, evelendday, element.stockcode);
 
-        if (dayrpsevel.length == 0) { continue }
-        dayrpsevel.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b.TodayMaxPrice));
+        if (dayrpseval.length == 0) { continue }
+        dayrpseval.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b.TodayMaxPrice));
 
-        var maxprice = Number(dayrpsevel[dayrpsevel.length - 1].TodayMaxPrice);
+        var maxprice = Number(dayrpseval[dayrpseval.length - 1].TodayMaxPrice);
 
 
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
@@ -182,6 +183,86 @@ router.get(p.findW, async (req: Request, res: Response) => {
     console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
     return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults });
 });
+
+router.get(p.findyzm, async (req: Request, res: Response) => {
+    const { endday } = req.params;
+    var enddate: Date = new Date(endday);
+    enddate.setHours(8, 0, 0, 0);
+
+    var findresults = await simService.findYZM(enddate);
+    var tempCount = findresults.length;
+
+    if (findresults.length == 0) { return res.status(OK).end("not find"); }
+
+    var iCountGood = 0;
+    var iRsi1 = 0;
+    var iRsi2 = 0;
+    var iRsi3 = 0;
+    var iRsi4 = 0;
+    var iRsi5 = 0;
+    var iRsi6 = 0;
+    var iRsi7 = 0;
+    var iRsi8 = 0;
+    var iRsi9 = 0;
+
+    var daytomorrow: Date = new Date(endday);
+    daytomorrow.setDate(enddate.getDate() + 1);
+    daytomorrow.setHours(8, 0, 0, 0);
+
+    if (daytomorrow.getDay() == 0) { daytomorrow.setDate(daytomorrow.getDate() + 1); }
+    if (daytomorrow.getDay() == 6) { daytomorrow.setDate(daytomorrow.getDate() + 2); }
+
+    var evelendday: Date = new Date(daytomorrow);
+    evelendday.setHours(8, 0, 0, 0);
+    evelendday.setDate(daytomorrow.getDate() + 7);
+
+    // findresults = findresults.filter(x => x.rsi7 >= 60);
+
+    for (let index = 0; index < findresults.length; index++) {
+        const element = findresults[index];
+        // if (element.rsi7>70) {continue;}
+
+
+        var dayrptsEval = await dayrptService.getdayRptCountByDayAfter(daytomorrow, element.stockcode, 7);
+
+        if (dayrptsEval.length == 0) { continue }
+        dayrptsEval.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b.TodayMaxPrice));
+
+        var maxprice = Number(dayrptsEval[dayrptsEval.length - 1].TodayMaxPrice);
+        // console.log(dayrptsEval.length,maxprice,element.stockcode);
+
+        if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
+            // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
+            element.eval += "good";
+            iCountGood++;
+
+            var stat = parseInt((element.rsi7 / 10).toFixed(2))
+            // console.log(stat)
+            if (stat == 1) { iRsi1++; }
+            if (stat == 2) { iRsi2++; }
+            if (stat == 3) { iRsi3++; }
+            if (stat == 4) { iRsi4++; }
+            if (stat == 5) { iRsi5++; }
+            if (stat == 6) { iRsi6++; }
+            if (stat == 7) { iRsi7++; }
+            if (stat == 8) { iRsi8++; }
+            if (stat == 9) { iRsi9++; }
+        }
+        else {
+            var txtadd = ""
+            if (maxprice > element.price) { txtadd = "low" }
+            console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd)
+        }
+
+    }
+    findresults.sort((a, b) => (a.eval > b.eval) ? 1 : -1);
+
+    var filterCount = findresults.length;
+    var tempRate = (iCountGood / filterCount * 100).toFixed(2) + "%";
+    console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
+    return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults });
+});
+
 
 
 router.get(p.findwOnline, async (req: Request, res: Response) => {

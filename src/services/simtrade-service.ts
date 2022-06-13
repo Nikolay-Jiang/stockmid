@@ -397,7 +397,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
     if (dayrptsYes.length == 0) { return wresults; }
-    console.log(yesdate.toDateString())
+    // console.log(yesdate.toDateString())
 
     dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < 30 && x.RSI7 != null && Number(x.TodayClosePrice) >= 15 && Number(x.RSI7) >= 0);
     // dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= 20 && x.RSI7 != null && Number(x.TodayClosePrice) >= 12 && Number(x.RSI7) >= 0);
@@ -489,12 +489,114 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
 /*
 * 该算法灵感来源于 300415 从 2022.6.1-2022.6.8 RSI 持续双升 并走出高位的状态
 */
-async function findYZM(dayrpts: t_StockDayReport[]): Promise<wresult[]> {
+async function findYZM(enddate: Date): Promise<wresult[]> {
 
-    var wresults: Array<wresult> = [];
-    var iResult = 0;
+    var yesdate: Date = new Date(enddate);
+    if (enddate.getHours() == 0) { enddate.setHours(enddate.getHours() + 8); }
+    if (yesdate.getHours() == 0) { yesdate.setHours(yesdate.getHours() + 8); }
+
+    //处理周末的情况
+    if (enddate.getDay() == 0) { enddate.setDate(enddate.getDate() - 2); }
+    if (enddate.getDay() == 6) { enddate.setDate(enddate.getDate() - 1); }
+    yesdate.setDate(enddate.getDate() - 1)
+    if (enddate.getDay() == 1) { yesdate.setDate(enddate.getDate() - 3); }
+
 
     //RSI7,14   从50+ 平稳上升到 60+ 再上升至 70,且连续穿透上线
+    //查找前一天 双 60+ 的并往前计算
+
+
+    var wresults: Array<wresult> = [];
+    // var iResult = 0;
+
+
+    var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
+
+    if (dayrptsYes.length == 0) { return wresults; }
+    // console.log(yesdate.toDateString())
+
+    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= 60 && x.RSI7 != null && Number(x.RSI14) >= 60 && Number(x.TodayClosePrice) > 12);
+
+    if (dayrptsYes.length == 0) { return wresults; }
+
+    var startdate = new Date(yesdate);
+    startdate.setDate(yesdate.getDate() - 7);
+    var dayrpts = await dayrptService.getDayrptByReportDay2(startdate, yesdate);
+
+    if (dayrpts.length == 0) { return wresults; }
+
+    for (let index = 0; index < dayrptsYes.length; index++) {
+        const element = dayrptsYes[index];
+
+        var dayrptsTemp = dayrpts.filter(x => x.StockCode == element.StockCode);
+        if (dayrptsTemp.length == 0) { continue; }
+
+        dayrptsTemp.sort((a, b) => Number(b!.ReportDay) - Number(a!.ReportDay));
+
+        var iStatus = 0;
+        var isStar = false;
+        var todayPrice = Number(dayrptsTemp[0].TradingPriceAvg);
+        var iCountRise = 0;
+        for (let index = 1; index < dayrptsTemp.length; index++) {
+            const element = dayrptsTemp[index];
+
+            var todayRSI7 = Number(dayrptsTemp[index - 1].RSI7);
+            var todayRSI14 = Number(dayrptsTemp[index - 1].RSI14);
+
+            var yesRSI7 = Number(dayrptsTemp[index].RSI7);
+            var yesRSI14 = Number(dayrptsTemp[index].RSI14);
+
+            if (index == 1) { iStatus = parseInt((todayRSI7 / 10).toFixed(2)) };
+
+
+
+            if (todayRSI7 > yesRSI7 && todayRSI14 > yesRSI14) { iCountRise++; }
+            else {
+                break;//如果不是连续上升 中断
+                // if (iCountRise>0) {break;}
+
+            }
+
+
+            if (index > 1) {
+                var temp = parseInt((todayRSI7 / 10).toFixed(2))
+                console.log(temp, element.StockCode)
+                if (iStatus - 1 == temp) {
+                    iStatus--;
+                    isStar = true;
+                }
+                else { isStar = false; iStatus = 0; }
+            }
+
+            if (iCountRise == 3 && isStar) { break; }
+
+            if (iCountRise > 3) { break; }
+        }
+
+        if (iCountRise >= 2) {
+            var mResult = new wresult();
+            mResult.stockcode = element.StockCode
+            mResult.rsi7 = Number(element.RSI7);
+            mResult.rsi14 = Number(element.RSI14);
+            mResult.Type = rdType.YZMpatton;
+            mResult.price = todayPrice;
+            mResult.MA = Number(element.MA);
+            mResult.bollDown = Number(element.bollDown);
+            if (isStar) { mResult.eval = "*"; }
+            mResult.eval += iCountRise.toString();
+            // wresults[iResult] = mResult;
+            wresults.push(mResult)
+            // iResult++;
+        }
+
+
+
+
+
+
+    }
+
+
 
     return wresults;
 
@@ -574,7 +676,7 @@ export default {
     isAdd,
     isReduce,
     isM,
-    isW,
+    isW, findYZM,
     isRecentHigh,
     isRecentLow,
     findW, findDoubleRise
@@ -599,6 +701,7 @@ export class wresult {
 export enum rdType {
     doubleRise = "双升",
     wpatton = "w",
+    YZMpatton = "YZM",
     doubleDown = "双降",
     mpatton = "M",
     unknow = "未知",

@@ -30,7 +30,7 @@ async function getDayrptByReportDay(reportday: Date): Promise<t_StockDayReport[]
  * @returns 
  */
 async function getDayrptByReportDay2(startdate: Date, enddate: Date): Promise<t_StockDayReport[]> {
-    const dayrpts = await dayrptRepo.getAllbyReportDay2(startdate,enddate);
+    const dayrpts = await dayrptRepo.getAllbyReportDay2(startdate, enddate);
     return dayrpts
 }
 
@@ -43,6 +43,12 @@ async function getDayrptByReportDay2(startdate: Date, enddate: Date): Promise<t_
 async function getDayrptByCondition(startdate: Date, enddate: Date, stockcode: string): Promise<t_StockDayReport[]> {
     return await dayrptRepo.getAllbyCondition(startdate, enddate, stockcode);
 }
+
+async function getdayRptCountByDayAfter(endday: Date, stockcode: string, iCount: number): Promise<t_StockDayReport[]> {
+    return await dayrptRepo.getdayRptCountByDayAfter(endday, stockcode, iCount);
+}
+
+
 
 /**
  * getone
@@ -60,6 +66,6 @@ async function getone(reportday: Date, stockcode: string): Promise<t_StockDayRep
 // Export default
 export default {
     getDayrptByCode, getDayrptByReportDay, getDayrptByCondition,
-    getone,getDayrptByReportDay2
+    getone, getDayrptByReportDay2, getdayRptCountByDayAfter
 
 } as const;

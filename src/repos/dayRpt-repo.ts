@@ -116,6 +116,12 @@ async function getAllbyCondition(startdate: Date, enddate: Date, stockcode: stri
     });
 }
 
+async function getdayRptCountByDayAfter(endday: Date, stockcode: string, count: number): Promise<t_StockDayReport[]> {
+    const sqlstr = `SELECT top ${count} * FROM t_StockDayReport WHERE ReportDay >= '${endday.getFullYear() + "-" + (endday.getMonth() + 1) + "-" + endday.getDate() + " " + "00:00:00"}' and stockcode='${stockcode}';`;
+    const result = await prisma.$queryRawUnsafe<t_StockDayReport[]>(sqlstr)
+    return result;
+}
+
 
 
 
@@ -127,5 +133,7 @@ export default {
     getAllbyCode,
     getAllbyReportDay,
     getAllbyCondition,
-    getAllbyReportDay2
+    getAllbyReportDay2,
+    getdayRptCountByDayAfter,
+
 } as const;
