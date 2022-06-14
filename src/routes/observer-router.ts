@@ -59,7 +59,7 @@ router.put(p.update, async (req: Request, res: Response) => {
     if (!observer) { throw new ParamMissingError(); }
 
     var userid = await GetUserIDByHeader(String(authorization));
-    // observer.UserID = await GetUserID(req);
+    observer.UserID = userid;
     // Fetch data
     await observerService.updateOne(observer);
     return res.status(OK).end();
