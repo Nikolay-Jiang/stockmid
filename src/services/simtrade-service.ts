@@ -300,7 +300,6 @@ function validTremor(dayrpts: t_StockDayReport[], rate: number = 2): boolean {
     var stockcode = dayrpts[0].StockCode;
 
     var iTremor = rate + 10;
-
     //科创板情况
     if (stockcode.startsWith("sh688")) { iTremor = rate + 20; }
     if (stockcode.startsWith("sz300")) { iTremor = rate + 20; }
@@ -311,9 +310,9 @@ function validTremor(dayrpts: t_StockDayReport[], rate: number = 2): boolean {
         var todayPrice = Number(dayrpts[index].TodayClosePrice);
 
         var iRatePrice = todayPrice - yesPrice;
-        var iTemp = iRatePrice / yesPrice
-        if (iTemp >= iTremor) { return true; }
+        var iTemp = iRatePrice / yesPrice * 100
 
+        if (iTemp >= iTremor) { return true; }
     }
 
 
@@ -491,9 +490,11 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
 */
 async function findYZM(enddate: Date): Promise<wresult[]> {
 
+    enddate.setHours(8, 0, 0, 0);
     var yesdate: Date = new Date(enddate);
-    if (enddate.getHours() == 0) { enddate.setHours(enddate.getHours() + 8); }
-    if (yesdate.getHours() == 0) { yesdate.setHours(yesdate.getHours() + 8); }
+    yesdate.setHours(8, 0, 0, 0);
+
+
 
     //处理周末的情况
     if (enddate.getDay() == 0) { enddate.setDate(enddate.getDate() - 2); }
@@ -532,6 +533,12 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
         if (dayrptsTemp.length == 0) { continue; }
 
         dayrptsTemp.sort((a, b) => Number(b!.ReportDay) - Number(a!.ReportDay));
+        if (element.StockCode == "sz002915") {
+            console.log(dayrptsTemp[0].ReportDay.toDateString());
+        }
+
+        if (validTremor(dayrptsTemp)) { console.log("Tremor", dayrptsTemp[0].StockCode); continue; }
+
 
         var iStatus = 0;
         var isStar = false;
@@ -560,7 +567,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
             if (index > 1) {
                 var temp = parseInt((todayRSI7 / 10).toFixed(2))
-                console.log(temp, element.StockCode)
+                // console.log(temp, element.StockCode)
                 if (iStatus - 1 == temp) {
                     iStatus--;
                     isStar = true;
@@ -588,11 +595,6 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
             wresults.push(mResult)
             // iResult++;
         }
-
-
-
-
-
 
     }
 
@@ -692,6 +694,8 @@ export class wresult {
     MA: number = -1;
     bollDown: number = -1;
     eval: string = "";
+    evelprice: number = 0;
+    evelrate: number = 0;
 
 
 

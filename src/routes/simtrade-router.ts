@@ -234,10 +234,11 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
             // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
             element.eval += "good";
+            element.evelprice = Number((maxprice - element.price).toFixed(2));
+            element.evelrate = Number((element.evelprice / element.price * 100).toFixed(2));
             iCountGood++;
 
             var stat = parseInt((element.rsi7 / 10).toFixed(2))
-            // console.log(stat)
             if (stat == 1) { iRsi1++; }
             if (stat == 2) { iRsi2++; }
             if (stat == 3) { iRsi3++; }
@@ -250,12 +251,18 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
         }
         else {
             var txtadd = ""
-            if (maxprice > element.price) { txtadd = "low" }
+            element.evelprice = Number((maxprice - element.price).toFixed(2));
+            element.evelrate = Number((element.evelprice / element.price * 100).toFixed(2));
+            if (maxprice > element.price) {
+                txtadd = "low";
+
+            }
             console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd)
         }
 
     }
     findresults.sort((a, b) => (a.eval > b.eval) ? 1 : -1);
+    findresults.sort((a, b) => b.evelrate - a.evelrate);
 
     var filterCount = findresults.length;
     var tempRate = (iCountGood / filterCount * 100).toFixed(2) + "%";
