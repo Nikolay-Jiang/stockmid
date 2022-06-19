@@ -56,7 +56,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
     var dayrpts = await dayrptService.getDayrptByReportDay2(startdate, enddate)
 
-    if (dayrpts.length == 0) { return predictlist; }
+    // if (dayrpts.length == 0) { return predictlist; }
 
     var stockcodes = "";
     //获得STOCKCODES
@@ -66,13 +66,6 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     }
 
     var mystocks = await sinaService.getstockList(stockcodes);
-
-    // if (needtoday) {
-    //     //mystocks add dayrpts
-
-    //     //  analService.GetTodayDayRpt()
-    // }
-
 
     for (let index = 0; index < predicts.length; index++) {
         const element = predicts[index];
@@ -100,7 +93,10 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
                 break;
         }
 
-        if (CurrentInfo.length > 0) { mPredict.CurrentPrice = Number(CurrentInfo[0].CurrentPrice); }
+        if (CurrentInfo.length > 0) {
+            mPredict.CurrentPrice = Number(CurrentInfo[0].CurrentPrice);
+            mPredict.MaxDayPrice = mPredict.CurrentPrice;
+        }
 
         if (needtoday) {
             var dayrptsCalc = await dayrptService.getdayRptCountByDayBefore(today, mPredict.StockCode, 15);
@@ -110,21 +106,23 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
             mPredict.CurrentRsi14expect = rsiCalc.rsi14expect;
         }
 
+        if (dayrptsTemp.length > 0) {
+            dayrptsTemp.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b.TodayMaxPrice));
+            var maxprice = Number(dayrptsTemp[dayrptsTemp.length - 1].TodayMaxPrice);
+            mPredict.MaxDayPrice = maxprice
+            mPredict.MaxDay = dayrptsTemp[dayrptsTemp.length - 1].ReportDay;
+            mPredict.MaxDayBB = Number(dayrptsTemp[dayrptsTemp.length - 1].BB);
+            mPredict.MaxDayRsi7 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI7);
+            mPredict.MaxDayRsi14 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI14);
 
-        dayrptsTemp.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b.TodayMaxPrice));
-        var maxprice = Number(dayrptsTemp[dayrptsTemp.length - 1].TodayMaxPrice);
-        mPredict.MaxDayPrice = maxprice
-        mPredict.MaxDay = dayrptsTemp[dayrptsTemp.length - 1].ReportDay;
-        mPredict.MaxDayBB = Number(dayrptsTemp[dayrptsTemp.length - 1].BB);
-        mPredict.MaxDayRsi7 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI7);
-        mPredict.MaxDayRsi14 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI14);
-
-        if (mPredict.CurrentPrice > maxprice) {
-            mPredict.MaxDayPrice = mPredict.CurrentPrice;
-            mPredict.MaxDayRsi7 = -1;
-            mPredict.MaxDayRsi14 = -1;
-            mPredict.MaxDayBB = -1;
+            if (mPredict.CurrentPrice > maxprice) {
+                mPredict.MaxDayPrice = mPredict.CurrentPrice;
+                mPredict.MaxDayRsi7 = -1;
+                mPredict.MaxDayRsi14 = -1;
+                mPredict.MaxDayBB = -1;
+            }
         }
+
 
 
         if (mPredict.MaxDayPrice > mPredict.CatchPrice && (mPredict.MaxDayPrice - mPredict.CatchPrice) > evalnumber) {

@@ -278,6 +278,7 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
     enddate.setHours(8, 0, 0, 0);
 
     var findresults = await simService.findYZM(enddate);
+    // enddate.setHours(10, 0, 0, 0);
     var findCount = findresults.length;
 
     if (findresults.length == 0) { return res.status(OK).end("not find"); }
@@ -285,7 +286,7 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
     var predicts: Array<t_Predict> = [];
     for (let index = 0; index < findresults.length; index++) {
         const element = findresults[index];
-        
+
         var mPredict = {
             PredictKey: "",
             StockCode: element.stockcode,
@@ -302,7 +303,7 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
 
     }
 
-    if (predicts.length>0) {
+    if (predicts.length > 0) {
         for (let index = 0; index < predicts.length; index++) {
             const element = predicts[index];
             predictService.addOne(element);
