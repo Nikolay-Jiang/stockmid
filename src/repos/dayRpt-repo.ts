@@ -122,6 +122,13 @@ async function getdayRptCountByDayAfter(endday: Date, stockcode: string, count: 
     return result;
 }
 
+async function getdayRptCountByDayBefore(endday: Date, stockcode: string, count: number): Promise<t_StockDayReport[]> {
+    endday.setHours(8, 0, 0, 0);
+    const sqlstr = `SELECT top ${count} * FROM t_StockDayReport WHERE ReportDay <= '${endday.getFullYear() + "-" + (endday.getMonth() + 1) + "-" + endday.getDate() + " " + "00:00:00"}' and stockcode='${stockcode}' order by ReportDay desc;`;
+    const result = await prisma.$queryRawUnsafe<t_StockDayReport[]>(sqlstr)
+    return result;
+}
+
 
 
 
@@ -135,5 +142,6 @@ export default {
     getAllbyCondition,
     getAllbyReportDay2,
     getdayRptCountByDayAfter,
+    getdayRptCountByDayBefore,
 
 } as const;

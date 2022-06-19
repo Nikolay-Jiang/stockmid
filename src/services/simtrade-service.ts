@@ -404,7 +404,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     if (dayrptsYes.length == 0) { return wresults; }
 
     var startdate = new Date(enddate);
-    startdate.setDate(enddate.getDate() - 15);
+    startdate.setDate(enddate.getDate() - 18);
     var dayrpts = await dayrptService.getDayrptByReportDay2(startdate, enddate);
 
     if (dayrpts.length == 0) { return wresults; }
@@ -694,8 +694,8 @@ export class wresult {
     MA: number = -1;
     bollDown: number = -1;
     eval: string = "";
-    evelprice: number = 0;
-    evelrate: number = 0;
+    evalprice: number = 0;
+    evalrate: number = 0;
 
 
 
@@ -704,7 +704,7 @@ export class wresult {
 //涨跌类型
 export enum rdType {
     doubleRise = "双升",
-    wpatton = "w",
+    wpatton = "W",
     YZMpatton = "YZM",
     doubleDown = "双降",
     mpatton = "M",

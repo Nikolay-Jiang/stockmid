@@ -14,6 +14,7 @@ const { CREATED, OK } = StatusCodes;
 // Paths
 export const p = {
     get: '/all/',
+    gettst: 'all2/:test',
     add: '/add/',
     update: '/update',
     delete: '/delete/:stockcode/',
@@ -26,7 +27,18 @@ export const p = {
  */
 router.get(p.get, async (req: Request, res: Response) => {
     const { authorization } = req.headers;
-    if (authorization==undefined || authorization=="") {throw new ParamMissingError();}
+    if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
+    var userid = await GetUserIDByHeader(String(authorization));
+    const observers = await observerService.getAll(userid);
+    return res.status(OK).json({ observers });
+});
+
+router.get(p.gettst, async (req: Request, res: Response) => {
+    const { authorization } = req.headers;
+    const { authinfo } = req.body;
+    console.log(authorization, authinfo);
+    if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
+
     var userid = await GetUserIDByHeader(String(authorization));
     const observers = await observerService.getAll(userid);
     return res.status(OK).json({ observers });
@@ -73,7 +85,7 @@ router.put(p.update, async (req: Request, res: Response) => {
 router.delete(p.delete, async (req: Request, res: Response) => {
     const { authorization } = req.headers;
     const { stockcode } = req.params;
-    if (authorization==undefined || authorization=="") {throw new ParamMissingError();}
+    if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
     var userid = await GetUserIDByHeader(String(authorization));
     // Check param
     if (!stockcode) { throw new ParamMissingError(); }

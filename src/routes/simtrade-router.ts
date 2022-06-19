@@ -39,7 +39,8 @@ export const p = {
     statistics: '/statistics/:startday/:endday/:stockcode',
     findW: '/findw/:endday',
     findwOnline: '/findwon/',
-    findyzm: '/findyzm/:endday'
+    findyzm: '/findyzm/:endday',
+    findyzmon: '/findyzmon/:endday',
 
 } as const;
 
@@ -234,8 +235,8 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
             // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
             element.eval += "good";
-            element.evelprice = Number((maxprice - element.price).toFixed(2));
-            element.evelrate = Number((element.evelprice / element.price * 100).toFixed(2));
+            element.evalprice = Number((maxprice - element.price).toFixed(2));
+            element.evalrate = Number((element.evalprice / element.price * 100).toFixed(2));
             iCountGood++;
 
             var stat = parseInt((element.rsi7 / 10).toFixed(2))
@@ -251,8 +252,8 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
         }
         else {
             var txtadd = ""
-            element.evelprice = Number((maxprice - element.price).toFixed(2));
-            element.evelrate = Number((element.evelprice / element.price * 100).toFixed(2));
+            element.evalprice = Number((maxprice - element.price).toFixed(2));
+            element.evalrate = Number((element.evalprice / element.price * 100).toFixed(2));
             if (maxprice > element.price) {
                 txtadd = "low";
 
@@ -262,12 +263,55 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
 
     }
     findresults.sort((a, b) => (a.eval > b.eval) ? 1 : -1);
-    findresults.sort((a, b) => b.evelrate - a.evelrate);
+    findresults.sort((a, b) => b.evalrate - a.evalrate);
 
     var filterCount = findresults.length;
     var tempRate = (iCountGood / filterCount * 100).toFixed(2) + "%";
     console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
     return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults });
+});
+
+
+router.get(p.findyzmon, async (req: Request, res: Response) => {
+    const { endday } = req.params;
+    var enddate: Date = new Date(endday);
+    enddate.setHours(8, 0, 0, 0);
+
+    var findresults = await simService.findYZM(enddate);
+    var findCount = findresults.length;
+
+    if (findresults.length == 0) { return res.status(OK).end("not find"); }
+
+    var predicts: Array<t_Predict> = [];
+    for (let index = 0; index < findresults.length; index++) {
+        const element = findresults[index];
+        
+        var mPredict = {
+            PredictKey: "",
+            StockCode: element.stockcode,
+            PredictTime: new Date(),
+            Type: "YZM",
+            CurrentPrice: new Decimal(element.price),
+            RSI7: new Decimal(element.rsi7),
+            RSI14: new Decimal(element.rsi14),
+            BackTest: "",
+            Memo: ""
+        }
+
+        predicts.push(mPredict)
+
+    }
+
+    if (predicts.length>0) {
+        for (let index = 0; index < predicts.length; index++) {
+            const element = predicts[index];
+            predictService.addOne(element);
+        }
+    }
+
+
+
+    return res.status(OK).json({ enddate, findCount, findresults });
 });
 
 
@@ -297,83 +341,6 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
 
 
     var findresults = await simService.findW(enddate, true);
-
-
-    // for (let index = 0; index < dayrptsYes.length; index++) {
-    //     const element = dayrptsYes[index];
-    //     var startdate = new Date(enddate);
-    //     startdate.setDate(enddate.getDate() - 25);
-
-    //     //获取当日实时数据
-    //     var mStock = await sinaService.getone(element.StockCode);
-    //     if (!analService.isSameDay(mStock.SearchTime, enddate)) { continue; }
-
-
-
-    //     var dayrpts = await dayrptService.getDayrptByCondition(startdate, enddate, element.StockCode)
-    //     if (dayrpts.length == 0) { continue; }
-
-    //     //实时数据转RPT
-    //     var mdayrpttoday = await analService.GetTodayDayRpt(enddate, mStock.stockcode, mStock)
-
-    //     // daypts.push(mdayrpttoday);
-    //     var rsi = await analService.rsiCalc(dayrpts);
-
-
-
-    //     mdayrpttoday.RSI7 = new Prisma.Decimal(rsi.rsi7);
-    //     mdayrpttoday.RSI14 = new Prisma.Decimal(rsi.rsi14);
-
-    //     dayrpts[dayrpts.length - 1].RSI7 = mdayrpttoday.RSI7;
-    //     dayrpts[dayrpts.length - 1].RSI14 = mdayrpttoday.RSI14;
-
-    //     console.log(mdayrpttoday.StockCode, mdayrpttoday.RSI7, dayrpts.length, rsi.rsi14);
-    //     //加入当天实时数据
-
-
-
-    //     if (await simService.isW(dayrpts, dayrpts.length - 1, 30, 29)) {
-    //         if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7) {
-    //             var mPre: t_Predict = {
-    //                 PredictKey: "",
-    //                 StockCode: element.StockCode,
-    //                 PredictTime: new Date(),
-    //                 Type: "W",
-    //                 CurrentPrice: mdayrpttoday.TodayClosePrice,
-    //                 RSI7: mdayrpttoday.RSI7,
-    //                 RSI14: mdayrpttoday.RSI14,
-    //                 BackTest: "",
-    //                 Memo: ""
-    //             }
-
-    //             preresults[iCountpre] = mPre;
-    //             iCountpre++;
-
-    //             txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} W  |`
-
-    //         }
-    //         // console.log(rsi.rsi7, rsi.rsi7expect.toFixed(2), element.StockCode)
-    //     }
-    //     else if (Number(dayrpts[dayrpts.length - 2].RSI7) <= rsi.rsi7 && Number(dayrpts[dayrpts.length - 2].RSI14) <= rsi.rsi14 && rsi.rsi7 > 25) {//双升
-    //         var mPre: t_Predict = {
-    //             PredictKey: "",
-    //             StockCode: element.StockCode,
-    //             PredictTime: new Date(),
-    //             Type: "doublerise",
-    //             CurrentPrice: mdayrpttoday.TodayClosePrice,
-    //             RSI7: mdayrpttoday.RSI7,
-    //             RSI14: mdayrpttoday.RSI14,
-    //             BackTest: "",
-    //             Memo: ""
-    //         }
-
-    //         preresults[iCountpre] = mPre;
-    //         iCountpre++;
-
-    //         txtresult += `| ${element.StockCode}: ${element.TodayClosePrice} ${rsi.rsi7} 双升 |`
-    //     }
-
-    // }
 
 
     for (let index = 0; index < findresults.length; index++) {

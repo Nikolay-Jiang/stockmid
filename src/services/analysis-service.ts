@@ -199,14 +199,14 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
             mRsiData.down7avg = downSum7 / 7;
             mRsiData.relativestrength7 = mRsiData.up7avg / mRsiData.down7avg;
             mRsiData.rsi7 = Number((100 - 100 / (mRsiData.relativestrength7 + 1)).toFixed(2));
-            mRsiData.rsi7expect = mRsiData.rsi7expect + Number(element.TodayClosePrice);//预测第二天良好值
+            mRsiData.rsi7expect = Number((mRsiData.rsi7expect + Number(element.TodayClosePrice)).toFixed(2));//预测第二天良好值
 
             if (dayrptsCopy.length > 14) {
                 mRsiData.up14avg = upSum / 14;
                 mRsiData.down14avg = downSum / 14;
                 mRsiData.relativestrength14 = mRsiData.up14avg / mRsiData.down14avg;
                 mRsiData.rsi14 = Number((100 - 100 / (mRsiData.relativestrength14 + 1)).toFixed(2));
-                mRsiData.rsi14expect = mRsiData.rsi14expect + Number(element.TodayClosePrice);//预测第二天良好值
+                mRsiData.rsi14expect = Number((mRsiData.rsi14expect + Number(element.TodayClosePrice)).toFixed(2));//预测第二天良好值
 
             }
 
@@ -268,6 +268,24 @@ function isSameDay(d1: Date, d2: Date): boolean {
         d1.getDate() === d2.getDate();
 }
 
+function calc_day(timestamp1: number, timestamp2: number): number {
+
+    // 将时间戳相减获得差值（毫秒数）
+    var differ = timestamp1 - timestamp2
+
+    /**
+     * @desc 毫秒数除以1000就转为秒数
+     * @desc 秒数除以60后取整，就是分钟（因为1分钟等于60秒）
+     * @desc 秒数除以3600后取整，就是小时（因为1小时等于3600秒）
+     * @desc 小时数除以24后取整，就是相差的天数
+     */
+    var day = differ / 1000 / 60 / 60 / 24
+
+    return parseInt(day.toString())
+
+}
+
+
 
 
 export class rsidata {
@@ -311,6 +329,6 @@ export default {
     bollCalc,
     GetTodayDayRpt,
     GetRateData,
-    isSameDay,
+    isSameDay, calc_day,
 
 } as const;
