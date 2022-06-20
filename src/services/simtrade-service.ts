@@ -533,16 +533,23 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
         if (dayrptsTemp.length == 0) { continue; }
 
         dayrptsTemp.sort((a, b) => Number(b!.ReportDay) - Number(a!.ReportDay));
-        if (element.StockCode == "sz002915") {
-            console.log(dayrptsTemp[0].ReportDay.toDateString());
-        }
 
-        if (validTremor(dayrptsTemp)) { console.log("Tremor", dayrptsTemp[0].StockCode); continue; }
+        if (validTremor(dayrptsTemp)) { continue; }
 
-
+        var isVolUpPriceUp = false;
         var iStatus = 0;
         var isStar = false;
         var todayPrice = Number(dayrptsTemp[0].TradingPriceAvg);
+        var todayVol = Number(dayrptsTemp[0].TradingVol);
+        var yesPrice = Number(dayrptsTemp[1].TradingPriceAvg);
+        var yesVol = Number(dayrptsTemp[1].TradingVol);
+
+        if (todayPrice > yesPrice && todayVol > yesVol) {//判断量价齐升
+            var tempVolRate = (todayVol - yesVol) / yesVol * 100
+            var tempPriceRate = (todayPrice - yesPrice) / yesPrice * 100
+            if (tempVolRate > 80 && tempPriceRate > 5) { isVolUpPriceUp = true; }
+        }
+
         var iCountRise = 0;
         for (let index = 1; index < dayrptsTemp.length; index++) {
             const element = dayrptsTemp[index];
@@ -591,14 +598,10 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
             mResult.bollDown = Number(element.bollDown);
             if (isStar) { mResult.eval = "*"; }
             mResult.eval += iCountRise.toString();
-            // wresults[iResult] = mResult;
+            if (isVolUpPriceUp) { mResult.eval += "量价齐升" }
             wresults.push(mResult)
-            // iResult++;
         }
-
     }
-
-
 
     return wresults;
 
