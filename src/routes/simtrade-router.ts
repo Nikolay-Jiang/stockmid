@@ -277,8 +277,10 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
     var enddate: Date = new Date(endday);
     enddate.setHours(8, 0, 0, 0);
 
+    if (enddate.getDay() == 0 ||enddate.getDay() == 6) { return res.status(OK).end("not find"); }
+    
+
     var findresults = await simService.findYZM(enddate);
-    // enddate.setHours(10, 0, 0, 0);
     var findCount = findresults.length;
 
     if (findresults.length == 0) { return res.status(OK).end("not find"); }
@@ -296,7 +298,7 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
             RSI7: new Decimal(element.rsi7),
             RSI14: new Decimal(element.rsi14),
             BackTest: "",
-            Memo: ""
+            Memo: element.eval,
         }
 
         predicts.push(mPredict)
