@@ -123,11 +123,11 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
             }
         }
 
-
+        mPredict.eval = element.Memo!
 
         if (mPredict.MaxDayPrice > mPredict.CatchPrice && (mPredict.MaxDayPrice - mPredict.CatchPrice) > evalnumber) {
 
-            mPredict.eval = element.Memo + "|Good";
+            mPredict.eval += "|Good";
             iCountGood++
 
         }
