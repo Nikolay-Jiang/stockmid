@@ -537,10 +537,13 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
         if (validTremor(dayrptsTemp)) { continue; }
 
         var isVolUpPriceUp = false;
+        var isDoubleStrong = false;
         var iStatus = 0;
         var isStar = false;
         var todayPrice = Number(dayrptsTemp[0].TradingPriceAvg);
         var todayVol = Number(dayrptsTemp[0].TradingVol);
+        var todateRSI7 = Number(dayrptsTemp[0].RSI7);
+        var todateRSI14 = Number(dayrptsTemp[0].RSI14);
         var yesPrice = Number(dayrptsTemp[1].TradingPriceAvg);
         var yesVol = Number(dayrptsTemp[1].TradingVol);
 
@@ -549,6 +552,9 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
             var tempPriceRate = (todayPrice - yesPrice) / yesPrice * 100
             if (tempVolRate > 80 && tempPriceRate > 5) { isVolUpPriceUp = true; }
         }
+
+        if (todateRSI7 > 50 && todateRSI14 > 50) { isDoubleStrong = true; }
+
 
         var iCountRise = 0;
         for (let index = 1; index < dayrptsTemp.length; index++) {
@@ -598,7 +604,8 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
             mResult.bollDown = Number(element.bollDown);
             if (isStar) { mResult.eval = "*"; }
             mResult.eval += iCountRise.toString();
-            if (isVolUpPriceUp) { mResult.eval += "量价齐升" }
+            if (isVolUpPriceUp) { mResult.eval += "|量价齐升"; }
+            if (isDoubleStrong) { mResult.eval += "|双强"; }
             wresults.push(mResult)
         }
     }
