@@ -40,7 +40,7 @@ export const p = {
     findW: '/findw/:endday',
     findwOnline: '/findwon/',
     findyzm: '/findyzm/:endday',
-    findyzmon: '/findyzmon/:endday',
+    findyzmon: '/findyzmon/',
 
 } as const;
 
@@ -273,8 +273,8 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
 
 
 router.get(p.findyzmon, async (req: Request, res: Response) => {
-    const { endday } = req.params;
-    var enddate: Date = new Date(endday);
+    // const { endday } = req.params;
+    var enddate: Date = new Date();
     enddate.setHours(8, 0, 0, 0);
 
     if (enddate.getDay() == 0 ||enddate.getDay() == 6) { return res.status(OK).end("not find"); }
