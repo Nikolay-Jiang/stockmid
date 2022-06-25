@@ -104,6 +104,9 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
             var rsiCalc = await analService.rsiCalc(dayrptsCalc);
             mPredict.CurrentRsi7expect = rsiCalc.rsi7expect;
             mPredict.CurrentRsi14expect = rsiCalc.rsi14expect;
+            if (mPredict.CurrentPrice > rsiCalc.rsi7expect && mPredict.CurrentPrice > rsiCalc.rsi14expect) {
+                mPredict.eval = "|C双升|"
+            }
         }
 
         if (dayrptsTemp.length > 0) {
@@ -123,7 +126,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
             }
         }
 
-        mPredict.eval = element.Memo!
+        mPredict.eval += element.Memo!
 
         if (mPredict.MaxDayPrice > mPredict.CatchPrice && (mPredict.MaxDayPrice - mPredict.CatchPrice) > evalnumber) {
 
