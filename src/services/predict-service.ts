@@ -4,7 +4,6 @@ import simtradeService, { rdType } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
 import dayrptService from '@services/dayrpt-service';
 import sinaService from '@services/sinastock-service';
-import { cursorTo } from 'readline';
 
 
 
@@ -51,8 +50,8 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
     startdate.setDate(startdate.getDate() + 1)
     enddate.setDate(startdate.getDate() + 9);
-    // if (daydiff < 7 && today.getHours() >= 9 && today.getHours() <= 15) { needtoday = true; enddate = new Date(); }
-    if (daydiff < 7) { needtoday = true; enddate = new Date(); }
+    if (daydiff < 7 && today.getHours() >= 9) { needtoday = true; enddate = new Date(); enddate.setHours(8, 0, 0, 0); }
+    //if (daydiff < 7) { needtoday = true; enddate = new Date(); }
 
     var dayrpts = await dayrptService.getDayrptByReportDay2(startdate, enddate)
 
@@ -95,11 +94,19 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
         if (CurrentInfo.length > 0) {
             mPredict.CurrentPrice = Number(CurrentInfo[0].CurrentPrice);
+            if (needtoday && today.getHours() >= 16) {
+                var dayrptsCurr = dayrptsTemp.filter(x => x.ReportDay == enddate)
+                if (dayrptsCurr.length > 0) {
+                    mPredict.CurrentBB = Number(dayrptsCurr[0].BB)
+                }
+            }
             mPredict.MaxDayPrice = mPredict.CurrentPrice;
         }
 
         if (needtoday) {
-            var dayrptsCalc = await dayrptService.getdayRptCountByDayBefore(today, mPredict.StockCode, 15);
+            var yesday = new Date();
+            yesday.setDate(today.getDate() - 1);
+            var dayrptsCalc = await dayrptService.getdayRptCountByDayBefore(yesday, mPredict.StockCode, 15);
             dayrptsCalc.sort((a, b) => a!.ReportDay > b.ReportDay ? 1 : -1);
             var rsiCalc = await analService.rsiCalc(dayrptsCalc);
             mPredict.CurrentRsi7expect = rsiCalc.rsi7expect;
