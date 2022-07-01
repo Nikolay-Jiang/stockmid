@@ -42,31 +42,31 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     var dayrpts = await dayrptService.getDayrptByCondition(begindate, enddate, stockcode)
 
     if (dayrpts == null || dayrpts.length == 0) { return res.status(OK).end(); }
-
+    var dayrptsCopy=[...dayrpts];
     var txtresult: string = ""
     var mStock = await sinaService.getone(stockcode);
-    var boll = await analService.bollCalc(dayrpts);
-    var rsi = await analService.rsiCalc(dayrpts);
+    var boll = await analService.bollCalc(dayrptsCopy);
+    var rsi = await analService.rsiCalc(dayrptsCopy);
 
     if (analService.isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
         if (todaydate.getHours() >= 9 && todaydate.getHours() <= 15) {
             var mdayrpttoday = await analService.GetTodayDayRpt(todaydate, stockcode, mStock)
 
-            dayrpts.push(mdayrpttoday);
+            dayrptsCopy.push(mdayrpttoday);
 
-            let rsiReal = await analService.rsiCalc(dayrpts);
+            let rsiReal = await analService.rsiCalc(dayrptsCopy);
 
-            dayrpts[dayrpts.length - 1].RSI7 = new Prisma.Decimal(rsiReal.rsi7);
-            dayrpts[dayrpts.length - 1].RSI14 = new Prisma.Decimal(rsiReal.rsi14);
+            dayrptsCopy[dayrptsCopy.length - 1].RSI7 = new Prisma.Decimal(rsiReal.rsi7);
+            dayrptsCopy[dayrptsCopy.length - 1].RSI14 = new Prisma.Decimal(rsiReal.rsi14);
 
-            console.log("sameday", convertDatetoStr(dayrpts[dayrpts.length - 1].ReportDay), dayrpts.length);
-            txtresult += await analService.getRealTxt(mStock, boll, rsiReal, dayrpts);
+            console.log("sameday", convertDatetoStr(dayrptsCopy[dayrptsCopy.length - 1].ReportDay), dayrptsCopy.length);
+            txtresult += await analService.getRealTxt(mStock, boll, rsiReal, dayrptsCopy);
         }
     }
 
     //获取振幅数据
-    var rateanalysisdata = await analService.GetRateData(dayrpts);
-    txtresult += analService.getAnalyTxt(dayrpts, rateanalysisdata, boll, rsi, mStock);
+    var rateanalysisdata = await analService.GetRateData(dayrptsCopy);
+    txtresult += analService.getAnalyTxt(dayrptsCopy, rateanalysisdata, boll, rsi, mStock);
 
     return res.status(OK).json({ txtresult, rateanalysisdata });
 });

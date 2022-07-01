@@ -129,7 +129,7 @@ async function GetTodayDayRpt(today: Date, stockcode: string, mStock: Stock): Pr
         TodayMinPrice: new Prisma.Decimal(mStock.TodayMinPrice),
         TodayClosePrice: new Prisma.Decimal(mStock.CurrentPrice),
         Rate: new Prisma.Decimal(fRatetemp),
-        RatePrice: new Prisma.Decimal(Number(mStock.TodayMaxPrice) - Number(mStock.TodayMinPrice)),
+        RatePrice: new Prisma.Decimal((Number(mStock.TodayMaxPrice) - Number(mStock.TodayMinPrice)).toFixed(2)),
         Memo: "",
         TradingVol: new Prisma.Decimal(mStock.TradingVolume),
         TradingPrice: new Prisma.Decimal(mStock.TradingPrice),
