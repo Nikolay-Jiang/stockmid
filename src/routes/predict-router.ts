@@ -43,6 +43,9 @@ router.get(p.getbyday, async (req: Request, res: Response) => {
 
 
     const predicts = await predictService.getPredictByDay(startdate, evalTmp);
+    // var testresults = predicts.filter(x => x.CatchRsi7 >= 60 && x.CatchRsi7 <= 70 && x.CatchRsi14 >= 60 && x.CatchRsi14 <= 70);
+    // console.log(testresults.length)
+    // return res.status(OK).json({ testresults, statsGood });
     return res.status(OK).json({ predicts, statsGood });
 });
 

@@ -606,6 +606,8 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
             mResult.eval += iCountRise.toString();
             if (isVolUpPriceUp) { mResult.eval += "|量价齐升"; }
             if (isDoubleStrong) { mResult.eval += "|双强"; }
+            if (mResult.rsi7>=60 && mResult.rsi7<70 && mResult.rsi14>=60 && mResult.rsi14<70) {
+                mResult.eval+='|双6';}
             wresults.push(mResult)
         }
     }
