@@ -32,7 +32,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     startdate.setHours(8, 0, 0, 0);
     var needtoday: boolean = false;
     var today = new Date();
-    var enddate = new Date();
+    var enddate = new Date(startdate);
     enddate.setDate(startdate.getDate() + 1);
     enddate.setHours(8, 0, 0, 0);
     var predictlist: Array<predictresult> = [];
@@ -41,7 +41,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
 
     const predicts = await predictRepo.getAllbyPredictTime(startdate, enddate);
-    // console.log(enddate.toUTCString(), predicts.length);
+    // console.log(startdate.toDateString(),enddate.toUTCString(), predicts.length);
 
     if (predicts.length == 0) { return predictlist; }
 
@@ -104,7 +104,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
         }
 
         if (needtoday) {
-            var yesday = new Date();
+            var yesday = new Date(today);
             yesday.setDate(today.getDate() - 1);
             var dayrptsCalc = await dayrptService.getdayRptCountByDayBefore(yesday, mPredict.StockCode, 15);
             dayrptsCalc.sort((a, b) => a!.ReportDay > b.ReportDay ? 1 : -1);
