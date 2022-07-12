@@ -35,7 +35,7 @@ async function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: 
     console.log(myoper, isMpatton, dayrpts[dayrpts.length - 1].RSI7, dayrpts[dayrpts.length - 1].RSI14)
 
     txtresult += `[size=${titleSize}][B]实时数据：[/B][/size] \r\n`;
-    txtresult += `&emsp;&emsp;[size=${txtSize}][B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}`;
+    txtresult += `&emsp;&emsp;[size=${txtSize}][B]现价：[color=${colorCurrent}]${mStock.CurrentPrice}[/color] &nbsp;今开：${mStock.TodayOpeningPrice} &nbsp; 今高：${mStock.TodayMaxPrice} &nbsp; 今低：${mStock.TodayMinPrice}`;
     txtresult += `&nbsp; 振额：${rateprice.toFixed(2)}[/B][/size]`;
     txtresult += `&emsp;&emsp;[size=${txtSize}][B]BOLL：上:[color=${colorbollup}]${boll.up}[/color]&nbsp;中:${boll.ma}&nbsp;下:[color=${colorbolldown}]${boll.down}[/color][/B][/size]`;
     if (rsi.rsi7 != -1 && rsi.rsi14 != -1) {
