@@ -404,11 +404,10 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     if (dayrptsYes.length == 0) { return wresults; }
 
     var startdate = new Date(enddate);
-    startdate.setDate(enddate.getDate() - 18);
+    startdate.setDate(enddate.getDate() - 21);
     var dayrpts = await dayrptService.getDayrptByReportDay2(startdate, enddate);
 
     if (dayrpts.length == 0) { return wresults; }
-
 
     for (let index = 0; index < dayrptsYes.length; index++) {
         const element = dayrptsYes[index];

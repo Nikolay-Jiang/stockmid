@@ -277,8 +277,8 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
     var enddate: Date = new Date();
     enddate.setHours(8, 0, 0, 0);
 
-    if (enddate.getDay() == 0 ||enddate.getDay() == 6) { return res.status(OK).end("not find"); }
-    
+    if (enddate.getDay() == 0 || enddate.getDay() == 6) { return res.status(OK).end("not find"); }
+
 
     var findresults = await simService.findYZM(enddate);
     var findCount = findresults.length;
@@ -373,9 +373,8 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
     }
 
 
-    var tempCount = dayrptsYes.length;
 
-    return res.status(OK).json({ yesdate, enddate, tempCount, txtresult });
+    return res.status(OK).json({ yesdate, enddate, txtresult });
 });
 
 
