@@ -7,7 +7,7 @@ import sinaService from '@services/sinastock-service';
 export var isMpatton: boolean = false;
 export var isWpatton: boolean = false;
 export var iCountW: number = 0;
-
+export var wStr: string = "";
 
 export var txtOP = "";
 
@@ -216,7 +216,16 @@ function isM(dayrpts: t_StockDayReport[], index: number): boolean {
     return true;
 }
 
+/*
+* 寻找RSI W图形
+* dayrpts:需要分析的日报数据
+* index:起始位置
+* iRsiDecide: RSI7 决策值
+* RsiAvg:Rsi RSI7平均值
+* isIgnoreTremor 忽略振荡
+*/
 async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: number, RSIavg: number = 21, isIgnoreTremor: boolean = true): Promise<boolean> {
+    wStr = "";
     var eleCurr = dayrpts[index];
     var eleYesterday = dayrpts[index - 1];
 
@@ -259,7 +268,7 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
     var iMin = dayrptsCopy.findIndex(x => Number(x.RSI7) == Number(dayrpsTemp[0].RSI7));
     var iMinsec = dayrptsCopy.findIndex(x => Number(x.RSI7) == Number(dayrpsTemp[1].RSI7));
 
-    if (iMin != iCurr) { iMinsec = iCurr }
+    // if (iMin != iCurr) { iMinsec = iCurr }
 
     // console.log(eleCurr.StockCode, eleCurr.ReportDay.toDateString(), iMin, iMinsec, Number(dayrptsCopy[iMin].RSI7), Number(dayrptsCopy[iMinsec].RSI7))
 
@@ -280,15 +289,31 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
     }
 
     if (iFirst == 0) {
-        // console.log("step3");
         return false;
     }
+
+
 
 
     if (isUnderLow(iFirst, iSec, dayrptsCopy)) {
         // console.log("step4");
         return false;
     }
+
+    var iMaxRsi7 = 0;
+    var iFirstRsi7 = Number(dayrptsCopy[iFirst].RSI7);
+    var iSecRsi7 = Number(dayrptsCopy[iSec].RSI7);
+    for (let index = iFirst; index < iSec; index++) {
+        const CurrentRsi = Number(dayrptsCopy[index].RSI7);
+        if (CurrentRsi > iMaxRsi7) {
+            iMaxRsi7 = CurrentRsi;
+        }
+    }
+
+    if (iMaxRsi7 < iFirstRsi7 || iMaxRsi7 < iSecRsi7) { return false }//如果MAXRSI7 会小于其中一个 低峰，则W不成立
+
+    wStr = "|" + iFirstRsi7 + "," + iMaxRsi7 + "," + iSecRsi7
+    // console.log(eleCurr.StockCode, iFirstRsi7, iMaxRsi7, iSecRsi7)
     // console.log(iFirst, iSec, eleCurr.StockCode,dayrptsCopy[iFirst].RSI7,dayrptsCopy[iSec].RSI7);
 
     return true;
@@ -473,6 +498,9 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
                 mResult.price = todayPrice;
                 mResult.MA = Number(dayrptsTemp[dayrptsTemp.length - 1].MA);
                 mResult.bollDown = Number(dayrptsTemp[dayrptsTemp.length - 1].bollDown);
+                mResult.bb = Number(dayrptsTemp[dayrptsTemp.length - 1].BB);
+                mResult.width = Number(dayrptsTemp[dayrptsTemp.length - 1].WIDTH);
+                mResult.eval = wStr;
                 wresults[iResult] = mResult;
                 iResult++;
             }
@@ -605,8 +633,9 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
             mResult.eval += iCountRise.toString();
             if (isVolUpPriceUp) { mResult.eval += "|量价齐升"; }
             if (isDoubleStrong) { mResult.eval += "|双强"; }
-            if (mResult.rsi7>=60 && mResult.rsi7<70 && mResult.rsi14>=60 && mResult.rsi14<70) {
-                mResult.eval+='|双6';}
+            if (mResult.rsi7 >= 60 && mResult.rsi7 < 70 && mResult.rsi14 >= 60 && mResult.rsi14 < 70) {
+                mResult.eval += '|双6';
+            }
             wresults.push(mResult)
         }
     }
@@ -704,6 +733,8 @@ export class wresult {
     price: number = -1;
     MA: number = -1;
     bollDown: number = -1;
+    bb: number = -1;
+    width: number = -1;
     eval: string = "";
     evalprice: number = 0;
     evalrate: number = 0;

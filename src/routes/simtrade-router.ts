@@ -156,7 +156,8 @@ router.get(p.findW, async (req: Request, res: Response) => {
 
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
             // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
-            element.eval = "good";
+            element.eval += "|Good";
+            element.evalprice = Number((maxprice - element.price).toFixed(2))
             iCountGood++;
 
             var stat = parseInt((element.rsi7 / 10).toFixed(2))
@@ -173,8 +174,9 @@ router.get(p.findW, async (req: Request, res: Response) => {
         }
         else {
             var txtadd = ""
-            if (maxprice > element.price) { txtadd = "low" }
-            console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd)
+            if (maxprice > element.price) { txtadd = "low"; element.eval += "|Low" }
+            element.evalprice = Number((maxprice - element.price).toFixed(2))
+            // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd)
         }
 
     }
