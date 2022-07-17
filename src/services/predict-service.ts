@@ -139,8 +139,9 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
             mPredict.eval += "|Good";
             iCountGood++
-
         }
+        else if (daydiff>7) {mPredict.eval += "|Bad";}//超过7天的给出BAD 判断
+        
 
         mPredict.evalprice = Number((mPredict.MaxDayPrice - mPredict.CatchPrice).toFixed(2));
         mPredict.evalrate = Number((mPredict.evalprice / mPredict.CatchPrice * 100).toFixed(2))
