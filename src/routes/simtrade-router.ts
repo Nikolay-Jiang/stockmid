@@ -359,7 +359,7 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
             RSI7: new Decimal(element.rsi7),
             RSI14: new Decimal(element.rsi14),
             BackTest: "",
-            Memo: ""
+            Memo: element.eval
         }
 
         preresults[iCountpre] = mPre;
