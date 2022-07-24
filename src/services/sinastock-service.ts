@@ -1,4 +1,4 @@
-import sinastockRepo, { Stock } from '@repos/sinastock-repo';
+import sinastockRepo, { Notice, Stock } from '@repos/sinastock-repo';
 
 /**
  * getonestockCurrrentStatus
@@ -10,6 +10,13 @@ async function getone(stockcode: string): Promise<Stock> {
     return stock
 }
 
+/**
+ * 获取公告
+ */
+async function getnotice(stockcode: string): Promise<Notice[]> {
+    const noticelist = await sinastockRepo.GetStockNotice(stockcode);
+    return noticelist
+}
 
 /**
  * getstockList
@@ -23,7 +30,7 @@ async function getstockList(stockcodes: string): Promise<Stock[]> {
 
 // Export default
 export default {
-    getstockList,
+    getstockList,getnotice,
     getone
 
 } as const;

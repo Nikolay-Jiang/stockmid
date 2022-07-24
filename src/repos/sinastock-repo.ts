@@ -1,7 +1,9 @@
 import superagent, { parse } from 'superagent';
 import { t_StockNameList } from '@prisma/client'
+import { json } from 'stream/consumers';
 
 const dataurl = "http://hq.sinajs.cn/list=";
+const noticeurl = "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=15&page_index=1&ann_type=A&client_source=web&f_node=0&s_node=0&stock_list="
 let TempWebData = '';
 
 ///单个股票查询接口
@@ -17,7 +19,7 @@ export function GetStockOne(stockcode: string): Promise<Stock> {
         var mStock = Parse(result);
         return mStock;
     });
-    
+
 }
 
 
@@ -95,6 +97,9 @@ export async function GetSinaStockByList(lstockcode: t_StockNameList[]): Promise
     return Lstock
 
 }
+
+
+
 
 function Parse(orginText: string): Stock {
 
@@ -204,6 +209,63 @@ async function GetWebData(stockcode: string): Promise<string> {
 
 }
 
+///单个股票公告查询接口
+export async function GetStockNotice(stockcode: string): Promise<Notice[]> {
+
+    if (stockcode.length > 8) {
+        throw new Error("股票代码异常！");
+    }
+
+    var codefornotice = stockcode.substring(2);
+
+    var noticelist: Array<Notice> = [];
+    var result = await GetNoticeWebData(codefornotice);
+    // console.log(result);
+    var datas = JSON.parse(result);
+
+    for (let index = 0; index < datas.data.list.length; index++) {
+        const element = datas.data.list[index];
+
+        var mNotice = {
+            stockcode: stockcode,
+            notice_date: element.notice_date,
+            title_ch: element.title_ch
+        }
+        noticelist.push(mNotice)
+    }
+
+    return noticelist;
+}
+
+async function GetNoticeWebData(stockcode: string): Promise<string> {
+
+    const charset = require('superagent-charset');
+    const Throttle = require('superagent-throttle')
+    let throttle = new Throttle({
+        active: true,     // set false to pause queue
+        rate: 5,          // how many requests can be sent every `ratePer`
+        ratePer: 100,   // number of ms in which `rate` requests may be sent
+        concurrent: 2     // how many requests can be sent concurrently
+    })
+
+
+
+    const superagent = charset(require('superagent'));
+    const courseHtml = await superagent.get(noticeurl + stockcode)
+        // .set('Referer', 'https://finance.sina.com.cn/')
+        .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36')
+        // .set('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8')
+        // .set('Content-Type', ' application/javascript; charset=GB18030')
+        .use(throttle.plugin())
+        .buffer(true)
+
+        ;
+
+    var res = courseHtml.text;
+    return res;
+
+}
+
 export class Stock {
     stockcode!: string;
     stockname!: string;
@@ -226,7 +288,15 @@ export class Stock {
 
 }
 
+export class Notice {
+    stockcode!: string;
+    title_ch!: string;
+    notice_date: Date = new Date();
+
+}
+
 export default {
     GetStockOne,
-    GetStockList
+    GetStockList,
+    GetStockNotice
 } as const;

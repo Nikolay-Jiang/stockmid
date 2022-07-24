@@ -13,6 +13,7 @@ const { CREATED, OK } = StatusCodes;
 export const p = {
     getstocks: '/allbycodes/:stockcodes',
     getbycode: '/bycode/:stockcode',
+    getNotice: '/getnotice/:stockcode',
 } as const;
 
 
@@ -23,7 +24,7 @@ export const p = {
 router.get(p.getstocks, async (req: Request, res: Response) => {
 
     const { stockcodes } = req.params;
-    
+
     const stocks = await sinastockService.getstockList(stockcodes);
     return res.status(OK).json({ stocks });
 });
@@ -37,6 +38,13 @@ router.get(p.getbycode, async (req: Request, res: Response) => {
     const { stockcode } = req.params;
     const stock = await sinastockService.getone(stockcode);
     return res.status(OK).json({ stock });
+});
+
+router.get(p.getNotice, async (req: Request, res: Response) => {
+
+    const { stockcode } = req.params;
+    const noticelist = await sinastockService.getnotice(stockcode);
+    return res.status(OK).json({ noticelist });
 });
 
 

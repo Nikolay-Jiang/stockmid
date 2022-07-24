@@ -644,6 +644,42 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
 }
 
+/**
+ * 1个月内是否存在负面事件
+ * @param stockcode 
+ * @returns 
+ */
+async function isNegativeEvent(stockcode: string): Promise<boolean> {
+    var notices = await sinaService.getnotice(stockcode)
+
+    if (notices.length == 0) { return false; }
+    var today = new Date();
+    today.setHours(8, 0, 0, 0);
+
+    var daylimit = new Date();
+    daylimit.setDate(today.getDate() - 30);
+    // console.log("daylim",daylimit.toDateString());
+    notices = notices.filter(x => {
+        let itemdate = new Date(x.notice_date).getTime();
+        return itemdate > daylimit.getTime();
+        // console.log(itemdate,daylimit.getTime())
+    })
+
+    // console.log("notices", notices.length);
+    if (notices.length == 0) { return false; }
+
+    var results = notices.filter(x => x.title_ch.indexOf("关注函") > -1 || x.title_ch.indexOf("问询函") > -1)
+    if (results.length > 0) { return true; }
+
+    return false;
+}
+
+
+/**
+ * 寻找双升
+ * @param enddate 
+ * @returns 
+ */
 async function findDoubleRise(enddate: Date): Promise<wresult[]> {
     var yesdate: Date = new Date(enddate);
     if (enddate.getHours() == 0) { enddate.setHours(enddate.getHours() + 8); }
@@ -717,7 +753,7 @@ async function findDoubleRise(enddate: Date): Promise<wresult[]> {
 export default {
     isAdd,
     isReduce,
-    isM,
+    isM, isNegativeevent: isNegativeEvent,
     isW, findYZM,
     isRecentHigh,
     isRecentLow,
