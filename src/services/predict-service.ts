@@ -37,6 +37,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     enddate.setHours(8, 0, 0, 0);
     var predictlist: Array<predictresult> = [];
     var iCountGood = 0;
+    var iCountGoodFowW = 0;
     statsGood = "";
 
 
@@ -73,6 +74,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
         var mPredict: predictresult = new predictresult();
         var CurrentInfo = mystocks.filter(x => x.stockcode == element.StockCode);
+        mPredict.PredictKey = element.PredictKey;
         mPredict.StockCode = element.StockCode!
         mPredict.PredictTime = element.PredictTime!;
         mPredict.CatchPrice = Number(element.CurrentPrice);
@@ -100,7 +102,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
                     mPredict.CurrentBB = Number(dayrptsCurr[0].BB)
                 }
             }
-            mPredict.MaxDayPrice = mPredict.CurrentPrice;
+
         }
 
         if (needtoday) {
@@ -114,6 +116,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
             if (mPredict.CurrentPrice > rsiCalc.rsi7expect && mPredict.CurrentPrice > rsiCalc.rsi14expect) {
                 mPredict.eval = "|C双升|"
             }
+            mPredict.MaxDayPrice = mPredict.CurrentPrice;
         }
 
         if (dayrptsTemp.length > 0) {
@@ -124,8 +127,10 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
             mPredict.MaxDayBB = Number(dayrptsTemp[dayrptsTemp.length - 1].BB);
             mPredict.MaxDayRsi7 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI7);
             mPredict.MaxDayRsi14 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI14);
+            mPredict.MaxDayDiff = analService.calc_day(mPredict.MaxDay.getTime(), startdate.getTime()) + 1;
 
-            if (mPredict.CurrentPrice > maxprice) {
+
+            if (mPredict.CurrentPrice > maxprice && needtoday) {
                 mPredict.MaxDayPrice = mPredict.CurrentPrice;
                 mPredict.MaxDayRsi7 = -1;
                 mPredict.MaxDayRsi14 = -1;
@@ -138,18 +143,21 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
         if (mPredict.MaxDayPrice > mPredict.CatchPrice && (mPredict.MaxDayPrice - mPredict.CatchPrice) > evalnumber) {
 
             mPredict.eval += "|Good";
+            mPredict.isGood = true;
             iCountGood++
+            
         }
-        else if (daydiff>7) {mPredict.eval += "|Bad";}//超过7天的给出BAD 判断
-        
+        else if (daydiff > 7) { mPredict.eval += "|Bad"; }//超过7天的给出BAD 判断
+
 
         mPredict.evalprice = Number((mPredict.MaxDayPrice - mPredict.CatchPrice).toFixed(2));
         mPredict.evalrate = Number((mPredict.evalprice / mPredict.CatchPrice * 100).toFixed(2))
 
         predictlist.push(mPredict)
     }
-
+    
     statsGood = (iCountGood / predicts.length * 100).toFixed(2) + "%";
+    predictlist.sort(((a, b) => b.CatchPrice - a.CatchPrice));
 
     return predictlist
 }
@@ -165,6 +173,7 @@ export default {
 
 
 export class predictresult {
+    PredictKey: string = "";
     StockCode: string = "";
     Type: rdType = rdType.unknow; //预测上升类型 目前有W YZM
     PredictTime!: Date; //预测执行的时间 
@@ -181,8 +190,10 @@ export class predictresult {
     MaxDayRsi7: number = 0; //评估期内 最高日 RSI7
     MaxDayRsi14: number = 0; //评估期内 最高日 RSI14
     MaxDayBB: number = 0; //评估期内 最高日 BB
+    MaxDayDiff: number = 0;
     eval: string = "";// 评估的文字价格 GOOD= 当前价-预测价>0.4
     evalprice: number = 0; //MaxDayPrice-CatchPrice
     evalrate: number = 0; // (evelprice - catchprice)/catchprice *100 to fix(2)
+    isGood: boolean = false;
 
 }
