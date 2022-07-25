@@ -156,7 +156,7 @@ router.get(p.findW, async (req: Request, res: Response) => {
 
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
             // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
-            if (await simService.isNegativeevent(element.stockcode)) {element.eval += "|负面"; }
+            if (await simService.isNegativeEvent(element.stockcode)) {element.eval += "|负面"; }
             element.eval += "|Good";
             element.evalprice = Number((maxprice - element.price).toFixed(2))
             iCountGood++;
@@ -352,7 +352,7 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
     for (let index = 0; index < findresults.length; index++) {
         const element = findresults[index];
 
-        if (await simService.isNegativeevent(element.stockcode)) {element.eval += "|负面"; }
+        if (await simService.isNegativeEvent(element.stockcode)) {element.eval += "|负面"; }
         
         var mPre: t_Predict = {
             PredictKey: "",

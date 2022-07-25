@@ -753,7 +753,7 @@ async function findDoubleRise(enddate: Date): Promise<wresult[]> {
 export default {
     isAdd,
     isReduce,
-    isM, isNegativeevent: isNegativeEvent,
+    isM, isNegativeEvent,
     isW, findYZM,
     isRecentHigh,
     isRecentLow,

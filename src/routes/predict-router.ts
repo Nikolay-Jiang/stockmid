@@ -15,7 +15,7 @@ const { CREATED, OK } = StatusCodes;
 export const p = {
     get: '/getallbyday/:startday/:endday',
     getbyday: '/getbyday/:startday/:evalnumber',
-    backtestw: '/becktestw/:startday/:evalnumber',
+    backtestw: '/backtestw/:startday/:evalnumber',
 } as const;
 
 
