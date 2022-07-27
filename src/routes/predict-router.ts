@@ -15,7 +15,7 @@ const { CREATED, OK } = StatusCodes;
 export const p = {
     get: '/getallbyday/:startday/:endday',
     getbyday: '/getbyday/:startday/:evalnumber',
-    backtestw: '/backtestw/:startday/:evalnumber',
+    backtest: '/backtest/:startday/:evalnumber',
 } as const;
 
 
@@ -53,7 +53,7 @@ router.get(p.getbyday, async (req: Request, res: Response) => {
 /**
  * BackTest predict.
  */
-router.get(p.backtestw, async (req: Request, res: Response) => {
+router.get(p.backtest, async (req: Request, res: Response) => {
     const { startday, evalnumber } = req.params;
     if (startday == undefined || startday == "") { throw new ParamMissingError(); }
     var startdate = new Date(startday);
@@ -62,31 +62,54 @@ router.get(p.backtestw, async (req: Request, res: Response) => {
     var predicts = await predictService.getPredictByDay(startdate, evalTmp);
 
     var Wpredicts = predicts.filter(x => x.Type == "W");
-    if (Wpredicts.length == 0) { return res.end() }
+    var YZMpredicts = predicts.filter(x => x.Type == "YZM");
+    var WText = "";
+    var YZMText = "";
+    if (Wpredicts.length >= 0) {
+        var iSumDayDiff = 0;
+        var iDayDiffAvg = 0;
+        var iMiniBenfit = 100;
+        var iCountGood = 0;
+
+        Wpredicts.forEach(function (item) {
+            if (item.isGood) {
+                iSumDayDiff += item.MaxDayDiff;
+                iCountGood++;
+                if (item.evalprice < iMiniBenfit) { iMiniBenfit = item.evalprice; }
+            }
+        })
+
+        iDayDiffAvg = parseInt((iSumDayDiff / iCountGood).toFixed(2))
+        var iStatusGood = (iCountGood / Wpredicts.length * 100).toFixed(2);
+
+        WText = `共有W数据${Wpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGood}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
+        // console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
+
+    }
 
 
-    var iSumDayDiff = 0;
-    var iDayDiffAvg = 0;
-    var iMiniBenfit = 100;
-    var iCountGood = 0;
-    var sWText = "";
-    Wpredicts.forEach(function (item) {
-        if (item.Type == "W" && item.isGood) {
-            iSumDayDiff += item.MaxDayDiff;
-            iCountGood++;
-            if (item.evalprice < iMiniBenfit) { iMiniBenfit = item.evalprice; }
-        }
-    })
+    if (YZMpredicts.length > 0) {
+        var iSumDayDiff = 0;
+        var iDayDiffAvg = 0;
+        var iMiniBenfit = 100;
+        var iCountGood = 0;
 
-    iDayDiffAvg = parseInt((iSumDayDiff / iCountGood).toFixed(2))
-    var iStatusGood = (iCountGood / Wpredicts.length * 100).toFixed(2);
+        YZMpredicts.forEach(function (item) {
+            if (item.isGood) {
+                iSumDayDiff += item.MaxDayDiff;
+                iCountGood++;
+                if (item.evalprice < iMiniBenfit) { iMiniBenfit = item.evalprice; }
+            }
+        })
 
-    sWText = `共有W数据${Wpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGood}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
-    console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
+        iDayDiffAvg = parseInt((iSumDayDiff / iCountGood).toFixed(2))
+        var iStatusGood = (iCountGood / YZMpredicts.length * 100).toFixed(2);
 
+        YZMText = `共有YZM数据${YZMpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGood}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
+        console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
+    }
 
-
-    return res.status(OK).json({ sWText });
+    return res.status(OK).json({ WText, YZMText });
 
 });
 
