@@ -42,13 +42,6 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     var iCountGoodFowW = 0;
     statsGood = "";
 
-
-    const predicts = await predictRepo.getAllbyPredictTime(startdate, enddate);
-    // console.log(startdate.toDateString(),enddate.toUTCString(), predicts.length);
-
-    if (predicts.length == 0) { return predictlist; }
-
-    //计算结果
     var daydiff = analService.calc_day(today.getTime(), startdate.getTime());
     
     if (daydiff>0) {//读取缓存
@@ -56,6 +49,12 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
         if (cacheresult != null) {return cacheresult;}
     }
 
+
+    const predicts = await predictRepo.getAllbyPredictTime(startdate, enddate);
+
+    if (predicts.length == 0) { return predictlist; }
+
+    //计算结果  
     startdate.setDate(startdate.getDate() + 1)
     enddate.setDate(startdate.getDate() + 9);
     if (daydiff < 7 && today.getHours() >= 9) { needtoday = true; enddate = new Date(); enddate.setHours(8, 0, 0, 0); }
