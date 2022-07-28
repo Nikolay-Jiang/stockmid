@@ -111,7 +111,7 @@ async function getone(reportday: Date, stockcode: string): Promise<t_StockDayRep
 
 // Export default
 export default {
-    getDayrptByCode, getDayrptByReportDay, getDayrptByCondition,
+    getDayrptByCode, getDayrptByReportDay, getDayrptByCondition,GetDateStr,
     getone, getDayrptByReportDay2, getdayRptCountByDayAfter, getdayRptCountByDayBefore
 
 } as const;

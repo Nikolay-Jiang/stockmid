@@ -29,6 +29,8 @@ async function getPredictByPredictTime(startdate: Date, enddate: Date): Promise<
 
 
 async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promise<predictresult[]> {
+    var cache = require('memory-cache');
+    var cacheKey: string = "predict" + dayrptService.GetDateStr(startdate);
     startdate.setHours(8, 0, 0, 0);
     var needtoday: boolean = false;
     var today = new Date();
@@ -48,6 +50,11 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
     //计算结果
     var daydiff = analService.calc_day(today.getTime(), startdate.getTime());
+    
+    if (daydiff>0) {//读取缓存
+        var cacheresult = cache.get(cacheKey);
+        if (cacheresult != null) {return cacheresult;}
+    }
 
     startdate.setDate(startdate.getDate() + 1)
     enddate.setDate(startdate.getDate() + 9);
@@ -158,6 +165,8 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     
     statsGood = (iCountGood / predicts.length * 100).toFixed(2) + "%";
     predictlist.sort(((a, b) => b.CatchPrice - a.CatchPrice));
+
+    if (daydiff>0) {cache.put(cacheKey, predictlist, 1800000);}//写入缓存
 
     return predictlist
 }

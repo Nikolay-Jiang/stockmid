@@ -65,12 +65,12 @@ router.get(p.backtest, async (req: Request, res: Response) => {
     var YZMpredicts = predicts.filter(x => x.Type == "YZM");
     var WText = "";
     var YZMText = "";
-    if (Wpredicts.length >= 0) {
+    if (Wpredicts.length > 0) {
         var iSumDayDiff = 0;
         var iDayDiffAvg = 0;
         var iMiniBenfit = 100;
         var iCountGood = 0;
-
+        var iStatusGoodW="0";
         Wpredicts.forEach(function (item) {
             if (item.isGood) {
                 iSumDayDiff += item.MaxDayDiff;
@@ -79,10 +79,14 @@ router.get(p.backtest, async (req: Request, res: Response) => {
             }
         })
 
-        iDayDiffAvg = parseInt((iSumDayDiff / iCountGood).toFixed(2))
-        var iStatusGood = (iCountGood / Wpredicts.length * 100).toFixed(2);
+        if (iCountGood>0) {
+            iDayDiffAvg = parseInt((iSumDayDiff / iCountGood).toFixed(2))
+            iStatusGoodW = (iCountGood / Wpredicts.length * 100).toFixed(2);    
+        }
+        
+        if (iCountGood==0) {iMiniBenfit=0;}
 
-        WText = `共有W数据${Wpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGood}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
+        WText = `共有W数据${Wpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGoodW}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
         // console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
 
     }
@@ -93,6 +97,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
         var iDayDiffAvg = 0;
         var iMiniBenfit = 100;
         var iCountGood = 0;
+        var iStatusGoodYZM = "0";
 
         YZMpredicts.forEach(function (item) {
             if (item.isGood) {
@@ -102,10 +107,15 @@ router.get(p.backtest, async (req: Request, res: Response) => {
             }
         })
 
-        iDayDiffAvg = parseInt((iSumDayDiff / iCountGood).toFixed(2))
-        var iStatusGood = (iCountGood / YZMpredicts.length * 100).toFixed(2);
+        if (iCountGood > 0) {
+            iDayDiffAvg = parseInt((iSumDayDiff / iCountGood).toFixed(2))
+            iStatusGoodYZM = (iCountGood / YZMpredicts.length * 100).toFixed(2);
+        }
 
-        YZMText = `共有YZM数据${YZMpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGood}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
+        if (iCountGood==0) {iMiniBenfit=0;}
+
+
+        YZMText = `共有YZM数据${YZMpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGoodYZM}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
         console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
     }
 
