@@ -16,6 +16,7 @@ export const p = {
     get: '/getallbyday/:startday/:endday',
     getbyday: '/getbyday/:startday/:evalnumber',
     backtest: '/backtest/:startday/:evalnumber',
+    backtestol: '/backtestonline/:startday',
 } as const;
 
 
@@ -120,6 +121,22 @@ router.get(p.backtest, async (req: Request, res: Response) => {
     }
 
     return res.status(OK).json({ WText, YZMText });
+
+});
+
+
+/**
+ * 生成单日的回测数据
+ */
+router.get(p.backtestol, async (req: Request, res: Response) => {
+    const { startday } = req.params;
+    if (startday == undefined || startday == "") { throw new ParamMissingError(); }
+    var startdate = new Date(startday);
+    var evalTmp = 0.4
+    
+    var predicts = await predictService.backtestol(startdate);
+
+    return res.status(OK).end("accomplish");
 
 });
 

@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 
 
 /**
- * Add one user.
+ * Add one predict.
  * 
- * @param mPredict 
+ * @param modelPredict 
  * @returns 
  */
 async function add(mPredict: t_Predict): Promise<void> {
@@ -24,6 +24,25 @@ async function add(mPredict: t_Predict): Promise<void> {
             RSI14: mPredict.RSI14,
             BackTest: mPredict.BackTest,
             Memo: mPredict.Memo
+        },
+    })
+}
+
+/**
+ * update one predict.
+ * 
+ * @param modelPredict 
+ * @returns 
+ */
+async function update(mPredict: t_Predict): Promise<void> {
+
+    const post = await prisma.t_Predict.update({
+        where: {
+            PredictKey: mPredict.PredictKey
+        },
+        data: {
+            BackTest: mPredict.BackTest,
+            // Memo: mPredict.Memo
         },
     })
 }
@@ -84,7 +103,7 @@ async function getAllbyCondition(startdate: Date, enddate: Date, stockcode: stri
 
 // Export default
 export default {
-    add,
+    add,update,
     getAll,
     getAllbyPredictTime,
     getAllbyCondition

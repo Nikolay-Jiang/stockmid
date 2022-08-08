@@ -1,5 +1,5 @@
 import predictRepo from '@repos/predict-repo';
-import { t_Predict } from '@prisma/client'
+import { Prisma, t_Predict } from '@prisma/client'
 import simtradeService, { rdType } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
 import dayrptService from '@services/dayrpt-service';
@@ -43,10 +43,10 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     statsGood = "";
 
     var daydiff = analService.calc_day(today.getTime(), startdate.getTime());
-    
-    if (daydiff>0) {//读取缓存
+
+    if (daydiff > 0) {//读取缓存
         var cacheresult = cache.get(cacheKey);
-        if (cacheresult != null) {return cacheresult;}
+        if (cacheresult != null) { return cacheresult; }
     }
 
 
@@ -151,7 +151,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
             mPredict.eval += "|Good";
             mPredict.isGood = true;
             iCountGood++
-            
+
         }
         else if (daydiff > 7) { mPredict.eval += "|Bad"; }//超过7天的给出BAD 判断
 
@@ -161,21 +161,51 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
         predictlist.push(mPredict)
     }
-    
+
     statsGood = (iCountGood / predicts.length * 100).toFixed(2) + "%";
     predictlist.sort(((a, b) => b.CatchPrice - a.CatchPrice));
 
-    if (daydiff>0) {cache.put(cacheKey, predictlist, 1800000);}//写入缓存
+    if (daydiff > 0) { cache.put(cacheKey, predictlist, 1800000); }//写入缓存
 
     return predictlist
 }
 
+/**
+ * 生成单日的回测数据
+ * @param startdate 
+ */
+async function backtestol(startdate: Date) {
+
+    var predicts = await getPredictByDay(startdate);
+    if (predicts.length == 0) { return; }
+    console.log(startdate.toUTCString(), predicts.length)
+    
+    for (let index = 0; index < predicts.length; index++) {
+        const element = predicts[index];
+
+        var sBackTest = `${element.MaxDayPrice}|${element.MaxDayDiff}|${element.evalprice}`;
+        var mPredict: t_Predict = {
+            PredictKey: element.PredictKey,
+            StockCode: '',
+            PredictTime: new Date(),
+            Type: element.Type,
+            CurrentPrice: null,
+            RSI7: null,
+            RSI14: null,
+            BackTest: sBackTest,
+            Memo: "",
+        }
+
+        predictRepo.update(mPredict);
+    }
+
+}
 
 
 // Export default
 export default {
     getPredictByPredictTime, getPredictByDay,
-    addOne,
+    addOne, backtestol,
 
 } as const;
 
