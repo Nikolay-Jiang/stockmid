@@ -18,7 +18,7 @@ export const p = {
     getbycode: '/getbycode/:startday/:endday/:stockcode',
     getbycode2: '/getbycode2/:startday/:stockcode',
     backtest: '/backtest/:startday/:evalnumber',
-    backtestol: '/backtestonline/:startday',
+    backteston: '/backteston/:startday',
 } as const;
 
 
@@ -158,7 +158,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
 /**
  * 生成单日的回测数据
  */
-router.get(p.backtestol, async (req: Request, res: Response) => {
+router.get(p.backteston, async (req: Request, res: Response) => {
     const { startday } = req.params;
     if (startday == undefined || startday == "") { throw new ParamMissingError(); }
     var startdate = new Date(startday);
