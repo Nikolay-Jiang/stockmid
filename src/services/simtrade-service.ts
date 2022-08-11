@@ -411,9 +411,9 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     //处理周末的情况
     if (enddate.getDay() == 0) { enddate.setDate(enddate.getDate() - 2); }
     if (enddate.getDay() == 6) { enddate.setDate(enddate.getDate() - 1); }
-    yesdate.setDate(enddate.getDate() - 1)
+    
     if (enddate.getDay() == 1) { yesdate.setDate(enddate.getDate() - 3); }
-
+    else {yesdate.setDate(enddate.getDate() - 1)}
 
     var wresults: Array<wresult> = [];
     var iResult = 0;
@@ -521,14 +521,13 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
     var yesdate: Date = new Date(enddate);
     yesdate.setHours(8, 0, 0, 0);
 
-
-
     //处理周末的情况
     if (enddate.getDay() == 0) { enddate.setDate(enddate.getDate() - 2); }
     if (enddate.getDay() == 6) { enddate.setDate(enddate.getDate() - 1); }
-    yesdate.setDate(enddate.getDate() - 1)
+    
+    //处理前一日情况
     if (enddate.getDay() == 1) { yesdate.setDate(enddate.getDate() - 3); }
-
+    else{yesdate.setDate(enddate.getDate() - 1)}
 
     //RSI7,14   从50+ 平稳上升到 60+ 再上升至 70,且连续穿透上线
     //查找前一天 双 60+ 的并往前计算

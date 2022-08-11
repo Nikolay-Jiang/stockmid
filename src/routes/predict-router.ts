@@ -16,6 +16,7 @@ export const p = {
     get: '/getallbyday/:startday/:endday',
     getbyday: '/getbyday/:startday/:evalnumber',
     getbycode: '/getbycode/:startday/:endday/:stockcode',
+    getbycode2: '/getbycode2/:startday/:stockcode',
     backtest: '/backtest/:startday/:evalnumber',
     backtestol: '/backtestonline/:startday',
 } as const;
@@ -46,6 +47,21 @@ router.get(p.getbycode, async (req: Request, res: Response) => {
     const predicts = await predictService.getPredictByCode(startdate, enddate, stockcode);
     return res.status(OK).json({ predicts });
 });
+
+/**
+ * Get predict by code2.
+ */
+ router.get(p.getbycode2, async (req: Request, res: Response) => {
+    const { startday, stockcode } = req.params;
+    if (startday == undefined || startday == "") { throw new ParamMissingError(); }
+    var enddate = new Date(startday);
+    var startdate = new Date(startday);
+    
+    startdate.setDate(enddate.getDate()-60);
+    const predicts = await predictService.getPredictByCode(startdate, enddate, stockcode);
+    return res.status(OK).json({ predicts });
+});
+
 
 /**
  * Get all predict By Day.

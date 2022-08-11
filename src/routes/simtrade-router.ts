@@ -41,6 +41,8 @@ export const p = {
     findwOnline: '/findwon/',
     findyzm: '/findyzm/:endday',
     findyzmon: '/findyzmon/',
+    findyzmonbyday: '/findyzmonbyday/:endday',
+
 
 } as const;
 
@@ -276,15 +278,12 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
 
 
 router.get(p.findyzmon, async (req: Request, res: Response) => {
-    // const { endday } = req.params;
     var enddate: Date = new Date();
     enddate.setHours(8, 0, 0, 0);
 
     if (enddate.getDay() == 0 || enddate.getDay() == 6) { return res.status(OK).end("not find"); }
-
-
     var findresults = await simService.findYZM(enddate);
-    var findCount = findresults.length;
+    // var findCount = findresults.length;
 
     if (findresults.length == 0) { return res.status(OK).end("not find"); }
 
@@ -317,7 +316,55 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
 
 
 
-    return res.status(OK).json({ enddate, findCount, findresults });
+    return res.status(OK).end("accomplish");
+});
+
+
+router.get(p.findyzmonbyday, async (req: Request, res: Response) => {
+    const { endday } = req.params;
+    var enddate: Date = new Date(endday);
+    enddate.setHours(8, 0, 0, 0);
+
+    if (enddate.getDay() == 0 || enddate.getDay() == 6) { return res.status(OK).end("not find"); }
+
+
+    var findresults = await simService.findYZM(enddate);
+    // var findCount = findresults.length;
+
+    if (findresults.length == 0) { return res.status(OK).end("not find"); }
+
+    enddate.setHours(9, 0, 0, 0);
+
+    var predicts: Array<t_Predict> = [];
+    for (let index = 0; index < findresults.length; index++) {
+        const element = findresults[index];
+
+        var mPredict = {
+            PredictKey: "",
+            StockCode: element.stockcode,
+            PredictTime: enddate,
+            Type: "YZM",
+            CurrentPrice: new Decimal(element.price),
+            RSI7: new Decimal(element.rsi7),
+            RSI14: new Decimal(element.rsi14),
+            BackTest: "",
+            Memo: element.eval,
+        }
+
+        predicts.push(mPredict)
+
+    }
+
+    if (predicts.length > 0) {
+        for (let index = 0; index < predicts.length; index++) {
+            const element = predicts[index];
+            predictService.addOne(element);
+        }
+    }
+
+
+
+    return res.status(OK).end("accomplish");
 });
 
 
