@@ -15,6 +15,7 @@ const { CREATED, OK } = StatusCodes;
 export const p = {
     get: '/getallbyday/:startday/:endday',
     getbyday: '/getbyday/:startday/:evalnumber',
+    getbycode: '/getbycode/:startday/:endday/:stockcode',
     backtest: '/backtest/:startday/:evalnumber',
     backtestol: '/backtestonline/:startday',
 } as const;
@@ -30,6 +31,19 @@ router.get(p.get, async (req: Request, res: Response) => {
     var startdate = new Date(startday);
     var enddate = new Date(endday);
     const predicts = await predictService.getPredictByPredictTime(startdate, enddate);
+    return res.status(OK).json({ predicts });
+});
+
+
+/**
+ * Get predict by code.
+ */
+router.get(p.getbycode, async (req: Request, res: Response) => {
+    const { startday, endday, stockcode } = req.params;
+    if (startday == undefined || startday == "") { throw new ParamMissingError(); }
+    var startdate = new Date(startday);
+    var enddate = new Date(endday);
+    const predicts = await predictService.getPredictByCode(startdate, enddate, stockcode);
     return res.status(OK).json({ predicts });
 });
 
@@ -71,7 +85,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
         var iDayDiffAvg = 0;
         var iMiniBenfit = 100;
         var iCountGood = 0;
-        var iStatusGoodW="0";
+        var iStatusGoodW = "0";
         Wpredicts.forEach(function (item) {
             if (item.isGood) {
                 iSumDayDiff += item.MaxDayDiff;
@@ -80,12 +94,12 @@ router.get(p.backtest, async (req: Request, res: Response) => {
             }
         })
 
-        if (iCountGood>0) {
+        if (iCountGood > 0) {
             iDayDiffAvg = parseInt((iSumDayDiff / iCountGood).toFixed(2))
-            iStatusGoodW = (iCountGood / Wpredicts.length * 100).toFixed(2);    
+            iStatusGoodW = (iCountGood / Wpredicts.length * 100).toFixed(2);
         }
-        
-        if (iCountGood==0) {iMiniBenfit=0;}
+
+        if (iCountGood == 0) { iMiniBenfit = 0; }
 
         WText = `共有W数据${Wpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGoodW}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
         // console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
@@ -113,7 +127,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
             iStatusGoodYZM = (iCountGood / YZMpredicts.length * 100).toFixed(2);
         }
 
-        if (iCountGood==0) {iMiniBenfit=0;}
+        if (iCountGood == 0) { iMiniBenfit = 0; }
 
 
         YZMText = `共有YZM数据${YZMpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGoodYZM}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
@@ -133,7 +147,7 @@ router.get(p.backtestol, async (req: Request, res: Response) => {
     if (startday == undefined || startday == "") { throw new ParamMissingError(); }
     var startdate = new Date(startday);
     var evalTmp = 0.4
-    
+
     var predicts = await predictService.backtestol(startdate);
 
     return res.status(OK).end("accomplish");

@@ -4,6 +4,7 @@ import simtradeService, { rdType } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
 import dayrptService from '@services/dayrpt-service';
 import sinaService from '@services/sinastock-service';
+import internal from 'stream';
 
 
 
@@ -155,6 +156,14 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
         }
         else if (daydiff > 7) { mPredict.eval += "|Bad"; }//超过7天的给出BAD 判断
 
+        var repeatDayStart = new Date(startdate);
+        repeatDayStart.setDate(startdate.getDate() - 60);
+        var iRepeatCount: number = await isRepeat(repeatDayStart, startdate, mPredict.StockCode)//判断曾经是否出现过
+        // console.log(iRepeatCount,mPredict.StockCode)
+        iRepeatCount--;
+        if (iRepeatCount > 0) {
+            mPredict.eval += `|重${iRepeatCount}`;
+        }
 
         mPredict.evalprice = Number((mPredict.MaxDayPrice - mPredict.CatchPrice).toFixed(2));
         mPredict.evalrate = Number((mPredict.evalprice / mPredict.CatchPrice * 100).toFixed(2))
@@ -170,6 +179,20 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     return predictlist
 }
 
+async function getPredictByCode(startdate: Date, enddate: Date, stockcode: string): Promise<t_Predict[]> {
+    const predicts = await predictRepo.getAllbyCode(startdate, enddate, stockcode);
+    return predicts
+}
+
+/**
+ * 检测stockcode是否在指定时间段内出现过，返回0表示没有。
+ */
+async function isRepeat(startdate: Date, enddate: Date, stockcode: string): Promise<number> {
+    const predicts = await predictRepo.getAllbyCode(startdate, enddate, stockcode);
+    return predicts.length
+}
+
+
 /**
  * 生成单日的回测数据
  * @param startdate 
@@ -179,7 +202,7 @@ async function backtestol(startdate: Date) {
     var predicts = await getPredictByDay(startdate);
     if (predicts.length == 0) { return; }
     console.log(startdate.toUTCString(), predicts.length)
-    
+
     for (let index = 0; index < predicts.length; index++) {
         const element = predicts[index];
 
@@ -205,7 +228,7 @@ async function backtestol(startdate: Date) {
 // Export default
 export default {
     getPredictByPredictTime, getPredictByDay,
-    addOne, backtestol,
+    addOne, backtestol, getPredictByCode,
 
 } as const;
 

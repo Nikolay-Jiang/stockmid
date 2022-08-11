@@ -86,7 +86,7 @@ async function getAllbyPredictTime(startdate: Date, enddate: Date): Promise<t_Pr
  * 
  * @returns 
  */
-async function getAllbyCondition(startdate: Date, enddate: Date, stockcode: string): Promise<t_Predict[]> {
+async function getAllbyCode(startdate: Date, enddate: Date, stockcode: string): Promise<t_Predict[]> {
     return await prisma.t_Predict.findMany({
         where: {
             StockCode: stockcode,
@@ -106,5 +106,5 @@ export default {
     add,update,
     getAll,
     getAllbyPredictTime,
-    getAllbyCondition
+    getAllbyCode,
 } as const;
