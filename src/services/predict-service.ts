@@ -4,8 +4,7 @@ import simtradeService, { rdType } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
 import dayrptService from '@services/dayrpt-service';
 import sinaService from '@services/sinastock-service';
-import internal from 'stream';
-
+import commonService from '@services/common-service';
 
 
 export var statsGood = "";
@@ -174,7 +173,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     statsGood = (iCountGood / predicts.length * 100).toFixed(2) + "%";
     predictlist.sort(((a, b) => b.CatchPrice - a.CatchPrice));
 
-    if (daydiff > 0) { cache.put(cacheKey, predictlist, 1800000); }//写入缓存
+    if (daydiff > 0 && commonService.checkCache()) {cache.put(cacheKey, predictlist, 1800000);}//写入缓存
 
     return predictlist
 }

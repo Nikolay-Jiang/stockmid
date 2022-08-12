@@ -1,6 +1,6 @@
 import dayrptRepo from '@repos/dayRpt-repo';
 import { t_StockDayReport } from '@prisma/client'
-
+import commonService from '@services/common-service';
 
 /**
  * getDayrptByCode
@@ -28,7 +28,11 @@ async function getDayrptByReportDay(reportday: Date): Promise<t_StockDayReport[]
     }
 
     const dayrpts = await dayrptRepo.getAllbyReportDay(reportday);
-    cache.put(cacheKey, dayrpts, 3600000);
+    
+    if (commonService.checkCache()) {
+        cache.put(cacheKey, dayrpts, 3600000);    
+    }
+    
     return dayrpts
 }
 
@@ -50,7 +54,10 @@ async function getDayrptByReportDay2(startdate: Date, enddate: Date): Promise<t_
     if (cacheresult != null) { return cacheresult; }
 
     const dayrpts = await dayrptRepo.getAllbyReportDay2(startdate, enddate);
-    cache.put(cacheKey, dayrpts, 3600000);
+    
+    if (commonService.checkCache()) {
+        cache.put(cacheKey, dayrpts, 3600000);    
+    }
 
     return dayrpts
 }
@@ -68,7 +75,11 @@ async function getDayrptByCondition(startdate: Date, enddate: Date, stockcode: s
     if (cacheresult != null) { return cacheresult; }
 
     const dayrpts = await dayrptRepo.getAllbyCondition(startdate, enddate, stockcode);
-    cache.put(cacheKey, dayrpts, 3600000);
+    
+    if (commonService.checkCache()) {
+        cache.put(cacheKey, dayrpts, 3600000);    
+    }
+
     return dayrpts
 }
 
@@ -79,7 +90,11 @@ async function getdayRptCountByDayAfter(endday: Date, stockcode: string, iCount:
     if (cacheresult != null) { return cacheresult; }
 
     const dayrpts = await dayrptRepo.getdayRptCountByDayAfter(endday, stockcode, iCount);
-    cache.put(cacheKey, dayrpts, 3600000);
+    
+    if (commonService.checkCache()) {
+        cache.put(cacheKey, dayrpts, 3600000);    
+    }
+
     return dayrpts
 }
 
@@ -90,7 +105,11 @@ async function getdayRptCountByDayBefore(endday: Date, stockcode: string, iCount
     if (cacheresult != null) { return cacheresult; }
 
     const dayrpts = await dayrptRepo.getdayRptCountByDayBefore(endday, stockcode, iCount);
-    cache.put(cacheKey, dayrpts, 3600000);
+    
+    if (commonService.checkCache()) {
+        cache.put(cacheKey, dayrpts, 3600000);    
+    }
+    
     return dayrpts
 }
 
