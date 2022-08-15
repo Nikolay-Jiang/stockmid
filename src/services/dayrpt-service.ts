@@ -3,7 +3,7 @@ import { t_StockDayReport } from '@prisma/client'
 import commonService from '@services/common-service';
 
 
-const cacheTTL: number = 300000
+const cacheTTL: number = 60000
 const cacheTTLShort: number = 60000
 /**
  * getDayrptByCode
