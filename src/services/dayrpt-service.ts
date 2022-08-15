@@ -2,6 +2,9 @@ import dayrptRepo from '@repos/dayRpt-repo';
 import { t_StockDayReport } from '@prisma/client'
 import commonService from '@services/common-service';
 
+
+const cacheTTL: number = 300000
+const cacheTTLShort: number = 60000
 /**
  * getDayrptByCode
  * @param stockcode  
@@ -28,11 +31,11 @@ async function getDayrptByReportDay(reportday: Date): Promise<t_StockDayReport[]
     }
 
     const dayrpts = await dayrptRepo.getAllbyReportDay(reportday);
-    
+
     if (commonService.checkCache()) {
-        cache.put(cacheKey, dayrpts, 3600000);    
+        cache.put(cacheKey, dayrpts, cacheTTL);
     }
-    
+
     return dayrpts
 }
 
@@ -54,9 +57,9 @@ async function getDayrptByReportDay2(startdate: Date, enddate: Date): Promise<t_
     if (cacheresult != null) { return cacheresult; }
 
     const dayrpts = await dayrptRepo.getAllbyReportDay2(startdate, enddate);
-    
+
     if (commonService.checkCache()) {
-        cache.put(cacheKey, dayrpts, 3600000);    
+        cache.put(cacheKey, dayrpts, cacheTTL);
     }
 
     return dayrpts
@@ -75,9 +78,9 @@ async function getDayrptByCondition(startdate: Date, enddate: Date, stockcode: s
     if (cacheresult != null) { return cacheresult; }
 
     const dayrpts = await dayrptRepo.getAllbyCondition(startdate, enddate, stockcode);
-    
+
     if (commonService.checkCache()) {
-        cache.put(cacheKey, dayrpts, 3600000);    
+        cache.put(cacheKey, dayrpts, cacheTTL);
     }
 
     return dayrpts
@@ -90,9 +93,9 @@ async function getdayRptCountByDayAfter(endday: Date, stockcode: string, iCount:
     if (cacheresult != null) { return cacheresult; }
 
     const dayrpts = await dayrptRepo.getdayRptCountByDayAfter(endday, stockcode, iCount);
-    
+
     if (commonService.checkCache()) {
-        cache.put(cacheKey, dayrpts, 3600000);    
+        cache.put(cacheKey, dayrpts, cacheTTLShort);
     }
 
     return dayrpts
@@ -105,11 +108,11 @@ async function getdayRptCountByDayBefore(endday: Date, stockcode: string, iCount
     if (cacheresult != null) { return cacheresult; }
 
     const dayrpts = await dayrptRepo.getdayRptCountByDayBefore(endday, stockcode, iCount);
-    
+
     if (commonService.checkCache()) {
-        cache.put(cacheKey, dayrpts, 3600000);    
+        cache.put(cacheKey, dayrpts, cacheTTLShort);
     }
-    
+
     return dayrpts
 }
 
@@ -130,7 +133,7 @@ async function getone(reportday: Date, stockcode: string): Promise<t_StockDayRep
 
 // Export default
 export default {
-    getDayrptByCode, getDayrptByReportDay, getDayrptByCondition,GetDateStr,
+    getDayrptByCode, getDayrptByReportDay, getDayrptByCondition, GetDateStr,
     getone, getDayrptByReportDay2, getdayRptCountByDayAfter, getdayRptCountByDayBefore
 
 } as const;
