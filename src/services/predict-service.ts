@@ -43,7 +43,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     var iCountGoodFowW = 0;
     statsGood = "";
 
-    var daydiff = analService.calc_day(today.getTime(), startdate.getTime());
+    var daydiff = commonService.calc_day(today.getTime(), startdate.getTime());
 
     if (daydiff > 0) {//读取缓存
         var cacheresult = cache.get(cacheKey);
@@ -134,7 +134,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
             mPredict.MaxDayBB = Number(dayrptsTemp[dayrptsTemp.length - 1].BB);
             mPredict.MaxDayRsi7 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI7);
             mPredict.MaxDayRsi14 = Number(dayrptsTemp[dayrptsTemp.length - 1].RSI14);
-            mPredict.MaxDayDiff = analService.calc_day(mPredict.MaxDay.getTime(), startdate.getTime()) + 1;
+            mPredict.MaxDayDiff = commonService.calc_day(mPredict.MaxDay.getTime(), startdate.getTime()) + 1;
 
 
             if (mPredict.CurrentPrice > maxprice && needtoday) {

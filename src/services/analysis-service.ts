@@ -265,31 +265,6 @@ async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
 
 }
 
-function isSameDay(d1: Date, d2: Date): boolean {
-    return d1.getFullYear() === d2.getFullYear() &&
-        d1.getMonth() === d2.getMonth() &&
-        d1.getDate() === d2.getDate();
-}
-
-function calc_day(timestamp1: number, timestamp2: number): number {
-
-    // 将时间戳相减获得差值（毫秒数）
-    var differ = timestamp1 - timestamp2
-
-    /**
-     * @desc 毫秒数除以1000就转为秒数
-     * @desc 秒数除以60后取整，就是分钟（因为1分钟等于60秒）
-     * @desc 秒数除以3600后取整，就是小时（因为1小时等于3600秒）
-     * @desc 小时数除以24后取整，就是相差的天数
-     */
-    var day = differ / 1000 / 60 / 60 / 24
-
-    return parseInt(day.toString())
-
-}
-
-
-
 
 export class rsidata {
     rsi7: number = -1;
@@ -332,6 +307,4 @@ export default {
     bollCalc,
     GetTodayDayRpt,
     GetRateData,
-    isSameDay, calc_day,
-
 } as const;

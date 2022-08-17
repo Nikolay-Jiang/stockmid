@@ -3,6 +3,7 @@ import { t_StockDayReport, Prisma } from '@prisma/client'
 import dayrptService from '@services/dayrpt-service';
 import analService, { rsidata } from '@services/analysis-service';
 import sinaService from '@services/sinastock-service';
+import commonService from '@services/common-service';
 
 export var isMpatton: boolean = false;
 export var isWpatton: boolean = false;
@@ -444,8 +445,8 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
             //获取当日实时数据
             var mStock = await sinaService.getone(element.StockCode);
 
-            if (!analService.isSameDay(dayrptsTemp[dayrptsTemp.length - 1].ReportDay, mStock.SearchTime)) {//确认没有当日数据
-                if (analService.isSameDay(mStock.SearchTime, enddate)) {//如果查询日期和最后天相同
+            if (!commonService.isSameDay(dayrptsTemp[dayrptsTemp.length - 1].ReportDay, mStock.SearchTime)) {//确认没有当日数据
+                if (commonService.isSameDay(mStock.SearchTime, enddate)) {//如果查询日期和最后天相同
                     //实时数据转RPT
                     var mdayrpttoday = await analService.GetTodayDayRpt(enddate, mStock.stockcode, mStock)
 
@@ -468,7 +469,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
         }
 
         if (!needtoday) {
-            if (!analService.isSameDay(dayrptsTemp[dayrptsTemp.length - 1].ReportDay, enddate)) { continue; }//排除当日无数据的情况    
+            if (!commonService.isSameDay(dayrptsTemp[dayrptsTemp.length - 1].ReportDay, enddate)) { continue; }//排除当日无数据的情况    
         }
 
 

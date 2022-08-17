@@ -2,12 +2,10 @@ import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
 import dayrptService from '@services/dayrpt-service';
 import sinaService from '@services/sinastock-service';
-import { Stock } from '@repos/sinastock-repo';
 
 import analService from '@services/analysis-service';
-import { rateAnalysis, bolldata } from '@services/analysis-service';
 import { Prisma } from '@prisma/client';
-
+import commonService from '@services/common-service';
 
 
 // Constants
@@ -48,7 +46,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     var boll = await analService.bollCalc(dayrptsCopy);
     var rsi = await analService.rsiCalc(dayrptsCopy);
 
-    if (analService.isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
+    if (commonService.isSameDay(enddate, todaydate) && Number(mStock.TradingVolume) > 0) {//如果是当日，则把实时数据放入,排除停牌情况
         if (todaydate.getHours() >= 9 && todaydate.getHours() <= 15) {
             var mdayrpttoday = await analService.GetTodayDayRpt(todaydate, stockcode, mStock)
 
