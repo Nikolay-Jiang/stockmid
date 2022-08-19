@@ -2,6 +2,7 @@ import { t_StockDayReport, Prisma } from '@prisma/client'
 import { Stock } from '@repos/sinastock-repo';
 import simService, { txtOP } from '@services/simtrade-service';
 import { isMpatton, stockOP } from '@services/simtrade-service';
+import predictService from '@services/predict-service';
 
 
 const titleSize = "36px";

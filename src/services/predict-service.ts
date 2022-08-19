@@ -228,7 +228,7 @@ async function backtestol(startdate: Date) {
 // Export default
 export default {
     getPredictByPredictTime, getPredictByDay,
-    addOne, backtestol, getPredictByCode,
+    addOne, backtestol, getPredictByCode,isRepeat,
 
 } as const;
 
