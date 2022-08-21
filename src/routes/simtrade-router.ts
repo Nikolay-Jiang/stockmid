@@ -1,13 +1,14 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
-import { t_StockDayReport, Prisma, t_Predict } from '@prisma/client';
-import dayrptService from '@services/dayrpt-service';
-import sinaService from '@services/sinastock-service';
-import simService from '@services/simtrade-service';
-import { isMpatton, stockOP, txtOP, isWpatton } from '@services/simtrade-service';
-import analService from '@services/analysis-service';
-import predictService from '@services/predict-service';
+import { t_StockDayReport, t_Predict } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime';
+import { isMpatton, stockOP, txtOP, isWpatton } from '@services/simtrade-service';
+import dayrptService from '@services/dayrpt-service';
+import simService from '@services/simtrade-service';
+import predictService from '@services/predict-service';
+import dayLogService from '@services/daylog-service';
+
+
 
 // Constants
 const router = Router();
@@ -35,18 +36,84 @@ var tradelog: Array<simLog> = [];
 
 // Paths
 export const p = {
-    getbyconditicon: '/allbycondition/:startday/:endday/:stockcode',
-    statistics: '/statistics/:startday/:endday/:stockcode',
-    findW: '/findw/:endday',
-    findwOnline: '/findwon/',
-    findyzm: '/findyzm/:endday',
-    findyzmon: '/findyzmon/',
-    findyzmonbyday: '/findyzmonbyday/:endday',
+    //getbyconditicon: '/allbycondition/:startday/:endday/:stockcode',
+    statistics: '/statistics/:startday/:endday/:stockcode',//统计并分析 特定股票在指定日期内的交易情况
+    findW: '/findw/:endday',//寻找指定日的YZM
+    findwOnline: '/findwon/',//寻找当日的W，并执行写库操作
+    findyzm: '/findyzm/:endday',//寻找指定日的YZM
+    findyzmon: '/findyzmon/',//寻找当日的YZM，并执行写库操作
+    findyzmonbyday: '/findyzmonbyday/:endday',//寻找指定日的YZM，并执行写库操作
+    simtradebypredict: '/simfrompredict/:startday'//根据指定日的predict 执行模拟交易
 
 
 } as const;
 
-//统计并分析 形态
+/**
+ * //根据指定日的predict 执行模拟交易
+ */
+router.get(p.simtradebypredict, async (req: Request, res: Response) => {
+    const { startday } = req.params;
+    var startdate: Date = new Date(startday);
+    var enddate: Date = new Date(startdate);
+    startdate.setHours(8, 0, 0, 0);
+    enddate.setDate(startdate.getDate() + 1);
+    var iCountLow = 0;
+    var iCountAfterNoon = 0;
+
+    console.log(enddate.toDateString());
+
+    var predictresults = await predictService.getPredictByPredictTime(startdate, enddate);
+
+    predictresults = predictresults.filter(x => x.Type == "W");
+
+    if (predictresults.length == 0) { return res.status(OK).end("not find"); }
+
+    for (let index = 0; index < predictresults.length; index++) {
+        const element = predictresults[index];
+
+
+        var tempdaylogs = await dayLogService.getDaylogByCondition(startdate, enddate, element.StockCode!);
+        if (tempdaylogs.length == 0) { continue; }
+
+        var bestbuyHour = -1;
+        var bestbuyPrice = element.CurrentPrice!;
+        var closeprice = element.CurrentPrice!;
+        var isLowThenCatch: boolean = false;
+
+        for (let index = 0; index < tempdaylogs.length; index++) {
+            const elementDayLog = tempdaylogs[index];
+            var currentHour = elementDayLog.SearchTime.getHours();
+            var currentPrice = elementDayLog.CurrentPrice!;
+            if (currentHour == 9) { continue } //9:35 时刚开盘
+            if (currentPrice < bestbuyPrice) {//监测是否有低于
+                isLowThenCatch = true;
+                bestbuyHour = currentHour;
+                bestbuyPrice = currentPrice;
+            }
+
+
+            if (currentHour == 15) {
+                closeprice = elementDayLog.CurrentPrice!;
+                continue;
+            } //收盘
+
+        }
+        if (isLowThenCatch) { iCountLow++; }
+        if (bestbuyHour >= 14) { iCountAfterNoon++; }
+
+        console.log(element.StockCode, element.Type, element.BackTest, "|", element.CurrentPrice, bestbuyPrice, bestbuyHour, isLowThenCatch, "close:", closeprice);
+
+    }
+
+    console.log("Total:", predictresults.length, "LowTrue:", iCountLow, "AfterNoonBuy:", iCountAfterNoon)
+
+    return res.status(OK).end("page end!");
+});
+
+
+/**
+ * 统计并分析 形态
+ */
 router.get(p.statistics, async (req: Request, res: Response) => {
     const { startday, endday, stockcode } = req.params;
     var begindate: Date = new Date(startday);
@@ -158,7 +225,7 @@ router.get(p.findW, async (req: Request, res: Response) => {
 
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
             // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
-            if (await simService.isNegativeEvent(element.stockcode)) {element.eval += "|负面"; }
+            if (await simService.isNegativeEvent(element.stockcode)) { element.eval += "|负面"; }
             element.eval += "|Good";
             element.evalprice = Number((maxprice - element.price).toFixed(2))
             iCountGood++;
@@ -399,8 +466,8 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
     for (let index = 0; index < findresults.length; index++) {
         const element = findresults[index];
 
-        if (await simService.isNegativeEvent(element.stockcode)) {element.eval += "|负面"; }
-        
+        if (await simService.isNegativeEvent(element.stockcode)) { element.eval += "|负面"; }
+
         var mPre: t_Predict = {
             PredictKey: "",
             StockCode: element.stockcode,

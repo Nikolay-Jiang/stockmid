@@ -22,7 +22,12 @@ function addOne(predict: t_Predict): Promise<void> {
 }
 
 
-
+/**
+ * 获取predict 源数据
+ * @param startdate 
+ * @param enddate 
+ * @returns 
+ */
 async function getPredictByPredictTime(startdate: Date, enddate: Date): Promise<t_Predict[]> {
     const predicts = await predictRepo.getAllbyPredictTime(startdate, enddate);
     return predicts
@@ -201,7 +206,6 @@ async function backtestol(startdate: Date) {
 
     var predicts = await getPredictByDay(startdate);
     if (predicts.length == 0) { return; }
-    console.log(startdate.toUTCString(), predicts.length)
 
     for (let index = 0; index < predicts.length; index++) {
         const element = predicts[index];
