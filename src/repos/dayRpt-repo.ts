@@ -46,7 +46,7 @@ async function persists(reportday: Date, stockcode: string): Promise<boolean> {
 
 
 /**
- * Get all DayRepor.
+ * Get all DayReport.
  * 
  * @returns 
  */
@@ -67,6 +67,20 @@ async function getAllbyCode(stockcode: string): Promise<t_StockDayReport[]> {
         }
     });
 }
+
+/**
+ * Add  DayReport
+ * 
+ * @returns 
+ */
+async function addone(mDayRpt: t_StockDayReport) {
+    await prisma.t_StockDayReport.create({
+        data: mDayRpt
+    });
+}
+
+
+
 
 /**
  * Get all DayReportByReportDay.
@@ -134,7 +148,7 @@ async function getdayRptCountByDayBefore(endday: Date, stockcode: string, count:
 
 // Export default
 export default {
-    getOne,
+    getOne,addone,
     persists,
     getAll,
     getAllbyCode,

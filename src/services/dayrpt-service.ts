@@ -129,11 +129,25 @@ async function getone(reportday: Date, stockcode: string): Promise<t_StockDayRep
     return await dayrptRepo.getOne(reportday, stockcode);
 }
 
+/**
+ * 判断是否已经存在
+ * @param reportday 
+ * @param stockcode 
+ * @returns 
+ */
+async function persists(reportday: Date, stockcode: string): Promise<boolean> {
+    return await dayrptRepo.persists(reportday, stockcode);
+}
+
+async function addone(mDayRpt: t_StockDayReport) {
+    await dayrptRepo.addone(mDayRpt);
+}
 
 
 // Export default
 export default {
     getDayrptByCode, getDayrptByReportDay, getDayrptByCondition, GetDateStr,
-    getone, getDayrptByReportDay2, getdayRptCountByDayAfter, getdayRptCountByDayBefore
+    getone, getDayrptByReportDay2, getdayRptCountByDayAfter, getdayRptCountByDayBefore,
+    persists,addone,
 
 } as const;

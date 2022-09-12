@@ -1,4 +1,5 @@
 import sinastockRepo, { Notice, Stock } from '@repos/sinastock-repo';
+import { t_StockDayReport } from '@prisma/client'
 
 /**
  * getonestockCurrrentStatus
@@ -19,6 +20,14 @@ async function getnotice(stockcode: string): Promise<Notice[]> {
 }
 
 /**
+ * 补日报
+ */
+async function getdayrpt(startdate: Date, enddate: Date, stockcode: string): Promise<t_StockDayReport[]> {
+    const dayrpts = await sinastockRepo.GetStockDayRpt(startdate, enddate, stockcode);
+    return dayrpts;
+}
+
+/**
  * getstockList
  * @param stockcodes 用',' 分割多个
  * @returns 
@@ -30,7 +39,7 @@ async function getstockList(stockcodes: string): Promise<Stock[]> {
 
 // Export default
 export default {
-    getstockList,getnotice,
-    getone
+    getstockList, getnotice,
+    getone, getdayrpt,
 
 } as const;

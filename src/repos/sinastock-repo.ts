@@ -1,9 +1,13 @@
 import superagent, { parse } from 'superagent';
-import { t_StockNameList } from '@prisma/client'
-import { json } from 'stream/consumers';
+import { prisma, t_StockDayReport, t_StockNameList } from '@prisma/client'
+import commonService from '@services/common-service';
+import { Decimal } from '@prisma/client/runtime';
+
+
 
 const dataurl = "http://hq.sinajs.cn/list=";
 const noticeurl = "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=15&page_index=1&ann_type=A&client_source=web&f_node=0&s_node=0&stock_list="
+//const dayrpturl = `https://q.stock.sohu.com/hisHq?code=zs_000300&start=${startdate}&end=20220901&stat=1&order=D&period=d&callback=historySearchHandler&rt=jsonp&r=0.34015556992340934&0.4387275691943626`
 let TempWebData = '';
 
 ///单个股票查询接口
@@ -266,6 +270,95 @@ async function GetNoticeWebData(stockcode: string): Promise<string> {
 
 }
 
+
+/**
+ * 日报补充接口
+ */
+export async function GetStockDayRpt(startdate: Date, enddate: Date, stockcode: string): Promise<t_StockDayReport[]> {
+    if (stockcode.length > 8) {
+        throw new Error("股票代码异常！");
+    }
+
+    var codefordayrpt = stockcode.substring(2);
+    if (codefordayrpt == "000300") { codefordayrpt = "zs_" + codefordayrpt; }
+    else { codefordayrpt = "cn_" + codefordayrpt; }
+    var result = await GetDayRptWebData(startdate, enddate, codefordayrpt);
+    var datas = JSON.parse(result);
+    var dayrpts: Array<t_StockDayReport> = [];
+
+    for (let index = 0; index < datas[0].hq.length; index++) {
+        const element = datas[0].hq[index];
+        var rate = (Number(element[4].substring(element[4].length - 1, 1)) / 100).toFixed(4);
+        var tradevol = (Number(element[7]) / 100).toFixed(2);
+        var tradeprice = (Number(element[8]) * 100).toFixed(2);
+
+        var mDayRpt: t_StockDayReport = {
+            StockCode: stockcode,
+            ReportDay: new Date(element[0]),
+            TodayOpenPrice: new Decimal(element[1]),
+            TodayClosePrice: new Decimal(element[2]),
+            RatePrice: new Decimal(element[3]),
+            Rate: new Decimal(rate),
+            TodayMinPrice: new Decimal(element[5]),
+            TodayMaxPrice: new Decimal(element[6]),
+            TradingVol: new Decimal(tradevol),
+            TradingPrice: new Decimal(tradeprice),
+            TradingPriceAvg: new Decimal((Number(tradeprice)/Number(tradevol)).toFixed(2)),
+            RSI7: null,
+            RSI14: null,
+            MA: null,
+            bollUP: null,
+            bollDown: null,
+            BB: null,
+            WIDTH: null,
+            Memo: null,
+        }
+
+        dayrpts.push(mDayRpt);
+    }
+
+
+    return dayrpts;
+}
+
+
+async function GetDayRptWebData(startdate: Date, enddate: Date, stockcode: string): Promise<string> {
+
+    const charset = require('superagent-charset');
+    const Throttle = require('superagent-throttle')
+    let throttle = new Throttle({
+        active: true,     // set false to pause queue
+        rate: 5,          // how many requests can be sent every `ratePer`
+        ratePer: 100,   // number of ms in which `rate` requests may be sent
+        concurrent: 2     // how many requests can be sent concurrently
+    })
+
+    var startstr = commonService.convertDatetoStr(startdate);
+    var endstr = commonService.convertDatetoStr(enddate);
+
+    startstr = startstr.replace(/-/g, "");
+    endstr = endstr.replace(/-/g, "");
+
+    console.log(startstr, endstr, stockcode);
+
+    const dayrpturl = `https://q.stock.sohu.com/hisHq?code=${stockcode}&start=${startstr}&end=${endstr}&stat=1&order=D&period=d&rt=json&r=0.34015556992340934&0.4387275691943626`
+
+
+    const superagent = charset(require('superagent'));
+    const courseHtml = await superagent.get(dayrpturl)
+        // .set('Referer', 'https://finance.sina.com.cn/')
+        .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36')
+        // .set('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8')
+        // .set('Content-Type', ' text/html; charset=gb2312')
+        .use(throttle.plugin())
+        .buffer(true)
+
+        ;
+
+    var res = courseHtml.text;
+    return res;
+}
+
 export class Stock {
     stockcode!: string;
     stockname!: string;
@@ -298,5 +391,6 @@ export class Notice {
 export default {
     GetStockOne,
     GetStockList,
-    GetStockNotice
+    GetStockNotice,
+    GetStockDayRpt
 } as const;
