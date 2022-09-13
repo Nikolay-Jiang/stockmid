@@ -343,7 +343,9 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
     return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults });
 });
 
-
+/**
+ * 基于YZM 进行预测并入库
+ */
 router.get(p.findyzmon, async (req: Request, res: Response) => {
     var enddate: Date = new Date();
     enddate.setHours(8, 0, 0, 0);
@@ -439,10 +441,8 @@ router.get(p.findyzmonbyday, async (req: Request, res: Response) => {
 router.get(p.findwOnline, async (req: Request, res: Response) => {
     // const { endday } = req.params;
     var enddate: Date = new Date();
-    var yesdate: Date = new Date();
     var txtresult: string = "";
     enddate.setHours(8, 0, 0, 0);
-    yesdate.setHours(8, 0, 0, 0);
 
     var preresults: Array<t_Predict> = []
     var iCountpre = 0;
@@ -451,16 +451,8 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
     if (enddate.getDay() == 0) { return res.status(OK).end("周末"); }
     if (enddate.getDay() == 6) { return res.status(OK).end("周末"); }
 
-    yesdate.setDate(enddate.getDate() - 1);
-    if (enddate.getDay() == 1) { yesdate.setDate(enddate.getDate() - 3); }
-
-
-    var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
-    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < 30 && x.RSI7 != null && Number(x.TodayClosePrice) >= 14 && Number(x.RSI7) >= 0);
-    if (dayrptsYes.length == 0) { return res.status(OK).end("Yesterday no data"); }
-
-
     var findresults = await simService.findW(enddate, true);
+    if (findresults.length == 0) { return res.status(OK).end("not find"); }
 
 
     for (let index = 0; index < findresults.length; index++) {
@@ -494,7 +486,7 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
 
 
 
-    return res.status(OK).json({ yesdate, enddate, txtresult });
+    return res.status(OK).json({ enddate, txtresult });
 });
 
 

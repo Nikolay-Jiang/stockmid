@@ -405,20 +405,14 @@ function isRecentLow(dayrps: t_StockDayReport[], index: number, dayCount: number
 
 async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult[]> {
 
-    var yesdate: Date = new Date(enddate);
-    if (enddate.getHours() == 0) { enddate.setHours(enddate.getHours() + 8); }
-    if (yesdate.getHours() == 0) { yesdate.setHours(yesdate.getHours() + 8); }
-
-    //处理周末的情况
-    if (enddate.getDay() == 0) { enddate.setDate(enddate.getDate() - 2); }
-    if (enddate.getDay() == 6) { enddate.setDate(enddate.getDate() - 1); }
-    
-    if (enddate.getDay() == 1) { yesdate.setDate(enddate.getDate() - 3); }
-    else {yesdate.setDate(enddate.getDate() - 1)}
-
+    enddate.setHours(8, 0, 0, 0);
     var wresults: Array<wresult> = [];
     var iResult = 0;
+    
+    var isholiday = await sinaService.isHoliday(enddate);
+    if (isholiday) { return wresults; };//判断当天是否为节假日
 
+    var yesdate: Date = await getLasttradeDay(enddate)
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
     if (dayrptsYes.length == 0) { return wresults; }
@@ -518,25 +512,14 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
 */
 async function findYZM(enddate: Date): Promise<wresult[]> {
 
-    enddate.setHours(8, 0, 0, 0);
-    var yesdate: Date = new Date(enddate);
-    yesdate.setHours(8, 0, 0, 0);
-
-    //处理周末的情况
-    if (enddate.getDay() == 0) { enddate.setDate(enddate.getDate() - 2); }
-    if (enddate.getDay() == 6) { enddate.setDate(enddate.getDate() - 1); }
-    
-    //处理前一日情况
-    if (enddate.getDay() == 1) { yesdate.setDate(enddate.getDate() - 3); }
-    else{yesdate.setDate(enddate.getDate() - 1)}
-
     //RSI7,14   从50+ 平稳上升到 60+ 再上升至 70,且连续穿透上线
     //查找前一天 双 60+ 的并往前计算
-
-
     var wresults: Array<wresult> = [];
-    // var iResult = 0;
+    enddate.setHours(8, 0, 0, 0);
+    var isholiday = await sinaService.isHoliday(enddate);
+    if (isholiday) { return wresults; };
 
+    var yesdate: Date = await getLasttradeDay(enddate);
 
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
@@ -642,6 +625,17 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
     return wresults;
 
+}
+
+async function getLasttradeDay(enddate: Date): Promise<Date> {
+    var yesdate: Date = new Date(enddate);
+    yesdate.setHours(8, 0, 0, 0);
+    yesdate.setDate(enddate.getDate() - 1)
+
+    while (await sinaService.isHoliday(yesdate)) {
+        yesdate.setDate(yesdate.getDate() - 1)
+    }
+    return yesdate;
 }
 
 /**

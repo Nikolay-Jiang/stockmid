@@ -37,9 +37,16 @@ async function getstockList(stockcodes: string): Promise<Stock[]> {
     return stocks
 }
 
+/**
+ * 判断日期是否为节假日
+ */
+async function isHoliday(checkDay: Date) {
+    return await sinastockRepo.isHoliday(checkDay);
+}
+
 // Export default
 export default {
     getstockList, getnotice,
-    getone, getdayrpt,
+    getone, getdayrpt, isHoliday
 
 } as const;

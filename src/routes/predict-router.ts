@@ -3,7 +3,7 @@ import { Request, Response, Router } from 'express';
 
 import predictService, { statsGood } from '@services/predict-service';
 import { ParamMissingError } from '@shared/errors';
-
+import dayrptService from '@services/dayrpt-service';
 
 
 
@@ -89,14 +89,26 @@ router.get(p.backtest, async (req: Request, res: Response) => {
     const { startday, evalnumber } = req.params;
     if (startday == undefined || startday == "") { throw new ParamMissingError(); }
     var startdate = new Date(startday);
+    startdate.setHours(8, 0, 0, 0);
     var evalTmp = 0.4
     if (evalnumber != undefined || evalnumber != "") { evalTmp = Number(evalnumber); }
-    var predicts = await predictService.getPredictByDay(startdate, evalTmp);
+    var hs300rpt = await dayrptService.getone(startdate, "sh000300");
+    console.log(hs300rpt, startdate.toUTCString());
 
+    var predicts = await predictService.getPredictByDay(startdate, evalTmp);
     var Wpredicts = predicts.filter(x => x.Type == "W");
     var YZMpredicts = predicts.filter(x => x.Type == "YZM");
     var WText = "";
     var YZMText = "";
+    var hs300 = "";
+
+
+
+    if (hs300rpt != null) {
+        var iTemp = (Number(hs300rpt.TodayClosePrice!) - Number(hs300rpt.TodayOpenPrice!)) / Number(hs300rpt.TodayOpenPrice);
+        var iRate = (iTemp * 100).toFixed(2) + "%";
+        hs300 = "\r\n 沪深300：" + iRate
+    }
     if (Wpredicts.length > 0) {
         var iSumDayDiff = 0;
         var iDayDiffAvg = 0;
@@ -148,6 +160,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
 
 
         YZMText = `共有YZM数据${YZMpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGoodYZM}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
+        YZMText += hs300;
         console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
     }
 

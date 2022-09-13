@@ -8,6 +8,7 @@ import { Decimal } from '@prisma/client/runtime';
 const dataurl = "http://hq.sinajs.cn/list=";
 const noticeurl = "https://np-anotice-stock.eastmoney.com/api/security/ann?sr=-1&page_size=15&page_index=1&ann_type=A&client_source=web&f_node=0&s_node=0&stock_list="
 //const dayrpturl = `https://q.stock.sohu.com/hisHq?code=zs_000300&start=${startdate}&end=20220901&stat=1&order=D&period=d&callback=historySearchHandler&rt=jsonp&r=0.34015556992340934&0.4387275691943626`
+const holidayurl = "https://tool.bitefu.net/jiari/?d="
 let TempWebData = '';
 
 ///单个股票查询接口
@@ -213,7 +214,11 @@ async function GetWebData(stockcode: string): Promise<string> {
 
 }
 
-///单个股票公告查询接口
+/**
+ * 查询股票公告信息
+ * @param stockcode 
+ * @returns 
+ */
 export async function GetStockNotice(stockcode: string): Promise<Notice[]> {
 
     if (stockcode.length > 8) {
@@ -303,7 +308,7 @@ export async function GetStockDayRpt(startdate: Date, enddate: Date, stockcode: 
             TodayMaxPrice: new Decimal(element[6]),
             TradingVol: new Decimal(tradevol),
             TradingPrice: new Decimal(tradeprice),
-            TradingPriceAvg: new Decimal((Number(tradeprice)/Number(tradevol)).toFixed(2)),
+            TradingPriceAvg: new Decimal((Number(tradeprice) / Number(tradevol)).toFixed(2)),
             RSI7: null,
             RSI14: null,
             MA: null,
@@ -359,6 +364,42 @@ async function GetDayRptWebData(startdate: Date, enddate: Date, stockcode: strin
     return res;
 }
 
+export async function isHoliday(checkDay: Date): Promise<boolean> {
+    var result = Number(await GetHolidayWebData(checkDay));
+    if (result > 0) { return true }
+    return false;
+}
+
+async function GetHolidayWebData(checkDay: Date): Promise<string> {
+
+    const charset = require('superagent-charset');
+    const Throttle = require('superagent-throttle')
+    let throttle = new Throttle({
+        active: true,     // set false to pause queue
+        rate: 5,          // how many requests can be sent every `ratePer`
+        ratePer: 100,   // number of ms in which `rate` requests may be sent
+        concurrent: 2     // how many requests can be sent concurrently
+    })
+
+    var checkstr = commonService.convertDatetoStr(checkDay);
+
+    checkstr = checkstr.replace(/-/g, "");
+
+    const superagent = charset(require('superagent'));
+    const courseHtml = await superagent.get(holidayurl + checkstr)
+        // .set('Referer', 'https://finance.sina.com.cn/')
+        .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36')
+        // .set('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8')
+        // .set('Content-Type', ' text/html; charset=gb2312')
+        .use(throttle.plugin())
+        .buffer(true)
+
+        ;
+
+    var res = courseHtml.text;
+    return res;
+}
+
 export class Stock {
     stockcode!: string;
     stockname!: string;
@@ -392,5 +433,6 @@ export default {
     GetStockOne,
     GetStockList,
     GetStockNotice,
-    GetStockDayRpt
+    GetStockDayRpt,
+    isHoliday,
 } as const;
