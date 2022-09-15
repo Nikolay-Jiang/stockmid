@@ -520,7 +520,6 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
     if (isholiday) { return wresults; };
 
     var yesdate: Date = await getLasttradeDay(enddate);
-
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
     if (dayrptsYes.length == 0) { return wresults; }

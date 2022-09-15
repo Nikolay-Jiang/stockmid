@@ -365,8 +365,11 @@ async function GetDayRptWebData(startdate: Date, enddate: Date, stockcode: strin
 }
 
 export async function isHoliday(checkDay: Date): Promise<boolean> {
-    var result = Number(await GetHolidayWebData(checkDay));
-    if (result > 0) { return true }
+    try {
+        var result = Number(await GetHolidayWebData(checkDay));
+        if (result > 0) { return true }    
+    } catch (error) {return false;}
+    
     return false;
 }
 
