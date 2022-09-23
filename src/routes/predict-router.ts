@@ -4,6 +4,7 @@ import { Request, Response, Router } from 'express';
 import predictService, { statsGood } from '@services/predict-service';
 import { ParamMissingError } from '@shared/errors';
 import dayrptService from '@services/dayrpt-service';
+import { t_Predict } from '@prisma/client';
 
 
 
@@ -20,6 +21,7 @@ export const p = {
     backtest: '/backtest/:startday/:evalnumber',//回测某日的全部数据
     backteston: '/backteston/:startday',//回测某日数据并写入 predict 的backtest 列
     backtestbyMonth: '/backtestbymonth/:startday',//按月执行预测表的回测功能
+    aYZM: '/ayzm/:startday/:endday/:evelrate', //分析YZM算法
 } as const;
 
 
@@ -204,6 +206,33 @@ router.get(p.backtestbyMonth, async (req: Request, res: Response) => {
 
 });
 
+/**
+ * Get all predict.
+ */
+router.get(p.aYZM, async (req: Request, res: Response) => {
+    const { startday, endday, evelrate } = req.params;
+    if (startday == undefined || startday == "") { throw new ParamMissingError(); }
+    var startdate = new Date(startday);
+    var enddate = new Date(endday);
+    var rate = Number(evelrate);
+    const predicts = await predictService.getPredictByPredictTime(startdate, enddate);
+    var predictsfilter: Array<t_Predict> = []
+    if (predicts.length == 0) { return res.status(OK).end("not find"); }
+    for (let index = 0; index < predicts.length; index++) {
+        const element = predicts[index];
+        if (element.BackTest == null || element.BackTest == "") { continue; }
+        var strs = element.BackTest.split("|")
+
+        var rateTemp = (Number(strs[2]) / Number(element.CurrentPrice)) * 100
+        // console.log(element.StockCode,rateTemp);
+        if (rateTemp >= rate) {
+            predictsfilter.push(element);
+        }
+
+
+    }
+    return res.status(OK).json({ predictsfilter });
+});
 
 
 // Export default
