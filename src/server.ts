@@ -67,13 +67,13 @@ app.get('/', (_: Request, res: Response) => {
 
 // Redirect to login if not logged in.
 app.get('/users', (req: Request, res: Response) => {
-    const jwt = req.signedCookies[cookieProps.key];
-
-    if (!jwt) {
-        res.redirect('/');
-    } else {
-        res.sendFile('users.html', {root: viewsDir});
-    }
+    // const jwt = req.signedCookies[cookieProps.key];
+    res.sendFile('users.html', {root: viewsDir});
+    // if (!jwt) {
+    //     res.redirect('/');
+    // } else {
+        
+    // }
 });
 
 app.get('/observers', (req: Request, res: Response) => {
