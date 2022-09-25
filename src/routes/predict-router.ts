@@ -1,9 +1,10 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
 
-import predictService, { statsGood } from '@services/predict-service';
+import predictService, { predictresult, statsGood } from '@services/predict-service';
 import { ParamMissingError } from '@shared/errors';
 import dayrptService from '@services/dayrpt-service';
+import commonService from '@services/common-service';
 import { t_Predict } from '@prisma/client';
 
 
@@ -207,32 +208,95 @@ router.get(p.backtestbyMonth, async (req: Request, res: Response) => {
 });
 
 /**
- * Get all predict.
+ * YZM 专门分析
  */
 router.get(p.aYZM, async (req: Request, res: Response) => {
     const { startday, endday, evelrate } = req.params;
     if (startday == undefined || startday == "") { throw new ParamMissingError(); }
     var startdate = new Date(startday);
     var enddate = new Date(endday);
+    var iCount = commonService.calc_day(enddate.getTime(), startdate.getTime(),);
     var rate = Number(evelrate);
-    const predicts = await predictService.getPredictByPredictTime(startdate, enddate);
-    var predictsfilter: Array<t_Predict> = []
-    if (predicts.length == 0) { return res.status(OK).end("not find"); }
+
+    // console.log(iCount, startdate, enddate)
+    if (iCount > 0) {
+        for (let index = 0; index < iCount; index++) {
+            if (startdate.getDay() == 6 || startdate.getDay() == 0) { startdate.setDate(startdate.getDate() + 1); continue; }
+            console.log(startdate.toDateString());
+            var tempday = new Date(startdate);
+            const predicts = await predictService.getPredictByDay(tempday);
+            var predictsfilter = predicts.filter(x => x.evalrate > rate && x.Type == "YZM").sort((a, b) => b.evalrate - a.evalrate);
+            an1(predictsfilter)
+
+            // console.log("end:",startdate.toDateString())
+            console.log("-----------------")
+            sim1(predicts.sort((a, b) => b.evalrate - a.evalrate));
+            startdate.setDate(startdate.getDate() + 1);
+        }
+        return res.status(OK).end();
+    }
+    else {
+        const predicts = await predictService.getPredictByDay(startdate);
+        var predictsfilter = predicts.filter(x => x.evalrate > rate && x.Type == "YZM").sort((a, b) => b.evalrate - a.evalrate);
+        an1(predictsfilter)
+        // sim1(predicts);
+        return res.status(OK).json({ predictsfilter });
+    }
+
+
+
+
+
+
+});
+
+function sim1(predicts: predictresult[]) {
     for (let index = 0; index < predicts.length; index++) {
         const element = predicts[index];
-        if (element.BackTest == null || element.BackTest == "") { continue; }
-        var strs = element.BackTest.split("|")
 
-        var rateTemp = (Number(strs[2]) / Number(element.CurrentPrice)) * 100
-        // console.log(element.StockCode,rateTemp);
-        if (rateTemp >= rate) {
-            predictsfilter.push(element);
-        }
+        var evelstrs = element.eval.split("|");
+        var strChong = evelstrs[evelstrs.length - 1];
+        var rsiCompare = element.CatchRsi7 - element.CatchRsi14;
 
+        if (strChong != "重4") { continue; }
+        if (rsiCompare < 10) { continue; }
+        if (element.CatchPrice < 15) { continue }
+        //判断是否从高点回落，正确状态：连续1周从低位往上
 
+//需要加入交易量分析
+        console.log("sim1:", element.StockCode, element.evalrate);
+
+        // var 
+        // var str1, str2, str3, str4 = "";
+        // if (evelstrs.length > 0) { str1 = evelstrs[0]; }
+        // if (evelstrs.length > 1) { str2 = evelstrs[2]; }
+        // if (evelstrs.length > 2) { str3 = evelstrs[3]; }
+        // if (evelstrs.length > 3) { str4 = evelstrs[4]; }
     }
-    return res.status(OK).json({ predictsfilter });
-});
+}
+
+function an1(predicts: predictresult[]) {
+    var istat0 = 0;
+    var istat1 = 0;
+    var istat2 = 0;
+    var istat3 = 0;
+    var istat4 = 0;
+    for (let index = 0; index < predicts.length; index++) {
+        const element = predicts[index];
+
+        if (element.eval.indexOf("重") > 0) {
+            var iChong = Number(element.eval.substring(element.eval.length - 1))
+            if (iChong == 1) { istat1++; }
+            if (iChong == 2) { istat2++; }
+            if (iChong == 3) { istat3++; }
+            if (iChong == 4) { istat4++; }
+        }
+        else { istat0++; }
+        console.log("an1", element.StockCode, (element.CatchRsi7 - element.CatchRsi14).toFixed(2), element.eval, element.evalrate)
+    }
+
+    console.log("stats:", istat0, "重1：", istat1, "重2：", istat2, "重3：", istat3, "重4：", istat4)
+}
 
 
 // Export default
