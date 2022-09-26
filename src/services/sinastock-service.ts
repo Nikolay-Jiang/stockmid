@@ -41,6 +41,9 @@ async function getstockList(stockcodes: string): Promise<Stock[]> {
  * 判断日期是否为节假日
  */
 async function isHoliday(checkDay: Date) {
+    if (checkDay.getDay()==6||checkDay.getDay()==0) {//周六 周日情况
+        return true
+    }
     return await sinastockRepo.isHoliday(checkDay);
 }
 

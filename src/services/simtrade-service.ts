@@ -408,7 +408,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     enddate.setHours(8, 0, 0, 0);
     var wresults: Array<wresult> = [];
     var iResult = 0;
-    
+
     var isholiday = await sinaService.isHoliday(enddate);
     if (isholiday) { return wresults; };//判断当天是否为节假日
 
@@ -522,8 +522,8 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
     var yesdate: Date = await getLasttradeDay(enddate);
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
+
     if (dayrptsYes.length == 0) { return wresults; }
-    // console.log(yesdate.toDateString())
 
     dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= 60 && x.RSI7 != null && Number(x.RSI14) >= 60 && Number(x.TodayClosePrice) > 12);
 
@@ -630,6 +630,15 @@ async function getLasttradeDay(enddate: Date): Promise<Date> {
     var yesdate: Date = new Date(enddate);
     yesdate.setHours(8, 0, 0, 0);
     yesdate.setDate(enddate.getDate() - 1)
+
+    if (yesdate.getDay() == 0) {//周日
+        yesdate.setDate(yesdate.getDate() - 2)
+        return yesdate;
+    }
+    if (yesdate.getDay() == 6) {//周六
+        yesdate.setDate(yesdate.getDate() - 1)
+        return yesdate;
+    }
 
     while (await sinaService.isHoliday(yesdate)) {
         yesdate.setDate(yesdate.getDate() - 1)
