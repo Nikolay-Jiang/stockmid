@@ -356,6 +356,8 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
 
     if (findresults.length == 0) { return res.status(OK).end("not find"); }
 
+    var ptime = new Date();
+    ptime.setHours(8, 15, 0, 0)
     var predicts: Array<t_Predict> = [];
     for (let index = 0; index < findresults.length; index++) {
         const element = findresults[index];
@@ -363,7 +365,7 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
         var mPredict = {
             PredictKey: "",
             StockCode: element.stockcode,
-            PredictTime: new Date(),
+            PredictTime: ptime,
             Type: "YZM",
             CurrentPrice: new Decimal(element.price),
             RSI7: new Decimal(element.rsi7),
@@ -382,8 +384,6 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
             predictService.addOne(element);
         }
     }
-
-
 
     return res.status(OK).end("accomplish");
 });
