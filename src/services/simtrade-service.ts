@@ -522,6 +522,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
     var yesdate: Date = await getLasttradeDay(enddate);
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
+    console.log(yesdate.toDateString())
 
     if (dayrptsYes.length == 0) { return wresults; }
 
@@ -633,11 +634,9 @@ async function getLasttradeDay(enddate: Date): Promise<Date> {
 
     if (yesdate.getDay() == 0) {//周日
         yesdate.setDate(yesdate.getDate() - 2)
-        return yesdate;
     }
     if (yesdate.getDay() == 6) {//周六
         yesdate.setDate(yesdate.getDate() - 1)
-        return yesdate;
     }
 
     while (await sinaService.isHoliday(yesdate)) {
