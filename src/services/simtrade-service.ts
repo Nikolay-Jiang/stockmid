@@ -532,8 +532,11 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
     var startdate = new Date(yesdate);
     startdate.setDate(yesdate.getDate() - 7);
-    var dayrpts = await dayrptService.getDayrptByReportDay2(startdate, yesdate);
+    if (await sinaService.isHoliday(startdate)) {//如果起始日期正好处于假期，再往前+7天
+        startdate.setDate(startdate.getDate() - 7);
+    }
 
+    var dayrpts = await dayrptService.getDayrptByReportDay2(startdate, yesdate);
     if (dayrpts.length == 0) { return wresults; }
 
     for (let index = 0; index < dayrptsYes.length; index++) {
@@ -545,7 +548,6 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
         dayrptsTemp.sort((a, b) => Number(b!.ReportDay) - Number(a!.ReportDay));
 
         if (validTremor(dayrptsTemp)) { continue; }
-
         var isVolUpPriceUp = false;
         var isDoubleStrong = false;
         var iStatus = 0;
@@ -554,6 +556,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
         var todayVol = Number(dayrptsTemp[0].TradingVol);
         var todateRSI7 = Number(dayrptsTemp[0].RSI7);
         var todateRSI14 = Number(dayrptsTemp[0].RSI14);
+
         var yesPrice = Number(dayrptsTemp[1].TradingPriceAvg);
         var yesVol = Number(dayrptsTemp[1].TradingVol);
 
@@ -565,26 +568,19 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
         if (todateRSI7 > 50 && todateRSI14 > 50) { isDoubleStrong = true; }
 
-
         var iCountRise = 0;
         for (let index = 1; index < dayrptsTemp.length; index++) {
             const element = dayrptsTemp[index];
 
             var todayRSI7 = Number(dayrptsTemp[index - 1].RSI7);
             var todayRSI14 = Number(dayrptsTemp[index - 1].RSI14);
-
             var yesRSI7 = Number(dayrptsTemp[index].RSI7);
             var yesRSI14 = Number(dayrptsTemp[index].RSI14);
-
             if (index == 1) { iStatus = parseInt((todayRSI7 / 10).toFixed(2)) };
-
-
-
             if (todayRSI7 > yesRSI7 && todayRSI14 > yesRSI14) { iCountRise++; }
             else {
                 break;//如果不是连续上升 中断
                 // if (iCountRise>0) {break;}
-
             }
 
 
