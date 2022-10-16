@@ -282,6 +282,11 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
     daytomorrow.setDate(enddate.getDate() + 1);
     daytomorrow.setHours(8, 0, 0, 0);
 
+
+    var yesterday: Date = new Date(endday);
+    yesterday.setDate(enddate.getDate() - 1);
+    yesterday.setHours(8, 0, 0, 0);
+
     if (daytomorrow.getDay() == 0) { daytomorrow.setDate(daytomorrow.getDate() + 1); }
     if (daytomorrow.getDay() == 6) { daytomorrow.setDate(daytomorrow.getDate() + 2); }
 
@@ -293,9 +298,14 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
 
     for (let index = 0; index < findresults.length; index++) {
         const element = findresults[index];
-        // if (element.rsi7>70) {continue;}
 
+        var dayrptsBefore = await dayrptService.getdayRptCountByDayBefore(yesterday, element.stockcode, 26);
+        if (dayrptsBefore.length > 0) {
+            //规律总结方法？
+            moneyrule1(dayrptsBefore)
+        }
 
+        //评估
         var dayrptsEval = await dayrptService.getdayRptCountByDayAfter(daytomorrow, element.stockcode, 7);
 
         if (dayrptsEval.length == 0) { continue }
@@ -332,6 +342,18 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
             }
             console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd)
         }
+
+
+
+        //基于图形的走势分析
+        // if (element.evalrate >= 20) {
+
+        //     var dayrptsBefore = await dayrptService.getdayRptCountByDayBefore(yesterday, element.stockcode, 26);
+        //     if (dayrptsBefore.length > 0) {
+        //         //规律总结方法？
+        //         findmoney(dayrptsBefore)
+        //     }
+        // }
 
     }
     findresults.sort((a, b) => (a.eval > b.eval) ? 1 : -1);
@@ -629,6 +651,137 @@ function GetChooseEval(dayrps: t_StockDayReport[], index: number, myoper: stockO
 
     return "";
 }
+
+//总结规律
+function findmoney(dayrpts: t_StockDayReport[]) {
+    //7天MINPRICE状态
+    //7天CLOSEPRICE状态
+
+    var iCountMinRise = 0;
+    var iCountMinIgnore = 0;
+
+    var iCountMaxRise = 0;
+    var iCountMaxIgnore = 0;
+
+    var iCountCloseRise = 0;
+    var iCountCloseIgnore = 0;
+
+    var iTempMin = 0;
+    var iTempMax = 0;
+    var iTempClose = 0;
+    for (let index = 7; index >= 0; index--) {
+        const element = dayrpts[index];
+        let todaymin = Number(element.TodayMinPrice);
+        let todayClose = Number(element.TodayClosePrice);
+        let todayMax = Number(element.TodayMaxPrice);
+
+        if (todaymin > iTempMin) {
+            if (iTempMin > 0) {
+                iCountMinRise++;
+            }
+        }
+        else {
+            if (iTempMin - todaymin < 0.5) {//小于一定幅度 忽略
+                iCountMinIgnore++;
+            }
+        }
+        iTempMin = todaymin
+
+        if (todayClose > iTempClose) {
+            if (iTempClose > 0) { iCountCloseRise++; }
+        }
+        else {
+            if (iTempClose - todayClose < 0.5) { iCountCloseIgnore++ }
+        }
+        iTempClose = todayClose
+
+        if (todayMax > iTempMax) {
+            if (iTempMax > 0) { iCountMaxRise++; }
+        }
+        else {
+            if (iTempMax - todayMax < 0.5) { iCountMaxIgnore++ }
+        }
+        iTempMax = todayMax
+
+
+
+        console.log(element.ReportDay, element.StockCode, todayMax.toFixed(2), element.TodayMinPrice?.toFixed(2), element.TodayClosePrice?.toFixed(2))
+    }
+    console.log("结论:", iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore)
+}
+
+function moneyrule1(dayrpts: t_StockDayReport[]): boolean {
+    //7天MINPRICE状态
+    //7天CLOSEPRICE状态
+    var stockcode = dayrpts[0].StockCode;
+    var iCountMinRise = 0;
+    var iCountMinIgnore = 0;
+
+    var iCountMaxRise = 0;
+    var iCountMaxIgnore = 0;
+
+    var iCountCloseRise = 0;
+    var iCountCloseIgnore = 0;
+
+    var iTempMin = 0;
+    var iTempMax = 0;
+    var iTempClose = 0;
+
+    for (let index = 7; index >= 0; index--) {
+        const element = dayrpts[index];
+        let todaymin = Number(element.TodayMinPrice);
+        let todayClose = Number(element.TodayClosePrice);
+        let todayMax = Number(element.TodayMaxPrice);
+
+        if (todaymin > iTempMin) {
+            if (iTempMin > 0) {
+                iCountMinRise++;
+            }
+        }
+        else {
+            if (iTempMin - todaymin < 0.5) {//小于一定幅度 忽略
+                iCountMinIgnore++;
+            }
+        }
+        iTempMin = todaymin
+
+        if (todayClose > iTempClose) {
+            if (iTempClose > 0) { iCountCloseRise++; }
+            iTempClose = todayClose
+        }
+        else {
+            if (iTempClose - todayClose < 0.5) { iCountCloseIgnore++ }
+        }
+
+        if (todayMax > iTempMax) {
+            if (iTempMax > 0) { iCountMaxRise++; }
+        }
+        else {
+            if (iTempMax - todayMax < 0.5) { iCountMaxIgnore++ }
+        }
+        iTempMax = todayMax
+
+        // console.log(element.ReportDay, element.StockCode, todayMax.toFixed(2), element.TodayMinPrice?.toFixed(2), element.TodayClosePrice?.toFixed(2))
+    }
+
+    if (iCountMinRise > 3 && iCountCloseRise > 3) {
+        var sTag = "";
+        if (iCountMaxRise == iCountMinRise && iCountMinRise == iCountCloseRise) {
+            sTag = "***";
+        }
+        if (sTag == "" && iCountMinRise == iCountCloseRise) { sTag = "0**" }
+        if (sTag == "" && iCountMaxRise == iCountCloseRise && iCountMinRise >= 5) { sTag = "*5*" }
+
+
+        console.log("结论:", stockcode, iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore, sTag)
+    }
+
+
+
+    return false;
+}
+
+
 
 
 export enum resultStatus {
