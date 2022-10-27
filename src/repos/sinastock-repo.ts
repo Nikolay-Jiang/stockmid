@@ -285,7 +285,7 @@ export async function GetStockDayRpt(startdate: Date, enddate: Date, stockcode: 
     }
 
     var codefordayrpt = stockcode.substring(2);
-    if (codefordayrpt == "000300") { codefordayrpt = "zs_" + codefordayrpt; }
+    if (codefordayrpt == "000300"||codefordayrpt == "000001") { codefordayrpt = "zs_" + codefordayrpt; }
     else { codefordayrpt = "cn_" + codefordayrpt; }
     var result = await GetDayRptWebData(startdate, enddate, codefordayrpt);
     var datas = JSON.parse(result);

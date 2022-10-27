@@ -300,14 +300,14 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
         const element = findresults[index];
 
         var dayrptsBefore = await dayrptService.getdayRptCountByDayBefore(yesterday, element.stockcode, 26);
-        
+
         if (dayrptsBefore.length > 0) {
             //规律总结方法？
             var sTag = "";
             sTag = moneyrule1(dayrptsBefore);
             element.eval += sTag;
         }
-        
+
 
         //评估
         var dayrptsEval = await dayrptService.getdayRptCountByDayAfter(daytomorrow, element.stockcode, 7);
@@ -774,8 +774,9 @@ function moneyrule1(dayrpts: t_StockDayReport[]): string {
         if (iCountMaxRise == iCountMinRise && iCountMinRise == iCountCloseRise) {
             sTag = "***";
         }
-        if (sTag == "" && iCountMinRise == iCountCloseRise) { sTag = "0**" }
+        if (sTag == "" && iCountMinRise == iCountCloseRise) { sTag = iCountMaxRise.toString().substring(0, 1) + "**" }
         if (sTag == "" && iCountMaxRise == iCountCloseRise && iCountMinRise >= 5) { sTag = "*5*" }
+        if (sTag == "" && iCountMaxRise == iCountMinRise) { sTag = "**" + iCountCloseRise.toString().substring(0, 1) };
 
 
         console.log("结论:", stockcode, iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore, sTag)

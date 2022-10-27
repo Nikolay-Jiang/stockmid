@@ -416,7 +416,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
     if (dayrptsYes.length == 0) { return wresults; }
-    // console.log(yesdate.toDateString())
+    //console.log(yesdate.toDateString())
 
     dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < 30 && x.RSI7 != null && Number(x.TodayClosePrice) >= 15 && Number(x.RSI7) >= 0);
     // dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= 20 && x.RSI7 != null && Number(x.TodayClosePrice) >= 12 && Number(x.RSI7) >= 0);
