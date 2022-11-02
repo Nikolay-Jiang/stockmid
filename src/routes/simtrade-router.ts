@@ -2,7 +2,7 @@ import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
 import { t_StockDayReport, t_Predict } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime';
-import { isMpatton, stockOP, txtOP, isWpatton } from '@services/simtrade-service';
+import { isMpatton, stockOP, txtOP, isWpatton, wresult } from '@services/simtrade-service';
 import dayrptService from '@services/dayrpt-service';
 import simService from '@services/simtrade-service';
 import predictService from '@services/predict-service';
@@ -294,6 +294,7 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
     evelendday.setHours(8, 0, 0, 0);
     evelendday.setDate(daytomorrow.getDate() + 7);
 
+    var findresultsRule: Array<wresult> = [];
     // findresults = findresults.filter(x => x.rsi7 >= 60);
 
     for (let index = 0; index < findresults.length; index++) {
@@ -306,6 +307,9 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
             var sTag = "";
             sTag = moneyrule1(dayrptsBefore);
             element.eval += sTag;
+            if (sTag != "") {
+                findresultsRule.push(element);
+            }
         }
 
 
@@ -362,11 +366,12 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
     }
     findresults.sort((a, b) => (a.eval > b.eval) ? 1 : -1);
     findresults.sort((a, b) => b.evalrate - a.evalrate);
+    findresultsRule.sort((a, b) => (b.price - a.price))
 
     var filterCount = findresults.length;
     var tempRate = (iCountGood / filterCount * 100).toFixed(2) + "%";
     console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
-    return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults });
+    return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults, dayrptsRule: findresultsRule });
 });
 
 /**
