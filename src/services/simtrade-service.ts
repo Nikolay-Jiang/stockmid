@@ -313,7 +313,7 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
 
     if (iMaxRsi7 < iFirstRsi7 || iMaxRsi7 < iSecRsi7) { return false }//如果MAXRSI7 会小于其中一个 低峰，则W不成立
 
-    wStr = "|" + iFirstRsi7 + "," + iMaxRsi7 + "," + iSecRsi7
+    wStr = "|" + iFirstRsi7.toFixed() + "," + iMaxRsi7.toFixed() + "," + iSecRsi7.toFixed();
     // console.log(eleCurr.StockCode, iFirstRsi7, iMaxRsi7, iSecRsi7)
     // console.log(iFirst, iSec, eleCurr.StockCode,dayrptsCopy[iFirst].RSI7,dayrptsCopy[iSec].RSI7);
 
