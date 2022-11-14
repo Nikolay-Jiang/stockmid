@@ -324,7 +324,7 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
 
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
             // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
-            element.eval += "good";
+            element.eval += "|good";
             element.evalprice = Number((maxprice - element.price).toFixed(2));
             element.evalrate = Number((element.evalprice / element.price * 100).toFixed(2));
             iCountGood++;
@@ -381,17 +381,30 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
     var enddate: Date = new Date();
     enddate.setHours(8, 0, 0, 0);
 
+    var yesterday: Date = new Date(enddate);
+    yesterday.setDate(enddate.getDate() - 1);
+    yesterday.setHours(8, 0, 0, 0);
+
     if (enddate.getDay() == 0 || enddate.getDay() == 6) { return res.status(OK).end("not find"); }
     var findresults = await simService.findYZM(enddate);
     // var findCount = findresults.length;
 
-    if (findresults.length == 0) { return res.status(OK).end("not find"); }
+    if (findresults.length == 0) { return res.status(OK).end("not find"); } 
 
     var ptime = new Date();
     ptime.setHours(8, 15, 0, 0)
     var predicts: Array<t_Predict> = [];
     for (let index = 0; index < findresults.length; index++) {
         const element = findresults[index];
+
+        var dayrptsBefore = await dayrptService.getdayRptCountByDayBefore(yesterday, element.stockcode, 26);
+
+        if (dayrptsBefore.length > 0) {
+            //规律总结方法？
+            var sTag = "";
+            sTag = moneyrule1(dayrptsBefore);
+            element.eval += sTag;
+        }
 
         var mPredict = {
             PredictKey: "",
@@ -777,14 +790,12 @@ function moneyrule1(dayrpts: t_StockDayReport[]): string {
     if (iCountMinRise > 3 && iCountCloseRise > 3) {
 
         if (iCountMaxRise == iCountMinRise && iCountMinRise == iCountCloseRise) {
-            sTag = "***";
+            sTag = "|***";
         }
-        if (sTag == "" && iCountMinRise == iCountCloseRise) { sTag = iCountMaxRise.toString().substring(0, 1) + "**" }
-        if (sTag == "" && iCountMaxRise == iCountCloseRise && iCountMinRise >= 5) { sTag = "*5*" }
-        if (sTag == "" && iCountMaxRise == iCountMinRise) { sTag = "**" + iCountCloseRise.toString().substring(0, 1) };
-
-
-        console.log("结论:", stockcode, iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore, sTag)
+        if (sTag == "" && iCountMinRise == iCountCloseRise) { sTag = "|" + iCountMaxRise.toString().substring(0, 1) + "**" }
+        if (sTag == "" && iCountMaxRise == iCountCloseRise && iCountMinRise >= 5) { sTag = "|*5*" }
+        if (sTag == "" && iCountMaxRise == iCountMinRise) { sTag = "|**" + iCountCloseRise.toString().substring(0, 1) };
+        // console.log("结论:", stockcode, iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore, sTag)
     }
 
 
