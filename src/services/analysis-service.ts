@@ -48,6 +48,7 @@ async function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: 
         txtresult += `&emsp;&emsp; [size=${txtSize}][B]${rsi.analysis}[/B]`
         txtresult += `&nbsp;&nbsp;[B][color=${colorRsi}] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[color][/B][/size]`;
     }
+    txtresult+=`\r\n&emsp;&emsp;[size=${txtSize}]交易量：${(Number(mStock.TradingVolume)/10000).toFixed(2)} 万手 [/size]`
     if (myoper != stockOP.hold) {
         txtresult += `\r\n&emsp;&emsp; [size=${txtSize}][B]RSI建议：`
         if (myoper == stockOP.reduce) {
