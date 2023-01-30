@@ -48,7 +48,7 @@ async function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: 
         txtresult += `&emsp;&emsp; [size=${txtSize}][B]${rsi.analysis}[/B]`
         txtresult += `&nbsp;&nbsp;[B][color=${colorRsi}] RSI(7)：${rsi.rsi7} &nbsp;&nbsp; RSI(14)：${rsi.rsi14}[color][/B][/size]`;
     }
-    txtresult+=`\r\n&emsp;&emsp;[size=${txtSize}]交易量：${(Number(mStock.TradingVolume)/10000).toFixed(2)} 万手 [/size]`
+    txtresult += `\r\n&emsp;&emsp;[size=${txtSize}]交易量：${(Number(mStock.TradingVolume) / 10000).toFixed(2)} 万手 [/size]`
     if (myoper != stockOP.hold) {
         txtresult += `\r\n&emsp;&emsp; [size=${txtSize}][B]RSI建议：`
         if (myoper == stockOP.reduce) {
@@ -72,13 +72,17 @@ async function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: 
 function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis[], boll: bolldata, rsi: rsidata, mStock: Stock): string {
 
     var dayrptsCopy = [...dayrpts];
-    var dayrptsVol=[...dayrpts];
+    var dayrptsVol = [...dayrpts];
     dayrptsCopy.sort((a, b) => Number(a!.RatePrice) - Number(b!.RatePrice));
     dayrptsVol.sort((a, b) => Number(a!.TradingVol) - Number(b!.TradingVol));
     var RPMin: number = Number(dayrptsCopy[0].RatePrice);
     var RPMax: number = Number(dayrptsCopy[dayrpts.length - 1].RatePrice);
-    var volMin:number=Number(dayrptsVol[0].TradingVol);
-    var volMax:number=Number(dayrptsVol[dayrptsVol.length - 1].TradingVol);
+    var volMin: number = Number(dayrptsVol[0].TradingVol);
+    var volMax: number = Number(dayrptsVol[dayrptsVol.length - 1].TradingVol);
+
+    let volSum: number = dayrptsVol.reduce((a, b) => a + Number(b.TradingVol), 0);
+    var volAvg: number = volSum / dayrptsVol.length;
+
     var bestPrice: number = rateanalysisdata[dayrpts.length - 1].rateprice
     var bb: number = (Number(mStock.CurrentPrice) - boll.down) / (boll.up - boll.down);
     bb = bb * 100;
@@ -88,8 +92,8 @@ function getAnalyTxt(dayrpts: t_StockDayReport[], rateanalysisdata: rateAnalysis
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]查询期内共有：${dayrpts.length}条日报数据[/size][/b]\r\n`;
     txtresult += `&emsp;&emsp;[b][size=${txtSize}]振额分析：最佳：${bestPrice.toFixed(2)}| 现价UP: ${(Number(mStock.CurrentPrice) + bestPrice).toFixed(2)} &nbsp; 现价DN：${(Number(mStock.CurrentPrice) - bestPrice).toFixed(2)}|`
     txtresult += `&emsp;最小：${RPMin.toFixed(2)} &nbsp;最大：${RPMax.toFixed(2)}[/size][/b]\r\n`;
-    txtresult += `&emsp;&emsp;[size=${txtSize}][b]布林指标：[/b]UP:${boll.up} MID:${boll.ma} DN:${boll.down}STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}[/size]`
-    txtresult +=`\r\n&emsp;&emsp;[size=${txtSize}][b]交易量分析：[/b] 最大：${(volMax/10000).toFixed(2)}万手 &nbsp; 最低：{${(volMin/10000).toFixed(2)}万手} `
+    txtresult += `&emsp;&emsp;[size=${txtSize}][b]布林指标：[/b]UP:${boll.up} MID:${boll.ma} DN:${boll.down} STA:${boll.sta} WIDTH:${((boll.up - boll.down) / boll.ma).toFixed(2)} BB:${bb.toFixed(2)}[/size]`
+    txtresult += `\r\n&emsp;&emsp;[size=${txtSize}][b]交易量分析：[/b] 最大：${(volMax / 10000).toFixed(2)}万手 &nbsp; 最低：${(volMin / 10000).toFixed(2)}万手 平均：${(volAvg / 10000).toFixed(2)}万手`
     if (rsi.rsi7 != -1) {
         txtresult += `\r\n&emsp;&emsp;[b][size=${txtSize}]RSI分析：`;
         txtresult += `${rsi.analysis} ;&emsp; RSI(7):${rsi.rsi7} &nbsp; RSI(14)：${rsi.rsi14}&nbsp; |&nbsp;RSI(7)预期：${rsi.rsi7expect.toFixed(2)} &nbsp;  RSI(14)预期：${rsi.rsi14expect.toFixed(2)} [/size][/b] \r\n`;
