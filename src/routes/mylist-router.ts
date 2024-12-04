@@ -3,7 +3,7 @@ import { Request, Response, Router } from 'express';
 
 import { GetUserID } from './middleware';
 import observerService from '@services/observer-service';
-import sinastockService from '@services/sinastock-service';
+import tencentstockService from '@services/tencentstock-service';
 import dayrptService from '@services/dayrpt-service';
 
 
@@ -37,7 +37,7 @@ router.get(p.getMylist, async (req: Request, res: Response) => {
         stockcodes += element.StockCode + ",";
     });
 
-    const stocklist = await sinastockService.getstockList(stockcodes);
+    const stocklist = await tencentstockService.getstockList(stockcodes);
 
     //获取observer 中 第一个过去 30天内产生的日报数据
     var beginday = new Date();

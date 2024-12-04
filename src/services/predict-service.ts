@@ -3,7 +3,7 @@ import { Prisma, t_Predict } from '@prisma/client'
 import simtradeService, { rdType } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
 import dayrptService from '@services/dayrpt-service';
-import sinaService from '@services/sinastock-service';
+import tencentService from '@services/tencentstock-service';
 import commonService from '@services/common-service';
 
 
@@ -77,7 +77,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
         stockcodes += (element.StockCode + ",")
     }
 
-    var mystocks = await sinaService.getstockList(stockcodes);
+    var mystocks = await tencentService.getstockList(stockcodes);
 
     for (let index = 0; index < predicts.length; index++) {
         const element = predicts[index];

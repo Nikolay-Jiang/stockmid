@@ -1,4 +1,3 @@
-import { GetID } from '@shared/functions';
 import { PrismaClient, t_Observer } from '@prisma/client'
 const prisma = new PrismaClient();
 

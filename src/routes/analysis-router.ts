@@ -1,7 +1,7 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
 import dayrptService from '@services/dayrpt-service';
-import sinaService from '@services/sinastock-service';
+import tencentService from '@services/tencentstock-service';
 
 import analService from '@services/analysis-service';
 import { Prisma } from '@prisma/client';
@@ -42,7 +42,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
     if (dayrpts == null || dayrpts.length == 0) { return res.status(OK).end(); }
     var dayrptsCopy=[...dayrpts];
     var txtresult: string = ""
-    var mStock = await sinaService.getone(stockcode);
+    var mStock = await tencentService.getone(stockcode);
     var boll = await analService.bollCalc(dayrptsCopy);
     var rsi = await analService.rsiCalc(dayrptsCopy);
 

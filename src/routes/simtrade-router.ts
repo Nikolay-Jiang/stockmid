@@ -1,7 +1,6 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
-import { t_StockDayReport, t_Predict } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime';
+import { t_StockDayReport, t_Predict, Prisma } from '@prisma/client';
 import { isMpatton, stockOP, txtOP, isWpatton, wresult } from '@services/simtrade-service';
 import dayrptService from '@services/dayrpt-service';
 import simService from '@services/simtrade-service';
@@ -411,9 +410,9 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
             StockCode: element.stockcode,
             PredictTime: ptime,
             Type: "YZM",
-            CurrentPrice: new Decimal(element.price),
-            RSI7: new Decimal(element.rsi7),
-            RSI14: new Decimal(element.rsi14),
+            CurrentPrice: new Prisma.Decimal(element.price),
+            RSI7: new Prisma.Decimal(element.rsi7),
+            RSI14: new Prisma.Decimal(element.rsi14),
             BackTest: "",
             Memo: element.eval,
         }
@@ -457,9 +456,9 @@ router.get(p.findyzmonbyday, async (req: Request, res: Response) => {
             StockCode: element.stockcode,
             PredictTime: enddate,
             Type: "YZM",
-            CurrentPrice: new Decimal(element.price),
-            RSI7: new Decimal(element.rsi7),
-            RSI14: new Decimal(element.rsi14),
+            CurrentPrice: new Prisma.Decimal(element.price),
+            RSI7: new Prisma.Decimal(element.rsi7),
+            RSI14: new Prisma.Decimal(element.rsi14),
             BackTest: "",
             Memo: element.eval,
         }
@@ -509,9 +508,9 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
             StockCode: element.stockcode,
             PredictTime: new Date(),
             Type: "W",
-            CurrentPrice: new Decimal(element.price),
-            RSI7: new Decimal(element.rsi7),
-            RSI14: new Decimal(element.rsi14),
+            CurrentPrice: new Prisma.Decimal(element.price),
+            RSI7: new Prisma.Decimal(element.rsi7),
+            RSI14: new Prisma.Decimal(element.rsi14),
             BackTest: "",
             Memo: element.eval
         }

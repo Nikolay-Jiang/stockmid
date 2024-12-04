@@ -2,7 +2,7 @@ import { t_StockDayReport, Prisma } from '@prisma/client'
 // import { Stock } from '@repos/sinastock-repo';
 import dayrptService from '@services/dayrpt-service';
 import analService, { rsidata } from '@services/analysis-service';
-import sinaService from '@services/sinastock-service';
+import tencentService from '@services/tencentstock-service';
 import commonService from '@services/common-service';
 
 export var isMpatton: boolean = false;
@@ -409,7 +409,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     var wresults: Array<wresult> = [];
     var iResult = 0;
 
-    var isholiday = await sinaService.isHoliday(enddate);
+    var isholiday = await tencentService.isHoliday(enddate);
     if (isholiday) { return wresults; };//判断当天是否为节假日
 
     var yesdate: Date = await getLasttradeDay(enddate)
@@ -437,7 +437,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
 
         if (needtoday) {
             //获取当日实时数据
-            var mStock = await sinaService.getone(element.StockCode);
+            var mStock = await tencentService.getone(element.StockCode);
 
             if (!commonService.isSameDay(dayrptsTemp[dayrptsTemp.length - 1].ReportDay, mStock.SearchTime)) {//确认没有当日数据
                 if (commonService.isSameDay(mStock.SearchTime, enddate)) {//如果查询日期和最后天相同
@@ -516,7 +516,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
     //查找前一天 双 60+ 的并往前计算
     var wresults: Array<wresult> = [];
     enddate.setHours(8, 0, 0, 0);
-    var isholiday = await sinaService.isHoliday(enddate);
+    var isholiday = await tencentService.isHoliday(enddate);
     if (isholiday) { return wresults; };
 
     var yesdate: Date = await getLasttradeDay(enddate);
@@ -532,7 +532,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
     var startdate = new Date(yesdate);
     startdate.setDate(yesdate.getDate() - 7);
-    if (await sinaService.isHoliday(startdate)) {//如果起始日期正好处于假期，再往前+7天
+    if (await tencentService.isHoliday(startdate)) {//如果起始日期正好处于假期，再往前+7天
         startdate.setDate(startdate.getDate() - 7);
     }
 
@@ -635,7 +635,7 @@ async function getLasttradeDay(enddate: Date): Promise<Date> {
         yesdate.setDate(yesdate.getDate() - 1)
     }
 
-    while (await sinaService.isHoliday(yesdate)) {
+    while (await tencentService.isHoliday(yesdate)) {
         yesdate.setDate(yesdate.getDate() - 1)
     }
     return yesdate;
@@ -647,7 +647,7 @@ async function getLasttradeDay(enddate: Date): Promise<Date> {
  * @returns 
  */
 async function isNegativeEvent(stockcode: string): Promise<boolean> {
-    var notices = await sinaService.getnotice(stockcode)
+    var notices = await tencentService.getnotice(stockcode)
 
     if (notices.length == 0) { return false; }
     var today = new Date();
