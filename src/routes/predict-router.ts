@@ -19,7 +19,7 @@ export const p = {
     getbyday: '/getbyday/:startday/:evalnumber',
     getbycode: '/getbycode/:startday/:endday/:stockcode',
     getbycode2: '/getbycode2/:startday/:stockcode',//根据日期和代码 获取预测表记录
-    backtest: '/backtest/:startday/:evalnumber',//回测某日的全部数据
+    backtest: '/backtest/:startday/:evalnumber',//回测某日的全部数据 预测页面下方的数据
     backteston: '/backteston/:startday',//回测某日数据并写入 predict 的backtest 列
     backtestbyMonth: '/backtestbymonth/:startday',//按月执行预测表的回测功能
     aYZM: '/ayzm/:startday/:endday/:evelrate', //分析YZM算法
@@ -110,7 +110,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
     if (hs300rpt != null) {
         var iTemp = (Number(hs300rpt.TodayClosePrice!) - Number(hs300rpt.TodayOpenPrice!)) / Number(hs300rpt.TodayOpenPrice);
         var iRate = (iTemp * 100).toFixed(2) + "%";
-        hs300 = "\r\n 沪深300：" + iRate
+        hs300 = "  沪深300：" + iRate+";"
     }
     if (Wpredicts.length > 0) {
         var iSumDayDiff = 0;
@@ -164,6 +164,8 @@ router.get(p.backtest, async (req: Request, res: Response) => {
 
         YZMText = `共有YZM数据${YZMpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGoodYZM}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
         YZMText += hs300;
+        YZMText +='  yzm-sim1:';
+        YZMText += sim1(YZMpredicts);
         console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
     }
 
@@ -222,9 +224,12 @@ router.get(p.aYZM, async (req: Request, res: Response) => {
     if (iCount > 0) {
         for (let index = 0; index < iCount; index++) {
             if (startdate.getDay() == 6 || startdate.getDay() == 0) { startdate.setDate(startdate.getDate() + 1); continue; }
-            console.log(startdate.toDateString());
+            console.log("日期：" + startdate.toDateString());
             var tempday = new Date(startdate);
             const predicts = await predictService.getPredictByDay(tempday);
+
+            console.log("当日YZM总数:" + predicts.length);
+
             var predictsfilter = predicts.filter(x => x.evalrate > rate && x.Type == "YZM").sort((a, b) => b.evalrate - a.evalrate);
             an1(predictsfilter)
 
@@ -243,14 +248,11 @@ router.get(p.aYZM, async (req: Request, res: Response) => {
         return res.status(OK).json({ predictsfilter });
     }
 
-
-
-
-
-
 });
 
-function sim1(predicts: predictresult[]) {
+//YZM-SIM1 筛选
+function sim1(predicts: predictresult[]):string {
+    let s1="";
     for (let index = 0; index < predicts.length; index++) {
         const element = predicts[index];
 
@@ -263,9 +265,9 @@ function sim1(predicts: predictresult[]) {
         if (element.CatchPrice < 15) { continue }
         //判断是否从高点回落，正确状态：连续1周从低位往上
 
-//需要加入交易量分析
-        console.log("sim1:", element.StockCode, element.evalrate);
-
+        //需要加入交易量分析
+        console.log("sim1:", element.StockCode, element.evalprice, element.evalrate);
+        s1+=element.StockCode+";";
         // var 
         // var str1, str2, str3, str4 = "";
         // if (evelstrs.length > 0) { str1 = evelstrs[0]; }
@@ -273,14 +275,18 @@ function sim1(predicts: predictresult[]) {
         // if (evelstrs.length > 2) { str3 = evelstrs[3]; }
         // if (evelstrs.length > 3) { str4 = evelstrs[4]; }
     }
+    return s1;
 }
 
+//YZM专门分析1
 function an1(predicts: predictresult[]) {
     var istat0 = 0;
     var istat1 = 0;
     var istat2 = 0;
     var istat3 = 0;
     var istat4 = 0;
+
+    console.log("方法名称 代码 RSI7-RSI14 评估 上升金额 上升率%")
     for (let index = 0; index < predicts.length; index++) {
         const element = predicts[index];
 
@@ -292,10 +298,12 @@ function an1(predicts: predictresult[]) {
             if (iChong == 4) { istat4++; }
         }
         else { istat0++; }
-        console.log("an1", element.StockCode, (element.CatchRsi7 - element.CatchRsi14).toFixed(2), element.eval, element.evalrate)
-    }
 
-    console.log("stats:", istat0, "重1：", istat1, "重2：", istat2, "重3：", istat3, "重4：", istat4)
+        console.log("方法1", element.StockCode, (element.CatchRsi7 - element.CatchRsi14).toFixed(2), element.eval, element.evalprice, element.evalrate)
+    }
+    var isumstat = istat0 + istat1 + istat2 + istat3 + istat4;
+
+    console.log("统计分析:", "总计", isumstat, "首次：", istat0, "重1：", istat1, "重2：", istat2, "重3：", istat3, "重4：", istat4)
 }
 
 

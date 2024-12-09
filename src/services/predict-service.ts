@@ -152,6 +152,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
 
         mPredict.eval += element.Memo!
 
+        //预测时间内，最大价格>预测价 视为GOOD
         if (mPredict.MaxDayPrice > mPredict.CatchPrice && (mPredict.MaxDayPrice - mPredict.CatchPrice) > evalnumber) {
 
             mPredict.eval += "|Good";
