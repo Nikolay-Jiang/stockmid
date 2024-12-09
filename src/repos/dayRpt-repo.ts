@@ -1,6 +1,5 @@
 /* eslint-disable max-len */
 import { PrismaClient, t_StockDayReport } from '@prisma/client'
-import { getPrismaClient } from '@prisma/client/runtime/library';
 const prisma = new PrismaClient();
 
 /**
