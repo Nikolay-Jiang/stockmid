@@ -58,11 +58,11 @@ router.get(p.getNotice, async (req: Request, res: Response) => {
 router.get(p.supplyDayRpt, async (req: Request, res: Response) => {
 
     const { startday, endday, stockcode } = req.params;
-    var startdate: Date = new Date(startday);
-    var enddate: Date = new Date(endday);
+    let startdate: Date = new Date(startday);
+    let enddate: Date = new Date(endday);
     const dayrptlist = await tencentstockService.getdayrpt(startdate, enddate, stockcode);
 
-    if (dayrptlist.length == 0) { res.status(OK).end("no data"); }
+    if (dayrptlist.length == 0) { res.status(200).json({ message: 'no data' }); }
 
 
     for (let index = 0; index < dayrptlist.length; index++) {
