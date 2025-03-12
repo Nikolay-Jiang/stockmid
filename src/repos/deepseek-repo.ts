@@ -2,14 +2,15 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({
         baseURL: 'https://api.deepseek.com',
-        apiKey: ''
+        apiKey: '',
 });
 
 async function callDeepSeek(prompt:string) {
   try {
     const completion = await openai.chat.completions.create({
-      messages: [{ role: "system", content: prompt }],
+      messages: [{ role: "user", content: prompt }],
       model: "deepseek-chat",
+      temperature:0.0,
     });
 
     
