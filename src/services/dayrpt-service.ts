@@ -2,8 +2,8 @@ import dayrptRepo from '@repos/dayRpt-repo';
 import { t_StockDayReport } from '@prisma/client'
 import commonService from '@services/common-service';
 
-
-const cacheTTL: number = 60000
+//缓存保留1小时
+const cacheTTL: number = 1*60*60*1000 
 const cacheTTLShort: number = 60000
 /**
  * getDayrptByCode

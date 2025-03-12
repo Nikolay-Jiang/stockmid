@@ -8,7 +8,7 @@ const { CREATED, OK } = StatusCodes;
 
 // Paths
 export const p = {
-    getds: '/callds/:stockcodes',
+    getds: '/callds/:stockcode',
     
 } as const;
 
@@ -17,10 +17,8 @@ export const p = {
  */
 router.get(p.getds, async (req: Request, res: Response) => {
 
-    const { stockcodes } = req.params;
-    const prompt="请结合已有数据，对"+stockcodes+"进行财务基本面分析"
-
-    const dscontent = await deepseekService.getds (prompt);
+    const { stockcode } = req.params;
+    const dscontent = await deepseekService.getds (stockcode);
     return res.status(OK).json({ dscontent });
 });
 
