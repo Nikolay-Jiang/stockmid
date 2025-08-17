@@ -6,6 +6,8 @@ import dayrptService from '@services/dayrpt-service';
 import simService from '@services/simtrade-service';
 import predictService from '@services/predict-service';
 import dayLogService from '@services/daylog-service';
+import ntfyService from '@services/ntfy-service'
+import commService from '@services/common-service'
 
 
 
@@ -421,6 +423,7 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
 
     }
 
+    var message=commService.convertDatetoStr(enddate)+"yzm算法今日生成:"+predicts.length;
     if (predicts.length > 0) {
         for (let index = 0; index < predicts.length; index++) {
             const element = predicts[index];
@@ -428,9 +431,9 @@ router.get(p.findyzmon, async (req: Request, res: Response) => {
         }
     }
 
+    await ntfyService.sendPostRequest(message);
     return res.status(OK).end("accomplish");
 });
-
 
 router.get(p.findyzmonbyday, async (req: Request, res: Response) => {
     const { endday } = req.params;
@@ -480,7 +483,6 @@ router.get(p.findyzmonbyday, async (req: Request, res: Response) => {
 });
 
 
-
 router.get(p.findwOnline, async (req: Request, res: Response) => {
     // const { endday } = req.params;
     var enddate: Date = new Date();
@@ -520,18 +522,26 @@ router.get(p.findwOnline, async (req: Request, res: Response) => {
         txtresult += `| ${element.stockcode}: ${element.price} ${element.rsi7} W  |`
     }
 
+    var message=commService.convertDatetoStr(enddate)+"W算法今日生成:"+preresults.length;
+
     if (preresults.length > 0) {
         for (let index = 0; index < preresults.length; index++) {
             const element = preresults[index];
             predictService.addOne(element);
         }
+        //ntfy 发送通知
+        if (preresults.length<=5) {
+            message+="; 数量较少建议减仓或者观望";
+        }
+
+        if (preresults.length>=15) {
+            message+="; 建议增仓!";
+        }
     }
 
-
-
+    await ntfyService.sendPostRequest(message);
     return res.status(OK).json({ enddate, txtresult });
 });
-
 
 function runHQ(dayrpts: t_StockDayReport[], index: number, myoper: stockOP) {
 
@@ -619,7 +629,6 @@ function runHQ(dayrpts: t_StockDayReport[], index: number, myoper: stockOP) {
 
 }
 
-
 async function GetDataAnaly(dayrps: t_StockDayReport[]) {
     var mystatus: dayStatus = dayStatus.hold;
 
@@ -644,7 +653,6 @@ async function GetDataAnaly(dayrps: t_StockDayReport[]) {
     }
 
 }
-
 
 function GetChooseEval(dayrps: t_StockDayReport[], index: number, myoper: stockOP): string {
     if (index + 2 > dayrps.length) {
@@ -801,9 +809,6 @@ function moneyrule1(dayrpts: t_StockDayReport[]): string {
 
     return sTag;
 }
-
-
-
 
 export enum resultStatus {
     good,

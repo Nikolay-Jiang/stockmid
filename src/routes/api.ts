@@ -11,6 +11,7 @@ import analysisRouter from './analysis-router';
 import simRouter from './simtrade-router';
 import preRouter from './predict-router';
 import deepseek from './deepseek-router';
+import ntfyRouter from './ntfy-router';
 import { adminMw } from './middleware';
 
 
@@ -30,6 +31,7 @@ apiRouter.use('/analysis', analysisRouter);//分析
 apiRouter.use('/sim', simRouter);//模拟
 apiRouter.use('/predict', preRouter);//预测
 apiRouter.use('/ai', deepseek);//AI
+apiRouter.use('/ntfy', ntfyRouter);//ntfy.sh
 
 // Export default
 export default apiRouter;
