@@ -541,6 +541,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
     for (let index = 0; index < dayrptsYes.length; index++) {
         const element = dayrptsYes[index];
+        if (element.StockCode=="sz399001") {continue;}
 
         var dayrptsTemp = dayrpts.filter(x => x.StockCode == element.StockCode);
         if (dayrptsTemp.length == 0) { continue; }
@@ -548,75 +549,81 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
         dayrptsTemp.sort((a, b) => Number(b!.ReportDay) - Number(a!.ReportDay));
 
         if (validTremor(dayrptsTemp)) { continue; }
-        var isVolUpPriceUp = false;
-        var isDoubleStrong = false;
-        var iStatus = 0;
-        var isStar = false;
-        var todayPrice = Number(dayrptsTemp[0].TradingPriceAvg);
-        var todayVol = Number(dayrptsTemp[0].TradingVol);
-        var todateRSI7 = Number(dayrptsTemp[0].RSI7);
-        var todateRSI14 = Number(dayrptsTemp[0].RSI14);
 
-        var yesPrice = Number(dayrptsTemp[1].TradingPriceAvg);
-        var yesVol = Number(dayrptsTemp[1].TradingVol);
+        try {
+            var isVolUpPriceUp = false;
+            var isDoubleStrong = false;
+            var iStatus = 0;
+            var isStar = false;
+            var todayPrice = Number(dayrptsTemp[0].TradingPriceAvg);
+            var todayVol = Number(dayrptsTemp[0].TradingVol);
+            var todateRSI7 = Number(dayrptsTemp[0].RSI7);
+            var todateRSI14 = Number(dayrptsTemp[0].RSI14);
 
-        if (todayPrice > yesPrice && todayVol > yesVol) {//判断量价齐升
-            var tempVolRate = (todayVol - yesVol) / yesVol * 100
-            var tempPriceRate = (todayPrice - yesPrice) / yesPrice * 100
-            if (tempVolRate > 80 && tempPriceRate > 5) { isVolUpPriceUp = true; }
-        }
+            var yesPrice = Number(dayrptsTemp[1].TradingPriceAvg);
+            var yesVol = Number(dayrptsTemp[1].TradingVol);
 
-        if (todateRSI7 > 50 && todateRSI14 > 50) { isDoubleStrong = true; }
-
-        var iCountRise = 0;
-        for (let index = 1; index < dayrptsTemp.length; index++) {
-            const element = dayrptsTemp[index];
-
-            var todayRSI7 = Number(dayrptsTemp[index - 1].RSI7);
-            var todayRSI14 = Number(dayrptsTemp[index - 1].RSI14);
-            var yesRSI7 = Number(dayrptsTemp[index].RSI7);
-            var yesRSI14 = Number(dayrptsTemp[index].RSI14);
-            if (index == 1) { iStatus = parseInt((todayRSI7 / 10).toFixed(2)) };
-            if (todayRSI7 > yesRSI7 && todayRSI14 > yesRSI14) { iCountRise++; }
-            else {
-                break;//如果不是连续上升 中断
-                // if (iCountRise>0) {break;}
+            if (todayPrice > yesPrice && todayVol > yesVol) {//判断量价齐升
+                var tempVolRate = (todayVol - yesVol) / yesVol * 100
+                var tempPriceRate = (todayPrice - yesPrice) / yesPrice * 100
+                if (tempVolRate > 80 && tempPriceRate > 5) { isVolUpPriceUp = true; }
             }
 
+            if (todateRSI7 > 50 && todateRSI14 > 50) { isDoubleStrong = true; }
 
-            if (index > 1) {
-                var temp = parseInt((todayRSI7 / 10).toFixed(2))
-                // console.log(temp, element.StockCode)
-                if (iStatus - 1 == temp) {
-                    iStatus--;
-                    isStar = true;
+            var iCountRise = 0;
+            for (let index = 1; index < dayrptsTemp.length; index++) {
+                const element = dayrptsTemp[index];
+
+                var todayRSI7 = Number(dayrptsTemp[index - 1].RSI7);
+                var todayRSI14 = Number(dayrptsTemp[index - 1].RSI14);
+                var yesRSI7 = Number(dayrptsTemp[index].RSI7);
+                var yesRSI14 = Number(dayrptsTemp[index].RSI14);
+                if (index == 1) { iStatus = parseInt((todayRSI7 / 10).toFixed(2)) };
+                if (todayRSI7 > yesRSI7 && todayRSI14 > yesRSI14) { iCountRise++; }
+                else {
+                    break;//如果不是连续上升 中断
+                    // if (iCountRise>0) {break;}
                 }
-                else { isStar = false; iStatus = 0; }
+
+
+                if (index > 1) {
+                    var temp = parseInt((todayRSI7 / 10).toFixed(2))
+                    // console.log(temp, element.StockCode)
+                    if (iStatus - 1 == temp) {
+                        iStatus--;
+                        isStar = true;
+                    }
+                    else { isStar = false; iStatus = 0; }
+                }
+
+                if (iCountRise == 3 && isStar) { break; }
+
+                if (iCountRise > 3) { break; }
             }
 
-            if (iCountRise == 3 && isStar) { break; }
-
-            if (iCountRise > 3) { break; }
-        }
-
-        if (iCountRise >= 2) {
-            var mResult = new wresult();
-            mResult.stockcode = element.StockCode
-            mResult.rsi7 = Number(element.RSI7);
-            mResult.rsi14 = Number(element.RSI14);
-            mResult.Type = rdType.YZMpatton;
-            mResult.price = todayPrice;
-            mResult.MA = Number(element.MA);
-            mResult.bollDown = Number(element.bollDown);
-            if (isStar) { mResult.eval = "*"; }
-            mResult.eval += iCountRise.toString();
-            if (isVolUpPriceUp) { mResult.eval += "|量价齐升"; }
-            if (isDoubleStrong) { mResult.eval += "|双强"; }
-            if (mResult.rsi7 >= 60 && mResult.rsi7 < 70 && mResult.rsi14 >= 60 && mResult.rsi14 < 70) {
-                mResult.eval += '|双6';
+            if (iCountRise >= 2) {
+                var mResult = new wresult();
+                mResult.stockcode = element.StockCode
+                mResult.rsi7 = Number(element.RSI7);
+                mResult.rsi14 = Number(element.RSI14);
+                mResult.Type = rdType.YZMpatton;
+                mResult.price = todayPrice;
+                mResult.MA = Number(element.MA);
+                mResult.bollDown = Number(element.bollDown);
+                if (isStar) { mResult.eval = "*"; }
+                mResult.eval += iCountRise.toString();
+                if (isVolUpPriceUp) { mResult.eval += "|量价齐升"; }
+                if (isDoubleStrong) { mResult.eval += "|双强"; }
+                if (mResult.rsi7 >= 60 && mResult.rsi7 < 70 && mResult.rsi14 >= 60 && mResult.rsi14 < 70) {
+                    mResult.eval += '|双6';
+                }
+                wresults.push(mResult)
             }
-            wresults.push(mResult)
+        } catch (error) {
+            console.log(element.StockCode)
         }
+
     }
 
     return wresults;

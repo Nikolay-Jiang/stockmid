@@ -10,6 +10,7 @@ import stocknameRouter from './stockname-router';
 import analysisRouter from './analysis-router';
 import simRouter from './simtrade-router';
 import preRouter from './predict-router';
+import deepseek from './deepseek-router';
 import { adminMw } from './middleware';
 
 
@@ -28,7 +29,7 @@ apiRouter.use('/stockname', stocknameRouter);
 apiRouter.use('/analysis', analysisRouter);
 apiRouter.use('/sim', simRouter);
 apiRouter.use('/predict', preRouter);
-
+apiRouter.use('/ai', deepseek);
 
 // Export default
 export default apiRouter;

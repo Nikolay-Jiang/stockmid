@@ -88,6 +88,7 @@ async function addone(mDayRpt: t_StockDayReport) {
  * @returns 
  */
 async function getAllbyReportDay(reportday: Date): Promise<t_StockDayReport[]> {
+    
     return await prisma.t_StockDayReport.findMany({
         where: {
             ReportDay: reportday,
