@@ -18,18 +18,18 @@ import { adminMw } from './middleware';
 const apiRouter = Router();
 
 // Add api routes
-apiRouter.use('/auth', authRouter);
-apiRouter.use('/users', userRouter);
-apiRouter.use('/observers', observerRouter);
-apiRouter.use('/mylist', mylistRouter);
-apiRouter.use('/dayrpt', dayrptRouter);
+apiRouter.use('/auth', authRouter);//用户认证
+apiRouter.use('/users', userRouter);//用户管理
+apiRouter.use('/observers', observerRouter);//观察列表
+apiRouter.use('/mylist', mylistRouter);//我的列表
+apiRouter.use('/dayrpt', dayrptRouter);//日报
 apiRouter.use('/stock', tencentstockRouter);
 apiRouter.use('/daylog', daylogRouter);
-apiRouter.use('/stockname', stocknameRouter);
-apiRouter.use('/analysis', analysisRouter);
-apiRouter.use('/sim', simRouter);
-apiRouter.use('/predict', preRouter);
-apiRouter.use('/ai', deepseek);
+apiRouter.use('/stockname', stocknameRouter);//股票名称
+apiRouter.use('/analysis', analysisRouter);//分析
+apiRouter.use('/sim', simRouter);//模拟
+apiRouter.use('/predict', preRouter);//预测
+apiRouter.use('/ai', deepseek);//AI
 
 // Export default
 export default apiRouter;
