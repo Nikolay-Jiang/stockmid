@@ -132,8 +132,11 @@ async function GetTodayDayRpt(today: Date, stockcode: string, mStock: Stock): Pr
 
     var fRatePrice = Number(mStock.TodayMaxPrice) - Number(mStock.TodayMinPrice);
     var fRatetemp = (fRatePrice / Number(mStock.TodayMinPrice)).toFixed(2);
-    var tradingpriceAvg = (Number(mStock.TradingPrice) / Number(mStock.TradingVolume)).toFixed(2);
-
+    var tradingprice=Number(mStock.TradingPrice);
+    if (stockcode.includes("sh688")) {//科创版的交易量精确度个位数,需要修正
+         tradingprice=tradingprice*100;
+        }
+    var tradingpriceAvg = (tradingprice / Number(mStock.TradingVolume)).toFixed(2);
     var mDayrptToday: t_StockDayReport = {
         StockCode: stockcode,
         ReportDay: today,
