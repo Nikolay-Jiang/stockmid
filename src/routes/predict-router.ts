@@ -22,7 +22,9 @@ export const p = {
     backtest: '/backtest/:startday/:evalnumber',//回测某日的全部数据 预测页面下方的数据
     backteston: '/backteston/:startday',//回测某日数据并写入 predict 的backtest 列
     backtestbyMonth: '/backtestbymonth/:startday',//按月执行预测表的回测功能
-    aYZM: '/ayzm/:startday/:endday/:evelrate', //分析YZM算法
+    aYZM: '/ayzm/:startday/:endday/:evelrate', //分析YZM算法,结果输出到CONSOLE
+    qmt: '/qmt/:startday/'
+
 } as const;
 
 
@@ -96,7 +98,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
     var evalTmp = 0.4
     if (evalnumber != undefined || evalnumber != "") { evalTmp = Number(evalnumber); }
     var hs300rpt = await dayrptService.getone(startdate, "sh000300");
-    console.log(hs300rpt, startdate.toUTCString());
+    //console.log(hs300rpt, startdate.toUTCString());
 
     var predicts = await predictService.getPredictByDay(startdate, evalTmp);
     var Wpredicts = predicts.filter(x => x.Type == "W");
@@ -106,11 +108,11 @@ router.get(p.backtest, async (req: Request, res: Response) => {
     var hs300 = "";
 
 
-
+    //计算当日沪深300 涨幅情况
     if (hs300rpt != null) {
         var iTemp = (Number(hs300rpt.TodayClosePrice!) - Number(hs300rpt.TodayOpenPrice!)) / Number(hs300rpt.TodayOpenPrice);
         var iRate = (iTemp * 100).toFixed(2) + "%";
-        hs300 = "  沪深300：" + iRate+";"
+        hs300 = "  沪深300：" + iRate + ";"
     }
     if (Wpredicts.length > 0) {
         var iSumDayDiff = 0;
@@ -164,7 +166,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
 
         YZMText = `共有YZM数据${YZMpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGoodYZM}%;平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
         YZMText += hs300;
-        YZMText +='  yzm-sim1:';
+        YZMText += '  yzm-sim1:';
         YZMText += sim1(YZMpredicts);
         console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
     }
@@ -172,6 +174,31 @@ router.get(p.backtest, async (req: Request, res: Response) => {
     return res.status(OK).json({ WText, YZMText });
 
 });
+
+/**
+ * api2qmt
+ */
+router.get(p.qmt, async (req: Request, res: Response) => {
+    const { startday, evalnumber } = req.params;
+    if (startday == undefined || startday == "") { throw new ParamMissingError(); }
+    var startdate = new Date(startday);
+    startdate.setHours(8, 0, 0, 0);
+    var evalTmp = 0.4
+    if (evalnumber != undefined || evalnumber != "") { evalTmp = Number(evalnumber); }
+
+    var predicts = await predictService.getPredictByDay(startdate, evalTmp);
+    var Wpredicts = predicts.filter(x => x.Type == "W");
+    var YZMpredicts = predicts.filter(x => x.Type == "YZM");
+    
+    var Wcount = Wpredicts.length
+    var YZMcount = YZMpredicts.length;
+    var YZMsim1 = sim1(YZMpredicts);
+    var YSim1predicts=YZMpredicts.filter(x=>YZMsim1.includes(x.StockCode) )
+
+    return res.status(OK).json({ Wcount, Wpredicts, YZMcount, YZMsim1,YSim1predicts });
+
+});
+
 
 
 /**
@@ -210,7 +237,7 @@ router.get(p.backtestbyMonth, async (req: Request, res: Response) => {
 });
 
 /**
- * YZM 专门分析
+ * YZM 专门分析 console 输出结果
  */
 router.get(p.aYZM, async (req: Request, res: Response) => {
     const { startday, endday, evelrate } = req.params;
@@ -251,8 +278,8 @@ router.get(p.aYZM, async (req: Request, res: Response) => {
 });
 
 //YZM-SIM1 筛选
-function sim1(predicts: predictresult[]):string {
-    let s1="";
+function sim1(predicts: predictresult[]): string {
+    let s1 = "";
     for (let index = 0; index < predicts.length; index++) {
         const element = predicts[index];
 
@@ -260,14 +287,15 @@ function sim1(predicts: predictresult[]):string {
         var strChong = evelstrs[evelstrs.length - 1];
         var rsiCompare = element.CatchRsi7 - element.CatchRsi14;
 
-        if (strChong != "重4") { continue; }
-        if (rsiCompare < 10) { continue; }
-        if (element.CatchPrice < 15) { continue }
+        if (strChong != "重4") { continue; }//重4
+        if (rsiCompare < 10) { continue; }//rsi7-rsi14 <10 波动不大
+        if (element.CatchRsi7 > 90) { continue; } //rsi7 <90 最好 70-80
+        if (element.CatchPrice < 15) { continue } //价格 >=15
         //判断是否从高点回落，正确状态：连续1周从低位往上
 
         //需要加入交易量分析
         console.log("sim1:", element.StockCode, element.evalprice, element.evalrate);
-        s1+=element.StockCode+";";
+        s1 += element.StockCode + ";";
         // var 
         // var str1, str2, str3, str4 = "";
         // if (evelstrs.length > 0) { str1 = evelstrs[0]; }
