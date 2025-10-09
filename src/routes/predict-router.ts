@@ -189,13 +189,13 @@ router.get(p.qmt, async (req: Request, res: Response) => {
     var predicts = await predictService.getPredictByDay(startdate, evalTmp);
     var Wpredicts = predicts.filter(x => x.Type == "W");
     var YZMpredicts = predicts.filter(x => x.Type == "YZM");
-    
+
     var Wcount = Wpredicts.length
     var YZMcount = YZMpredicts.length;
     var YZMsim1 = sim1(YZMpredicts);
-    var YSim1predicts=YZMpredicts.filter(x=>YZMsim1.includes(x.StockCode) )
+    var YSim1predicts = YZMpredicts.filter(x => YZMsim1.includes(x.StockCode))
 
-    return res.status(OK).json({ Wcount, Wpredicts, YZMcount, YZMsim1,YSim1predicts });
+    return res.status(OK).json({ Wcount, Wpredicts, YZMcount, YZMsim1, YSim1predicts });
 
 });
 

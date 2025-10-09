@@ -180,7 +180,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
     statsGood = (iCountGood / predicts.length * 100).toFixed(2) + "%";
     predictlist.sort(((a, b) => b.CatchPrice - a.CatchPrice));
 
-    if (daydiff > 0 && commonService.checkCache()) {cache.put(cacheKey, predictlist, cacheTTL);}//写入缓存
+    if (daydiff > 0 && commonService.checkCache()) { cache.put(cacheKey, predictlist, cacheTTL); }//写入缓存
 
     return predictlist
 }
@@ -196,6 +196,17 @@ async function getPredictByCode(startdate: Date, enddate: Date, stockcode: strin
 async function isRepeat(startdate: Date, enddate: Date, stockcode: string): Promise<number> {
     const predicts = await predictRepo.getAllbyCode(startdate, enddate, stockcode);
     return predicts.length
+}
+
+/**
+ * 返回符合YZMsim1的股票列表
+ */
+async function getYZMsim1(YZMpredicts: predictresult[]): Promise<predictresult[]> {
+    if (YZMpredicts.length <= 0) {
+        return YZMpredicts;
+    }
+    var YZMsim1 = sim1(YZMpredicts);
+    return YZMpredicts.filter(x => YZMsim1.includes(x.StockCode));
 }
 
 
@@ -229,11 +240,35 @@ async function backtestol(startdate: Date) {
 
 }
 
+function sim1(predicts: predictresult[]): string {
+    let s1 = "";
+    for (let index = 0; index < predicts.length; index++) {
+        const element = predicts[index];
+
+        var evelstrs = element.eval.split("|");
+        var strChong = evelstrs[evelstrs.length - 1];
+        var rsiCompare = element.CatchRsi7 - element.CatchRsi14;
+
+        if (strChong != "重4") { continue; }//重4
+        if (rsiCompare < 10) { continue; }//rsi7-rsi14 <10 波动不大
+        if (element.CatchRsi7 > 90) { continue; } //rsi7 <90 最好 70-80
+        if (element.CatchPrice < 15) { continue } //价格 >=15
+        //判断是否从高点回落，正确状态：连续1周从低位往上
+
+        //需要加入交易量分析
+        //console.log("sim1:", element.StockCode, element.evalprice, element.evalrate);
+        s1 += element.StockCode + ";";
+
+    }
+    return s1;
+}
+
 
 // Export default
 export default {
     getPredictByPredictTime, getPredictByDay,
-    addOne, backtestol, getPredictByCode,isRepeat,
+    addOne, backtestol, getPredictByCode, isRepeat,
+    getYZMsim1,
 
 } as const;
 
