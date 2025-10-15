@@ -23,7 +23,8 @@ export const p = {
     backteston: '/backteston/:startday',//回测某日数据并写入 predict 的backtest 列
     backtestbyMonth: '/backtestbymonth/:startday',//按月执行预测表的回测功能
     aYZM: '/ayzm/:startday/:endday/:evelrate', //分析YZM算法,结果输出到CONSOLE
-    qmt: '/qmt/:startday/'
+    qmt: '/qmt/:startday/',
+    backtestQMT: '/btqmt/:startday/:endday' //指定时间内QMT方案回测,结果输出到CONSOLE
 
 } as const;
 
@@ -276,6 +277,113 @@ router.get(p.aYZM, async (req: Request, res: Response) => {
     }
 
 });
+
+/**
+ * qmt 回测 console 输出结果
+ */
+router.get(p.backtestQMT, async (req: Request, res: Response) => {
+    const { startday, endday, evelrate } = req.params;
+    if (startday == undefined || startday == "") { throw new ParamMissingError(); }
+    var startdate = new Date(startday);
+    var enddate = new Date(endday);
+    var iCount = commonService.calc_day(enddate.getTime(), startdate.getTime(),);
+    var rate = 0.5;
+    var iBuyCount=0;//记录买入次数
+
+    console.log(iCount, startdate, enddate)
+    if (iCount > 0) {
+        for (let index = 0; index < iCount; index++) {
+            if (startdate.getDay() == 6 || startdate.getDay() == 0) { startdate.setDate(startdate.getDate() + 1); continue; }
+            console.log("日期：" + startdate.toDateString());
+            var tempday = new Date(startdate);
+            const predicts = await predictService.getPredictByDay(tempday);
+            var Wpredicts = predicts.filter(x => x.Type == "W");
+            var YZMpredicts = predicts.filter(x => x.Type == "YZM");
+            var YZMsim1 = sim1(YZMpredicts);
+            var YSim1predicts = YZMpredicts.filter(x => YZMsim1.includes(x.StockCode));
+
+            console.log("YZM总数:" + YZMpredicts.length + ";W总数：" + Wpredicts.length + ";YZMsim1：" + YSim1predicts.length);
+
+            var isBuy = false;
+            var isWfirst = false;
+            var iStrength = 0;
+
+
+
+            if (Wpredicts.length > 5 && YZMpredicts.length > 100) {
+                console.log("buy")
+                isBuy = true;
+                iStrength = 1;
+            }
+
+            if (Wpredicts.length > 15) {
+                isBuy = true;
+                isWfirst = true;
+                iStrength = 3;
+                console.log("buy+");
+            }
+
+            if (YZMpredicts.length > 100) {
+                isBuy = true;
+                iStrength = 3;
+                console.log("buy+")
+            }
+
+            if (Wpredicts.length > 15 && YZMpredicts.length > 200) {
+                isBuy = true;
+                iStrength = 5;
+                console.log("buy++")
+            }
+
+            if (Wpredicts.length <= 5) {
+                isBuy = false;
+                iStrength = 1;
+                console.log("sell")
+            }
+
+            if (Wpredicts.length <= 5 || YZMpredicts.length < 80) {
+                isBuy = false;
+                iStrength = 3;
+                console.log("sell+")
+            }
+
+            if (!isBuy) {
+                if (YSim1predicts.length>0 && Wpredicts.length>5) {
+                    isBuy=true;
+                    iStrength=1;
+                }
+            }
+
+            //统计
+            if (isBuy) {
+                var iSim1Loss = YSim1predicts.filter(x => x.evalprice <= 0.4);
+                var iLoss=0;
+                iBuyCount++;
+                if (iSim1Loss.length>0) {
+                    iLoss=(iSim1Loss.length/YSim1predicts.length)*100;
+                }
+                console.log("统计："+iLoss.toFixed(2));
+            }
+
+            console.log("-----------------")
+            // sim1(predicts.sort((a, b) => b.evalrate - a.evalrate));
+            startdate.setDate(startdate.getDate() + 1);
+        }
+
+        //表格输出
+        console.log("回测天数："+iCount+"买入："+iBuyCount);
+        return res.status(OK).end();
+    }
+    else {
+        // const predicts = await predictService.getPredictByDay(startdate);
+        // var predictsfilter = predicts.filter(x => x.evalrate > rate && x.Type == "YZM").sort((a, b) => b.evalrate - a.evalrate);
+        // an1(predictsfilter)
+        // sim1(predicts);
+        return res.status(OK).end("accomplish");
+    }
+
+});
+
 
 //YZM-SIM1 筛选
 function sim1(predicts: predictresult[]): string {
