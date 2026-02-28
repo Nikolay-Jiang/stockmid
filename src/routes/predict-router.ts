@@ -161,11 +161,10 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
             });
             return res.status(OK).json({ predictsSim1, statsGood });    
         }else{
-            predicts=predicts.filter(n=>n.Type==type.toUpperCase())
+            return res.status(OK).json({ predicts, statsGood });
         }
         
-        
-        return res.status(OK).json({ predicts, statsGood });
+        //return res.status(OK).json({ predicts, statsGood });
     } catch (error) {
         console.error(`Error in ${p.getbyday}:`, error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
