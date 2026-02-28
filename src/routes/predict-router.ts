@@ -152,9 +152,9 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
         //const Wpredicts=predictsAll.filter(n=>n.Type=="W");
 
         if (type.toUpperCase()=="YZM-SIM1") {    
-            var YZMsim1=sim1(YZMpredicts);
+            let YZMsim1=sim1(YZMpredicts);
             console.log("sim1:",YZMsim1,YZMpredicts.length);
-            if (YZMsim1=="") {
+            if (YZMsim1=== "") {
                 return res.status(OK).json('');
                 //predicts.length=0;
             }
