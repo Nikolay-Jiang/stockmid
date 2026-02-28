@@ -12,7 +12,7 @@ async function callDeepSeek(prompt:string) {
       model: "qwen-plus",
       temperature:0.2,
       stream: false,
-      enable_search:true,
+      //enable_search:true,
     });
 
     
