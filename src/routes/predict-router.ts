@@ -17,6 +17,7 @@ import {
     PREDICT_CONSTANTS, 
     MAGIC_NUMBERS 
 } from '@shared/constants/predict-constants';
+import simtradeService, { rdType } from '@services/simtrade-service';
 
 
 
@@ -147,7 +148,21 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
         const evalNumber = parseNumberParam(evalnumber, PREDICT_CONSTANTS.DEFAULT_EVAL_NUMBER);
         
         let predicts = await predictService.getPredictByDay(startDate, evalNumber);
-        predicts=predicts.filter(n=>n.Type==type.toUpperCase())
+        if (type.toUpperCase()=="YZM-SIM1") {
+            var YZMsim1=sim1(predicts.filter(n=>n.Type=="YZM"));
+            console.log("sim1:",YZMsim1);
+            if (YZMsim1=="") {
+                predicts.length=0;
+            }
+            predicts=predicts.filter(n=>YZMsim1.includes(n.StockCode));//挑出符合sim1的股票
+            predicts.forEach(n => {
+                n.Type=rdType.YZMsmi1;
+            });
+        }else{
+            predicts=predicts.filter(n=>n.Type==type.toUpperCase())
+        }
+        
+        
         return res.status(OK).json({ predicts, statsGood });
     } catch (error) {
         console.error(`Error in ${p.getbyday}:`, error);

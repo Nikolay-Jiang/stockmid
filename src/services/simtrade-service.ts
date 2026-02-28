@@ -788,6 +788,7 @@ export enum rdType {
     doubleRise = "双升",
     wpatton = "W",
     YZMpatton = "YZM",
+    YZMsmi1="YZM-sim1",
     doubleDown = "双降",
     mpatton = "M",
     unknow = "未知",
