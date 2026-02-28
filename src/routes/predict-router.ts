@@ -147,23 +147,24 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
         const startDate = parseDate(startday);
         const evalNumber = parseNumberParam(evalnumber, PREDICT_CONSTANTS.DEFAULT_EVAL_NUMBER);
         
-        let predictsAll = await predictService.getPredictByDay(startDate, evalNumber);
-        
-        if (type.toUpperCase()=="YZM-SIM1") {
-            var YZMpredicts=predictsAll.filter(n=>n.Type=="YZM");
+        const predictsAll = await predictService.getPredictByDay(startDate, evalNumber);
+        const YZMpredicts=predictsAll.filter(n=>n.Type=="YZM");
+        //const Wpredicts=predictsAll.filter(n=>n.Type=="W");
+
+        if (type.toUpperCase()=="YZM-SIM1") {    
             var YZMsim1=sim1(YZMpredicts);
             console.log("sim1:",YZMsim1,YZMpredicts.length);
             if (YZMsim1=="") {
                 return res.status(OK).json('');
                 //predicts.length=0;
             }
-            var predicts=predictsAll.filter(n=>YZMsim1.includes(n.StockCode));//挑出符合sim1的股票
+            let predicts=YZMpredicts.filter(n=>YZMsim1.includes(n.StockCode));//挑出符合sim1的股票
             predicts.forEach(n => {
                 n.Type=rdType.YZMsmi1;
             });
             return res.status(OK).json({ predicts, statsGood });    
         }else{
-            var predicts=predictsAll.filter(n=>n.Type==type.toUpperCase())
+            let predicts=predictsAll.filter(n=>n.Type==type.toUpperCase())
             return res.status(OK).json({ predicts, statsGood });
         }
         
