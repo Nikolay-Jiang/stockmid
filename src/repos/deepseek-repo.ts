@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-        baseURL: 'https://api.deepseek.com',
+        baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1/',
         apiKey: '',
 });
 
