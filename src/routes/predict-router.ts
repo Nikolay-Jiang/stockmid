@@ -149,8 +149,9 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
         
         let predicts = await predictService.getPredictByDay(startDate, evalNumber);
         if (type.toUpperCase()=="YZM-SIM1") {
-            var YZMsim1=sim1(predicts.filter(n=>n.Type=="YZM"));
-            console.log("sim1:",YZMsim1);
+            var YZMpredicts=predicts.filter(n=>n.Type=="YZM");
+            var YZMsim1=sim1(YZMpredicts);
+            console.log("sim1:",YZMsim1,YZMpredicts.length);
             if (YZMsim1=="") {
                 return res.status(OK).json('');
                 //predicts.length=0;
@@ -161,7 +162,8 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
             });
             return res.status(OK).json({ predictsSim1, statsGood });    
         }else{
-            return res.status(OK).json({ predicts, statsGood });
+            var predictsFilter=predicts.filter(n=>n.Type==type.toUpperCase())
+            return res.status(OK).json({ predictsFilter, statsGood });
         }
         
         //return res.status(OK).json({ predicts, statsGood });
