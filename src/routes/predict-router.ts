@@ -159,9 +159,9 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
                 //predicts.length=0;
             }
             let predicts=Array.from(YZMpredicts.filter(n=>YZMsim1.includes(n.StockCode)));//挑出符合sim1的股票
-            predicts.forEach(n => {
-                n.Type=rdType.YZMsmi1;
-            });
+            // predicts.forEach(n => {
+            //     n.Type=rdType.YZMsmi1;
+            // });
             return res.status(OK).json({ predicts, statsGood });    
         }else{
             let predicts=predictsAll.filter(n=>n.Type==type.toUpperCase())
