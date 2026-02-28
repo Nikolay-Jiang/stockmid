@@ -152,12 +152,14 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
             var YZMsim1=sim1(predicts.filter(n=>n.Type=="YZM"));
             console.log("sim1:",YZMsim1);
             if (YZMsim1=="") {
-                predicts.length=0;
+                return res.status(OK).json('');
+                //predicts.length=0;
             }
-            predicts=predicts.filter(n=>YZMsim1.includes(n.StockCode));//挑出符合sim1的股票
-            predicts.forEach(n => {
+            var predictsSim1=predicts.filter(n=>YZMsim1.includes(n.StockCode));//挑出符合sim1的股票
+            predictsSim1.forEach(n => {
                 n.Type=rdType.YZMsmi1;
             });
+            return res.status(OK).json({ predictsSim1, statsGood });    
         }else{
             predicts=predicts.filter(n=>n.Type==type.toUpperCase())
         }
