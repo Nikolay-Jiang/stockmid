@@ -6,6 +6,7 @@ import tencentService from '@services/tencentstock-service';
 import analService from '@services/analysis-service';
 import { Prisma } from '@prisma/client';
 import commonService from '@services/common-service';
+import logger from 'jet-logger';
 
 
 // Constants
@@ -57,7 +58,7 @@ router.get(p.getbyconditicon, async (req: Request, res: Response) => {
             dayrptsCopy[dayrptsCopy.length - 1].RSI7 = new Prisma.Decimal(rsiReal.rsi7);
             dayrptsCopy[dayrptsCopy.length - 1].RSI14 = new Prisma.Decimal(rsiReal.rsi14);
 
-            console.log("sameday", convertDatetoStr(dayrptsCopy[dayrptsCopy.length - 1].ReportDay), dayrptsCopy.length);
+            logger.info(["sameday", convertDatetoStr(dayrptsCopy[dayrptsCopy.length - 1].ReportDay), dayrptsCopy.length].join(' '));
             txtresult += await analService.getRealTxt(mStock, boll, rsiReal, dayrptsCopy);
         }
     }
@@ -81,7 +82,7 @@ router.get(p.getbestrate, async (req: Request, res: Response) => {
     var enddate: Date = new Date();
     var begindate: Date = new Date();
     begindate.setDate(enddate.getDate() - iDay);
-    console.log(enddate.toDateString(), begindate.toDateString());
+    logger.info([enddate.toDateString(), begindate.toDateString()].join(' '));
     //修正UTC问题
     if (begindate.getHours() == 0) {
         begindate.setHours(begindate.getHours() + 8)

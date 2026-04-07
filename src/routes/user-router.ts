@@ -6,6 +6,7 @@ import { ParamMissingError } from '@shared/errors';
 import authService from '@services/auth-service';
 import jwtUtil from '@util/jwt-util';
 import { GetUserIDByHeader } from './middleware';
+import logger from 'jet-logger';
 
 
 
@@ -61,7 +62,7 @@ router.post(p.add, async (req: Request, res: Response) => {
     await GetUserIDByHeader(String(authorization));
     const { user } = req.body;
     user.Password = await authService.ChangePwd(user.Password);
-    console.log(user);
+    logger.info(user);
     // Check param
     if (!user) {
         throw new ParamMissingError();

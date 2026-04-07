@@ -5,6 +5,7 @@ import analService, { rsidata } from '@services/analysis-service';
 import tencentService from '@services/tencentstock-service';
 import commonService from '@services/common-service';
 import { RSI_THRESHOLDS, PRICE_THRESHOLDS, BOLLINGER_THRESHOLDS, TIME_WINDOWS, W_DETECT_LOOSE } from '@shared/constants/trading-constants';
+import logger from 'jet-logger';
 
 export var isMpatton: boolean = false;
 export var isWpatton: boolean = false;
@@ -245,11 +246,11 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
     if (dayrptsCopy.length > 7) { dayrptsCopy = dayrptsCopy.slice(dayrptsCopy.length - 7, dayrptsCopy.length); }
 
     if (!isIgnoreTremor) {
-        if (validTremor(dayrptsCopy)) { console.log("Tremor"); return false; }
+        if (validTremor(dayrptsCopy)) { logger.info("Tremor"); return false; }
     }
 
 
-    // console.log(RSIavg, yesRSI7, last3rsiavg)
+    // logger.info([RSIavg, yesRSI7, last3rsiavg].join(' '))
     if (RSIavg > RSI_THRESHOLDS.DEFAULT_AVG && yesRSI7 < RSI_THRESHOLDS.OVERSOLD) {
         if (last3rsiavg <= RSI_THRESHOLDS.DEFAULT_AVG) { return false; }
     }
@@ -272,7 +273,7 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
 
     // if (iMin != iCurr) { iMinsec = iCurr }
 
-    // console.log(eleCurr.StockCode, eleCurr.ReportDay.toDateString(), iMin, iMinsec, Number(dayrptsCopy[iMin].RSI7), Number(dayrptsCopy[iMinsec].RSI7))
+    // logger.info([eleCurr.StockCode, eleCurr.ReportDay.toDateString(), iMin, iMinsec, Number(dayrptsCopy[iMin].RSI7), Number(dayrptsCopy[iMinsec].RSI7)].join(' '))
 
     if (Number(dayrptsCopy[iMinsec].RSI7) > iRSIDecide) { return false; }//一个指标小于20 另一个可以放宽到30
 
@@ -298,7 +299,7 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
 
 
     if (isUnderLow(iFirst, iSec, dayrptsCopy)) {
-        // console.log("step4");
+        // logger.info("step4");
         return false;
     }
 
@@ -315,8 +316,8 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
     if (iMaxRsi7 < iFirstRsi7 || iMaxRsi7 < iSecRsi7) { return false }//如果MAXRSI7 会小于其中一个 低峰，则W不成立
 
     wStr = "|" + iFirstRsi7.toFixed() + "," + iMaxRsi7.toFixed() + "," + iSecRsi7.toFixed();
-    // console.log(eleCurr.StockCode, iFirstRsi7, iMaxRsi7, iSecRsi7)
-    // console.log(iFirst, iSec, eleCurr.StockCode,dayrptsCopy[iFirst].RSI7,dayrptsCopy[iSec].RSI7);
+    // logger.info([eleCurr.StockCode, iFirstRsi7, iMaxRsi7, iSecRsi7].join(' '))
+    // logger.info([iFirst, iSec, eleCurr.StockCode,dayrptsCopy[iFirst].RSI7,dayrptsCopy[iSec].RSI7].join(' '));
 
     return true;
 }
@@ -375,7 +376,7 @@ function isRecentHigh(dayrps: t_StockDayReport[], index: number, dayCount: numbe
         dayrpsTemp.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b!.TodayMaxPrice));
 
         if (Number(dayrpsTemp[dayrpsTemp.length - 1].TodayMaxPrice) <= Number(element.TodayMaxPrice)) {
-            // console.log("recentHI!!!")
+            // logger.info("recentHI!!!")
             return true;
         }
 
@@ -395,7 +396,7 @@ function isRecentLow(dayrps: t_StockDayReport[], index: number, dayCount: number
 
         dayrpsTemp.sort((a, b) => Number(a!.TodayMinPrice) - Number(b.TodayMinPrice));
         if (Number(dayrpsTemp[0].TodayMinPrice) >= Number(element.TodayMinPrice)) {
-            console.log("recentLow!!!")
+            logger.info("recentLow!!!")
             return true;
         }
 
@@ -417,7 +418,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
     if (dayrptsYes.length == 0) { return wresults; }
-    //console.log(yesdate.toDateString())
+    //logger.info(yesdate.toDateString())
 
     dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < RSI_THRESHOLDS.WEAK_ZONE && x.RSI7 != null && Number(x.TodayClosePrice) >= PRICE_THRESHOLDS.MIN_W_CANDIDATE && Number(x.RSI7) >= 0);
     // dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= 20 && x.RSI7 != null && Number(x.TodayClosePrice) >= 12 && Number(x.RSI7) >= 0);
@@ -500,7 +501,7 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
                 wresults[iResult] = mResult;
                 iResult++;
             }
-            console.log(todayRSI7, todayRSI14, element.StockCode, mResult.Type, bestRate)
+            logger.info([todayRSI7, todayRSI14, element.StockCode, mResult.Type, bestRate].join(' '))
 
         }
 
@@ -523,7 +524,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
     var yesdate: Date = await getLasttradeDay(enddate);
     var dayrptsYes = await dayrptService.getDayrptByReportDay(yesdate);
 
-    console.log(yesdate.toDateString())
+    logger.info(yesdate.toDateString())
 
     if (dayrptsYes.length == 0) { return wresults; }
 
@@ -590,7 +591,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
                 if (index > 1) {
                     var temp = parseInt((todayRSI7 / 10).toFixed(2))
-                    // console.log(temp, element.StockCode)
+                    // logger.info([temp, element.StockCode].join(' '))
                     if (iStatus - 1 == temp) {
                         iStatus--;
                         isStar = true;
@@ -622,7 +623,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
                 wresults.push(mResult)
             }
         } catch (error) {
-            console.log(element.StockCode)
+            logger.info(element.StockCode)
         }
 
     }
@@ -663,14 +664,14 @@ async function isNegativeEvent(stockcode: string): Promise<boolean> {
 
     var daylimit = new Date();
     daylimit.setDate(today.getDate() - TIME_WINDOWS.NOTICE_CHECK_DAYS);
-    // console.log("daylim",daylimit.toDateString());
+    // logger.info(["daylim",daylimit.toDateString()].join(' '));
     notices = notices.filter(x => {
         let itemdate = new Date(x.notice_date).getTime();
         return itemdate > daylimit.getTime();
-        // console.log(itemdate,daylimit.getTime())
+        // logger.info([itemdate,daylimit.getTime()].join(' '))
     })
 
-    // console.log("notices", notices.length);
+    // logger.info(["notices", notices.length].join(' '));
     if (notices.length == 0) { return false; }
 
     var results = notices.filter(x => x.title_ch.indexOf("关注函") > -1 || x.title_ch.indexOf("问询函") > -1)
@@ -733,7 +734,7 @@ async function findDoubleRise(enddate: Date): Promise<wresult[]> {
             iResult++;
 
             var stat = parseInt((yesRSI7 / 10).toFixed(2))
-            // console.log(stat)
+            // logger.info(stat)
             if (stat == 1) { iRsi1++; }
             if (stat == 2) { iRsi2++; }
             if (stat == 3) { iRsi3++; }
@@ -747,7 +748,7 @@ async function findDoubleRise(enddate: Date): Promise<wresult[]> {
 
     }
 
-    console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
+    logger.info([iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9].join(' '))
 
     return wresults
 

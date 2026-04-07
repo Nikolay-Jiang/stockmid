@@ -2,6 +2,7 @@ import superagent, { parse } from 'superagent';
 import { t_StockDayReport, t_StockNameList } from '@prisma/client'
 import commonUtils from '@shared/common-utils';
 import { Decimal } from '@prisma/client/runtime/library';
+import logger from 'jet-logger';
 
 
 
@@ -20,7 +21,7 @@ export function GetStockOne(stockcode: string): Promise<Stock> {
 
     return GetWebData(stockcode).then((result: string) => {
 
-        // console.log(result);
+        // logger.info(result);
         var mStock = Parse(result);
         return mStock;
     });
@@ -45,7 +46,7 @@ export function GetStockList(stockcodes: string): Promise<Stock[]> {
 
         var Lstock: Array<Stock> = [];
         var iIndex = 0;
-        // console.log(result);
+        // logger.info(result);
         ArrayInfo.forEach(element => {
             var mStock = Parse(element);
             if (mStock.stockcode == undefined) {
@@ -80,7 +81,7 @@ export async function GetSinaStockByList(lstockcode: t_StockNameList[]): Promise
             var res = await GetStockList(strCodes)
             Lstock = Lstock.concat(res);
 
-            //console.log("count" + Lstock.length)
+            //logger.info("count" + Lstock.length)
 
             strCodes = "";
             iCount = 0;
@@ -92,7 +93,7 @@ export async function GetSinaStockByList(lstockcode: t_StockNameList[]): Promise
         var res = await GetStockList(strCodes)
         Lstock = Lstock.concat(res);
 
-        // console.log("count" + Lstock.length)
+        // logger.info("count" + Lstock.length)
 
         strCodes = "";
         iCount = 0;
@@ -111,7 +112,7 @@ function Parse(orginText: string): Stock {
     // var hq_str_sh600066 = "宇通客车,9.27,9.35,9.76,9.80,9.27,9.77,9.78,4567858,44306952,3100,9.77,1200,9.76,20500,9.75,1400,9.74,15300,9.73,10030,9.78,28093,9.79,156827,9.80,2800,9.81,6400,9.82,2009-01-09,15:03:32";
     var mStock = new Stock();
     try {
-        // console.log(orginText)
+        // logger.info(orginText)
         let iStart = orginText.indexOf('"') + 1;
         let iEnd = orginText.indexOf('"', iStart);
 
@@ -157,7 +158,7 @@ function Parse(orginText: string): Stock {
             iIndex += 2
         }
 
-        // console.log("lala:"+iBuyTotal+"&"+iSelltotal);
+        // logger.info("lala:"+iBuyTotal+"&"+iSelltotal);
 
         mStock.SellBuyRate = ((iBuyTotal - iSelltotal) / (iBuyTotal + iSelltotal) * 100).toFixed(2).toString() + "%";
 
@@ -167,7 +168,7 @@ function Parse(orginText: string): Stock {
 
 
     } catch (error) {
-        console.log(error);
+        logger.info(error);
     }
 
 
@@ -209,7 +210,7 @@ async function GetWebData(stockcode: string): Promise<string> {
 
     var res = courseHtml.text;
 
-    //console.log(courseHtml.charset);
+    //logger.info(courseHtml.charset);
     return res;
 
 }
@@ -229,7 +230,7 @@ export async function GetStockNotice(stockcode: string): Promise<Notice[]> {
 
     var noticelist: Array<Notice> = [];
     var result = await GetNoticeWebData(codefornotice);
-    // console.log(result);
+    // logger.info(result);
     var datas = JSON.parse(result);
 
     for (let index = 0; index < datas.data.list.length; index++) {
@@ -344,7 +345,7 @@ async function GetDayRptWebData(startdate: Date, enddate: Date, stockcode: strin
     startstr = startstr.replace(/-/g, "");
     endstr = endstr.replace(/-/g, "");
 
-    console.log(startstr, endstr, stockcode);
+    logger.info([startstr, endstr, stockcode].join(' '));
 
     const dayrpturl = `https://q.stock.sohu.com/hisHq?code=${stockcode}&start=${startstr}&end=${endstr}&stat=1&order=D&period=d&rt=json&r=0.34015556992340934&0.4387275691943626`
 
@@ -369,7 +370,7 @@ export async function isHoliday(checkDay: Date): Promise<boolean> {
         var result = Number(await GetHolidayWebData(checkDay));
         if (result > 0) { return true }    
     } catch (error) {
-        console.log("isHoliday check failed:", error instanceof Error ? error.message : String(error));
+        logger.info(["isHoliday check failed:", error instanceof Error ? error.message : String(error)].join(' '));
         return false;
     }
     

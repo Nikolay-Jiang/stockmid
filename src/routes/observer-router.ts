@@ -4,6 +4,7 @@ import { Request, Response, Router } from 'express';
 import { GetUserID, GetUserIDByHeader } from './middleware';
 import observerService from '@services/observer-service';
 import { ParamMissingError } from '@shared/errors';
+import logger from 'jet-logger';
 
 
 
@@ -36,7 +37,7 @@ router.get(p.get, async (req: Request, res: Response) => {
 router.get(p.gettst, async (req: Request, res: Response) => {
     const { authorization } = req.headers;
     const { authinfo } = req.body;
-    console.log(authorization, authinfo);
+    logger.info(authorization, authinfo);
     if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
 
     var userid = await GetUserIDByHeader(String(authorization));

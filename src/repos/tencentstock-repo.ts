@@ -2,6 +2,7 @@ import superagent, { parse } from 'superagent';
 import { t_StockDayReport, t_StockNameList } from '@prisma/client'
 import commonUtils from '@shared/common-utils';
 import { Prisma, PrismaClient } from '@prisma/client';
+import logger from 'jet-logger';
 
 
 
@@ -20,7 +21,7 @@ export function GetStockOne(stockcode: string): Promise<Stock> {
 
     return GetWebData(stockcode).then((result: string) => {
 
-        // console.log(result);
+        // logger.info(result);
         var mStock = Parse(result);
         return mStock;
     });
@@ -45,7 +46,7 @@ export function GetStockList(stockcodes: string): Promise<Stock[]> {
 
         var Lstock: Array<Stock> = [];
         var iIndex = 0;
-        // console.log(result);
+        // logger.info(result);
         ArrayInfo.forEach(element => {
             var mStock = Parse(element);
             if (mStock.stockcode == undefined) {
@@ -80,7 +81,7 @@ export async function GetSinaStockByList(lstockcode: t_StockNameList[]): Promise
             var res = await GetStockList(strCodes)
             Lstock = Lstock.concat(res);
 
-            //console.log("count" + Lstock.length)
+            //logger.info("count" + Lstock.length)
 
             strCodes = "";
             iCount = 0;
@@ -92,7 +93,7 @@ export async function GetSinaStockByList(lstockcode: t_StockNameList[]): Promise
         var res = await GetStockList(strCodes)
         Lstock = Lstock.concat(res);
 
-        // console.log("count" + Lstock.length)
+        // logger.info("count" + Lstock.length)
 
         strCodes = "";
         iCount = 0;
@@ -111,7 +112,7 @@ function Parse(orginText: string): Stock {
     // v_sz002415="51~海康威视~002415~30.02~29.59~29.51~280959~167335~113623~30.01~730~30.00~3043~29.99~243~29.98~504~29.97~147~30.02~518~30.03~273~30.04~69~30.05~254~30.06~72~~20241127161500~0.43~1.45~30.02~29.45~30.02/280959/837838461~280959~83784~0.31~20.74~~30.02~29.45~1.93~2733.62~2771.81~3.61~32.55~26.63~0.99~3481~29.82~25.64~19.65~~~1.05~83783.8461~0.0000~0~ ~GP-A~-11.24~-3.47~3.03~17.39~11.74~35.90~24.71~-7.40~0.03~13.80~9105998839~9233198326~59.47~-13.69~9105998839~~~-12.68~0.07~~CNY~0~~30.09~-312"; 
     var mStock = new Stock();
     try {
-        // console.log(orginText)
+        // logger.info(orginText)
         let iStart = orginText.indexOf('"') + 1;
         let iEnd = orginText.indexOf('"', iStart);
 
@@ -159,7 +160,7 @@ function Parse(orginText: string): Stock {
             iIndex += 2
         }
 
-        // console.log("lala:"+iBuyTotal+"&"+iSelltotal);
+        // logger.info("lala:"+iBuyTotal+"&"+iSelltotal);
 
         mStock.SellBuyRate = ((iBuyTotal - iSelltotal) / (iBuyTotal + iSelltotal) * 100).toFixed(2).toString() + "%";
         mStock.SearchTime = convertToDate(sTemp[30]);
@@ -168,7 +169,7 @@ function Parse(orginText: string): Stock {
 
 
     } catch (error) {
-        console.log(error);
+        logger.info(error);
     }
 
 
@@ -242,7 +243,7 @@ export async function GetStockNotice(stockcode: string): Promise<Notice[]> {
 
     var noticelist: Array<Notice> = [];
     var result = await GetNoticeWebData(codefornotice);
-    // console.log(result);
+    // logger.info(result);
     var datas = JSON.parse(result);
 
     for (let index = 0; index < datas.data.list.length; index++) {
@@ -357,7 +358,7 @@ async function GetDayRptWebData(startdate: Date, enddate: Date, stockcode: strin
     startstr = startstr.replace(/-/g, "");
     endstr = endstr.replace(/-/g, "");
 
-    console.log(startstr, endstr, stockcode);
+    logger.info([startstr, endstr, stockcode].join(' '));
 
     const dayrpturl = `https://q.stock.sohu.com/hisHq?code=${stockcode}&start=${startstr}&end=${endstr}&stat=1&order=D&period=d&rt=json&r=0.34015556992340934&0.4387275691943626`
 
@@ -382,7 +383,7 @@ export async function isHoliday(checkDay: Date): Promise<boolean> {
         var result = Number(await GetHolidayWebData(checkDay));
         if (result > 0) { return true }    
     } catch (error) {
-        console.log("isHoliday check failed:", error instanceof Error ? error.message : String(error));
+        logger.info(["isHoliday check failed:", error instanceof Error ? error.message : String(error)].join(' '));
         return false;
     }
     

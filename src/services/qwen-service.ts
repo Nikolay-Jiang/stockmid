@@ -1,5 +1,6 @@
 import qwenRepo from '@repos/qwen-repo';
 import commonService from '@services/common-service';
+import logger from 'jet-logger';
 
 //缓存保留12小时
 const cacheTTL: number = 12*60*60*1000 
@@ -17,7 +18,7 @@ async function getds(stockcode: string): Promise<string | null> {
     if (cacheresult != null) {
         return cacheresult;
     }
-    console.log("no cache",cacheKey);
+    logger.info(["no cache",cacheKey].join(' '));
     const content = await qwenRepo.callQwen(prompt);
 
     if (commonService.checkCache()) {

@@ -9,6 +9,7 @@ import dayLogService from '@services/daylog-service';
 import ntfyService from '@services/ntfy-service'
 import commService from '@services/common-service'
 import { PORTFOLIO_DEFAULTS } from '@shared/constants/trading-constants';
+import logger from 'jet-logger';
 
 
 
@@ -62,7 +63,7 @@ router.get(p.simtradebypredict, async (req: Request, res: Response) => {
     var iCountLow = 0;
     var iCountAfterNoon = 0;
 
-    console.log(enddate.toDateString());
+    logger.info(enddate.toDateString());
 
     var predictresults = await predictService.getPredictByPredictTime(startdate, enddate);
 
@@ -103,11 +104,11 @@ router.get(p.simtradebypredict, async (req: Request, res: Response) => {
         if (isLowThenCatch) { iCountLow++; }
         if (bestbuyHour >= 14) { iCountAfterNoon++; }
 
-        console.log(element.StockCode, element.Type, element.BackTest, "|", element.CurrentPrice, bestbuyPrice, bestbuyHour, isLowThenCatch, "close:", closeprice);
+        logger.info([element.StockCode, element.Type, element.BackTest, "|", element.CurrentPrice, bestbuyPrice, bestbuyHour, isLowThenCatch, "close:", closeprice].join(' '));
 
     }
 
-    console.log("Total:", predictresults.length, "LowTrue:", iCountLow, "AfterNoonBuy:", iCountAfterNoon)
+    logger.info(["Total:", predictresults.length, "LowTrue:", iCountLow, "AfterNoonBuy:", iCountAfterNoon].join(' '))
 
     return res.status(OK).end("page end!");
 });
@@ -151,7 +152,7 @@ router.get(p.statistics, async (req: Request, res: Response) => {
 
 
     initTotalMoney = CurrentMoney + CurrentVol * Number(dayrpts[0].TradingPriceAvg);
-    console.log(dayrpts[0].ReportDay.toDateString(), CurrentMoney + CurrentVol * Number(dayrpts[0].TradingPriceAvg));
+    logger.info([dayrpts[0].ReportDay.toDateString(), CurrentMoney + CurrentVol * Number(dayrpts[0].TradingPriceAvg)].join(' '));
     //基于RSI14
     for (let index = 1; index < dayrpts.length; index++) {
 
@@ -172,7 +173,7 @@ router.get(p.statistics, async (req: Request, res: Response) => {
     var temp = CurrentTotalMoney - initTotalMoney;
     var temprate = ((temp / initTotalMoney) * 100).toFixed(2);
     var tempStat = ((iCountGood / (iCountGood + iCountBad)) * 100).toFixed(2) + "%";
-    console.log(temp, ((temp / initTotalMoney) * 100).toFixed(2), iCountGood, iCountBad, tempStat, iCountBadForAdd, iCountAdd, iCountBadForReduce, iCountReduce);
+    logger.info([temp, ((temp / initTotalMoney) * 100).toFixed(2), iCountGood, iCountBad, tempStat, iCountBadForAdd, iCountAdd, iCountBadForReduce, iCountReduce].join(' '));
 
     return res.status(OK).json({ temp, temprate, tempStat });
 });
@@ -226,14 +227,14 @@ router.get(p.findW, async (req: Request, res: Response) => {
 
 
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
-            // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
+            // logger.info([element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good"].join(' '))
             if (await simService.isNegativeEvent(element.stockcode)) { element.eval += "|负面"; }
             element.eval += "|Good";
             element.evalprice = Number((maxprice - element.price).toFixed(2))
             iCountGood++;
 
             var stat = parseInt((element.rsi7 / 10).toFixed(2))
-            // console.log(stat)
+            // logger.info(stat)
             if (stat == 1) { iRsi1++; }
             if (stat == 2) { iRsi2++; }
             if (stat == 3) { iRsi3++; }
@@ -248,14 +249,14 @@ router.get(p.findW, async (req: Request, res: Response) => {
             var txtadd = ""
             if (maxprice > element.price) { txtadd = "low"; element.eval += "|Low" }
             element.evalprice = Number((maxprice - element.price).toFixed(2))
-            // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd)
+            // logger.info([element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd].join(' '))
         }
 
     }
 
     var filterCount = findresults.length;
     var tempRate = (iCountGood / filterCount * 100).toFixed(2) + "%";
-    console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
+    logger.info([iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9].join(' '))
     return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults });
 });
 
@@ -322,10 +323,10 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
         dayrptsEval.sort((a, b) => Number(a!.TodayMaxPrice) - Number(b.TodayMaxPrice));
 
         var maxprice = Number(dayrptsEval[dayrptsEval.length - 1].TodayMaxPrice);
-        // console.log(dayrptsEval.length,maxprice,element.stockcode);
+        // logger.info([dayrptsEval.length,maxprice,element.stockcode].join(' '));
 
         if (maxprice > element.price && (maxprice - element.price) >= 0.4) {
-            // console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good")
+            // logger.info([element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, "good"].join(' '))
             element.eval += "|good";
             element.evalprice = Number((maxprice - element.price).toFixed(2));
             element.evalrate = Number((element.evalprice / element.price * 100).toFixed(2));
@@ -350,7 +351,7 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
                 txtadd = "low";
 
             }
-            console.log(element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd)
+            logger.info([element.stockcode, element.price, element.rsi7, element.rsi14, element.MA, element.bollDown, element.Type, txtadd].join(' '))
         }
 
 
@@ -372,7 +373,7 @@ router.get(p.findyzm, async (req: Request, res: Response) => {
 
     var filterCount = findresults.length;
     var tempRate = (iCountGood / filterCount * 100).toFixed(2) + "%";
-    console.log(iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9)
+    logger.info([iRsi1, iRsi2, iRsi3, iRsi4, iRsi5, iRsi6, iRsi7, iRsi8, iRsi9].join(' '))
     return res.status(OK).json({ enddate, tempCount, filterCount, iCountGood, tempRate, findresults, dayrptsRule: findresultsRule });
 });
 
@@ -555,7 +556,7 @@ function runHQ(dayrpts: t_StockDayReport[], index: number, myoper: stockOP) {
 
 
     if (Math.abs(Number(element.TodayClosePrice) - Number(elyes.TodayClosePrice)) >= 2.2) {
-        console.log("sudden Price:", element.ReportDay.toDateString())
+        logger.info(["sudden Price:", element.ReportDay.toDateString()].join(' '))
     }
 
     if (myoper == stockOP.reduce) {
@@ -593,7 +594,7 @@ function runHQ(dayrpts: t_StockDayReport[], index: number, myoper: stockOP) {
                 CurrentVol += (k * onceVol);
                 CurrentMoney = CurrentMoney - k * onceVol * Number(element.TradingPriceAvg);
                 iCountAdd++;
-            } else { console.log("买入资金不足") }
+            } else { logger.info("买入资金不足") }
             break;
         case stockOP.sell:
             if (CurrentVol >= k * onceVol) {
@@ -620,7 +621,7 @@ function runHQ(dayrpts: t_StockDayReport[], index: number, myoper: stockOP) {
     choose = GetChooseEval(dayrpts, index, myoper);
     CurrentTotalMoney = CurrentMoney + CurrentVol * Number(element.TradingPriceAvg);
     if (myoper != stockOP.hold) {
-        console.log(element.ReportDay.toDateString(), myoper, CurrentMoney, reducePrice, CurrentVol, CurrentTotalMoney, CurrentTotalMoney - initTotalMoney, choose, isMpatton, isWpatton, txtOP);
+        logger.info([element.ReportDay.toDateString(), myoper, CurrentMoney, reducePrice, CurrentVol, CurrentTotalMoney, CurrentTotalMoney - initTotalMoney, choose, isMpatton, isWpatton, txtOP].join(' '));
     }
 
     // mLog.cost = -1;
@@ -650,7 +651,7 @@ async function GetDataAnaly(dayrps: t_StockDayReport[]) {
 
         txtresult += `${element.ReportDay.toDateString()} RSI7:${element.RSI7} RSI14:${element.RSI14} daystatus:${mystatus.toString()} CLose:${element.TodayClosePrice} MAX:${element.TodayMaxPrice} MIN:${element.TodayMinPrice} `
         txtresult += ` RATEPR:${element.RatePrice}`;
-        console.log(txtresult);
+        logger.info(txtresult);
     }
 
 }
@@ -735,9 +736,9 @@ function findmoney(dayrpts: t_StockDayReport[]) {
 
 
 
-        console.log(element.ReportDay, element.StockCode, todayMax.toFixed(2), element.TodayMinPrice?.toFixed(2), element.TodayClosePrice?.toFixed(2))
+        logger.info([element.ReportDay, element.StockCode, todayMax.toFixed(2), element.TodayMinPrice?.toFixed(2), element.TodayClosePrice?.toFixed(2)].join(' '))
     }
-    console.log("结论:", iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore)
+    logger.info(["结论:", iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore].join(' '))
 }
 
 function moneyrule1(dayrpts: t_StockDayReport[]): string {
@@ -791,7 +792,7 @@ function moneyrule1(dayrpts: t_StockDayReport[]): string {
         }
         iTempMax = todayMax
 
-        // console.log(element.ReportDay, element.StockCode, todayMax.toFixed(2), element.TodayMinPrice?.toFixed(2), element.TodayClosePrice?.toFixed(2))
+        // logger.info([element.ReportDay, element.StockCode, todayMax.toFixed(2), element.TodayMinPrice?.toFixed(2), element.TodayClosePrice?.toFixed(2)].join(' '))
     }
 
     var sTag = "";
@@ -803,7 +804,7 @@ function moneyrule1(dayrpts: t_StockDayReport[]): string {
         if (sTag == "" && iCountMinRise == iCountCloseRise) { sTag = "|" + iCountMaxRise.toString().substring(0, 1) + "**" }
         if (sTag == "" && iCountMaxRise == iCountCloseRise && iCountMinRise >= 5) { sTag = "|*5*" }
         if (sTag == "" && iCountMaxRise == iCountMinRise) { sTag = "|**" + iCountCloseRise.toString().substring(0, 1) };
-        // console.log("结论:", stockcode, iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore, sTag)
+        // logger.info(["结论:", stockcode, iCountMaxRise, iCountMaxIgnore, iCountMinRise, iCountMinIgnore, iCountCloseRise, iCountCloseIgnore, sTag].join(' '))
     }
 
 

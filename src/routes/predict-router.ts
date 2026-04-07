@@ -18,6 +18,7 @@ import {
     MAGIC_NUMBERS 
 } from '@shared/constants/predict-constants';
 import simtradeService, { rdType } from '@services/simtrade-service';
+import logger from 'jet-logger';
 
 
 
@@ -59,7 +60,7 @@ router.get(p.get, async (req: Request, res: Response) => {
         const predicts = await predictService.getPredictByPredictTime(startDate, endDate);
         return res.status(OK).json({ predicts });
     } catch (error) {
-        console.error(`Error in ${p.get}:`, error);
+        logger.err([`Error in ${p.get}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to fetch predicts' 
         });
@@ -83,7 +84,7 @@ router.get(p.getbycode, async (req: Request, res: Response) => {
         const predicts = await predictService.getPredictByCode(startDate, endDate, stockcode);
         return res.status(OK).json({ predicts });
     } catch (error) {
-        console.error(`Error in ${p.getbycode}:`, error);
+        logger.err([`Error in ${p.getbycode}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to fetch predicts by code' 
         });
@@ -105,7 +106,7 @@ router.get(p.getbycode2, async (req: Request, res: Response) => {
         const predicts = await predictService.getPredictByCode(startDate, endDate, stockcode);
         return res.status(OK).json({ predicts });
     } catch (error) {
-        console.error(`Error in ${p.getbycode2}:`, error);
+        logger.err([`Error in ${p.getbycode2}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to fetch predicts by code2' 
         });
@@ -128,7 +129,7 @@ router.get(p.getbyday, async (req: Request, res: Response) => {
         const predicts = await predictService.getPredictByDay(startDate, evalNumber);
         return res.status(OK).json({ predicts, statsGood });
     } catch (error) {
-        console.error(`Error in ${p.getbyday}:`, error);
+        logger.err([`Error in ${p.getbyday}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to fetch predicts by day' 
         });
@@ -153,7 +154,7 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
 
         if (type.toUpperCase()=="YZM-SIM1") {    
             let YZMsim1=predictService.sim1(YZMpredicts);
-            console.log("sim1:",YZMsim1,YZMpredicts.length);
+            logger.info(["sim1:",YZMsim1,YZMpredicts.length].join(' '));
             if (YZMsim1=== "") {
                 return res.status(OK).json('');
                 //predicts.length=0;
@@ -170,7 +171,7 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
         
         //return res.status(OK).json({ predicts, statsGood });
     } catch (error) {
-        console.error(`Error in ${p.getbyday}:`, error);
+        logger.err([`Error in ${p.getbyday}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to fetch predicts by day' 
         });
@@ -191,7 +192,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
         evalTmp = isNaN(parsed) ? PREDICT_CONSTANTS.DEFAULT_EVAL_NUMBER : parsed;
     }
     const hs300rpt = await dayrptService.getone(startdate, "sh000300");
-    //console.log(hs300rpt, startdate.toUTCString());
+    //logger.info([hs300rpt, startdate.toUTCString()].join(' '));
 
     const predicts = await predictService.getPredictByDay(startdate, evalTmp);
     const Wpredicts = predicts.filter(x => x.Type === "W");
@@ -235,7 +236,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
 
         WText = `共有W数据${Wpredicts.length}条,其中获益${iCountGood}条，获益比${iStatusGoodW}%;` +
                 `平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
-        // console.log(iSumDayDiff, iCountGood, iDayDiffAvg)
+        // logger.info([iSumDayDiff, iCountGood, iDayDiffAvg].join(' '))
     }
 
 
@@ -266,7 +267,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
         YZMText += hs300;
         YZMText += '  yzm-sim1:';
         YZMText += predictService.sim1(YZMpredicts);
-        console.log(iSumDayDiff, iCountGood, iDayDiffAvg);
+        logger.info([iSumDayDiff, iCountGood, iDayDiffAvg].join(' '));
     }
 
     return res.status(OK).json({ WText, YZMText });
@@ -296,7 +297,7 @@ router.get(p.qmt, async (req: Request, res: Response) => {
         
         return res.status(OK).json({ Wcount, Wpredicts, YZMcount, YZMsim1, YSim1predicts });
     } catch (error) {
-        console.error(`Error in ${p.qmt}:`, error);
+        logger.err([`Error in ${p.qmt}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to process QMT request' 
         });
@@ -320,7 +321,7 @@ router.get(p.backteston, async (req: Request, res: Response) => {
         
         return res.status(OK).end("accomplish");
     } catch (error) {
-        console.error(`Error in ${p.backteston}:`, error);
+        logger.err([`Error in ${p.backteston}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to generate daily backtest data' 
         });
@@ -345,12 +346,12 @@ router.get(p.backtestbyMonth, async (req: Request, res: Response) => {
             currentDate.setDate(day);
             await predictService.backtestol(new Date(currentDate));
             day++;
-            console.log(currentDate.toDateString(), targetMonth);
+            logger.info([currentDate.toDateString(), targetMonth].join(' '));
         }
 
         return res.status(OK).end("accomplish");
     } catch (error) {
-        console.error(`Error in ${p.backtestbyMonth}:`, error);
+        logger.err([`Error in ${p.backtestbyMonth}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to generate monthly backtest data' 
         });
@@ -372,21 +373,21 @@ router.get(p.aYZM, async (req: Request, res: Response) => {
         const iCount = commonService.calc_day(enddate.getTime(), startdate.getTime());
         const rate = parseNumberParam(evelrate, PREDICT_CONSTANTS.DEFAULT_EVAL_RATE);
 
-        // console.log(iCount, startdate, enddate)
+        // logger.info([iCount, startdate, enddate].join(' '))
         if (iCount > 0) {
             for (let index = 0; index < iCount; index++) {
                 if (startdate.getDay() == 6 || startdate.getDay() == 0) { startdate.setDate(startdate.getDate() + 1); continue; }
-                console.log("日期：" + startdate.toDateString());
+                logger.info("日期：" + startdate.toDateString());
                 const tempday = new Date(startdate);
                 const predicts = await predictService.getPredictByDay(tempday);
 
-                console.log("当日YZM总数:" + predicts.length);
+                logger.info("当日YZM总数:" + predicts.length);
 
                 const predictsfilter = predicts.filter(x => x.evalrate > rate && x.Type == "YZM").sort((a, b) => b.evalrate - a.evalrate);
                 an1(predictsfilter)
 
-                // console.log("end:",startdate.toDateString())
-                console.log("-----------------")
+                // logger.info(["end:",startdate.toDateString()].join(' '))
+                logger.info("-----------------")
                 predictService.sim1(predicts.sort((a, b) => b.evalrate - a.evalrate));
                 startdate.setDate(startdate.getDate() + 1);
             }
@@ -400,7 +401,7 @@ router.get(p.aYZM, async (req: Request, res: Response) => {
             return res.status(OK).json({ predictsfilter });
         }
     } catch (error) {
-        console.error(`Error in ${p.aYZM}:`, error);
+        logger.err([`Error in ${p.aYZM}:`, error].join(' '));
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             error: 'Failed to analyze YZM' 
         });
@@ -419,11 +420,11 @@ router.get(p.backtestQMT, async (req: Request, res: Response) => {
 
     let iBuyCount = 0; // 记录买入次数
 
-    console.log(iCount, startdate, enddate)
+    logger.info([iCount, startdate, enddate].join(' '))
     if (iCount > 0) {
         for (let index = 0; index < iCount; index++) {
             if (startdate.getDay() == 6 || startdate.getDay() == 0) { startdate.setDate(startdate.getDate() + 1); continue; }
-            console.log("日期：" + startdate.toDateString());
+            logger.info("日期：" + startdate.toDateString());
             const tempday = new Date(startdate);
             const predicts = await predictService.getPredictByDay(tempday);
             const Wpredicts = predicts.filter(x => x.Type === "W");
@@ -431,7 +432,7 @@ router.get(p.backtestQMT, async (req: Request, res: Response) => {
             const YZMsim1 = predictService.sim1(YZMpredicts);
             const YSim1predicts = YZMpredicts.filter(x => YZMsim1.includes(x.StockCode));
 
-            console.log("YZM总数:" + YZMpredicts.length + ";W总数：" + Wpredicts.length + ";YZMsim1：" + YSim1predicts.length);
+            logger.info("YZM总数:" + YZMpredicts.length + ";W总数：" + Wpredicts.length + ";YZMsim1：" + YSim1predicts.length);
 
             let isBuy = false;
 
@@ -442,33 +443,33 @@ router.get(p.backtestQMT, async (req: Request, res: Response) => {
             const { W_THRESHOLDS, YZM_THRESHOLDS } = MAGIC_NUMBERS;
             
             if (Wpredicts.length > W_THRESHOLDS.LOW && YZMpredicts.length > YZM_THRESHOLDS.MEDIUM) {
-                console.log("buy");
+                logger.info("buy");
                 isBuy = true;
             }
 
             if (Wpredicts.length > W_THRESHOLDS.MEDIUM) {
                 isBuy = true;
-                console.log("buy+");
+                logger.info("buy+");
             }
 
             if (YZMpredicts.length > YZM_THRESHOLDS.MEDIUM) {
                 isBuy = true;
-                console.log("buy+");
+                logger.info("buy+");
             }
 
             if (Wpredicts.length > W_THRESHOLDS.MEDIUM && YZMpredicts.length > YZM_THRESHOLDS.HIGH) {
                 isBuy = true;
-                console.log("buy++");
+                logger.info("buy++");
             }
 
             if (Wpredicts.length <= W_THRESHOLDS.LOW) {
                 isBuy = false;
-                console.log("sell");
+                logger.info("sell");
             }
 
             if (Wpredicts.length <= W_THRESHOLDS.LOW || YZMpredicts.length < YZM_THRESHOLDS.LOW) {
                 isBuy = false;
-                console.log("sell+");
+                logger.info("sell+");
             }
 
             if (!isBuy) {
@@ -485,16 +486,16 @@ router.get(p.backtestQMT, async (req: Request, res: Response) => {
                 if (iSim1Loss.length > 0) {
                     iLoss = (iSim1Loss.length / YSim1predicts.length) * MAGIC_NUMBERS.STATISTICS.PERCENTAGE_MULTIPLIER;
                 }
-                console.log("统计：" + iLoss.toFixed(MAGIC_NUMBERS.STATISTICS.DECIMAL_PLACES));
+                logger.info("统计：" + iLoss.toFixed(MAGIC_NUMBERS.STATISTICS.DECIMAL_PLACES));
             }
 
-            console.log("-----------------")
+            logger.info("-----------------")
             // predictService.sim1(predicts.sort((a, b) => b.evalrate - a.evalrate));
             startdate.setDate(startdate.getDate() + 1);
         }
 
         //表格输出
-        console.log("回测天数："+iCount+"买入："+iBuyCount);
+        logger.info("回测天数："+iCount+"买入："+iBuyCount);
         return res.status(OK).end();
     }
     else {
@@ -518,7 +519,7 @@ function an1(predicts: predictresult[]) {
     let istat3 = 0;
     let istat4 = 0;
 
-    console.log("方法名称 代码 RSI7-RSI14 评估 上升金额 上升率%");
+    logger.info("方法名称 代码 RSI7-RSI14 评估 上升金额 上升率%");
     
     for (const element of predicts) {
         if (element.eval.indexOf("重") > 0) {
@@ -530,11 +531,11 @@ function an1(predicts: predictresult[]) {
         }
         else { istat0++; }
 
-        console.log("方法1", element.StockCode, (element.CatchRsi7 - element.CatchRsi14).toFixed(2), element.eval, element.evalprice, element.evalrate);
+        logger.info(["方法1", element.StockCode, (element.CatchRsi7 - element.CatchRsi14).toFixed(2), element.eval, element.evalprice, element.evalrate].join(' '));
     }
     
     const isumstat = istat0 + istat1 + istat2 + istat3 + istat4;
-    console.log("统计分析:", "总计", isumstat, "首次：", istat0, "重1：", istat1, "重2：", istat2, "重3：", istat3, "重4：", istat4);
+    logger.info(["统计分析:", "总计", isumstat, "首次：", istat0, "重1：", istat1, "重2：", istat2, "重3：", istat3, "重4：", istat4].join(' '));
 }
 
 

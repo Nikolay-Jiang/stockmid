@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import logger from 'jet-logger';
 
 const openai = new OpenAI({
         baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1/',
@@ -20,7 +21,7 @@ async function callQwen(prompt:string) {
     
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
-    console.error('API请求失败:', errMsg);
+    logger.err(['API请求失败:', errMsg].join(' '));
     throw error;
   }
 }

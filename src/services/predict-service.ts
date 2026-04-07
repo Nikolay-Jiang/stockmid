@@ -6,6 +6,7 @@ import analService from '@services/analysis-service';
 import dayrptService from '@services/dayrpt-service';
 import tencentService from '@services/tencentstock-service';
 import commonService from '@services/common-service';
+import logger from 'jet-logger';
 
 
 export var statsGood = "";
@@ -166,7 +167,7 @@ async function getPredictByDay(startdate: Date, evalnumber: number = 0.4): Promi
         var repeatDayStart = new Date(startdate);
         repeatDayStart.setDate(startdate.getDate() - 60);
         var iRepeatCount: number = await isRepeat(repeatDayStart, startdate, mPredict.StockCode)//判断曾经是否出现过
-        // console.log(iRepeatCount,mPredict.StockCode)
+        // logger.info(iRepeatCount,mPredict.StockCode)
         iRepeatCount--;
         if (iRepeatCount > 0) {
             mPredict.eval += `|重${iRepeatCount}`;

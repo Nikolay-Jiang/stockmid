@@ -2,6 +2,7 @@ import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
 import sinastockService from '@services/sinastock-service';
 import dayrptService from '@services/dayrpt-service';
+import logger from 'jet-logger';
 
 
 
@@ -66,7 +67,7 @@ router.get(p.supplyDayRpt, async (req: Request, res: Response) => {
 
     for (let index = 0; index < dayrptlist.length; index++) {
         const element = dayrptlist[index];
-        if (await dayrptService.persists(element.ReportDay, element.StockCode)) { console.log(element.ReportDay.toDateString()); continue; }
+        if (await dayrptService.persists(element.ReportDay, element.StockCode)) { logger.info(element.ReportDay.toDateString()); continue; }
 
         await dayrptService.addone(element);
 

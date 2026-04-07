@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import { UserRoles } from '@routes/user-router';
 import { cookieProps } from '@routes/auth-router';
 import jwtUtil from '@util/jwt-util';
+import logger from 'jet-logger';
 
 
 // Constants
@@ -27,7 +28,7 @@ export async function adminMw(req: Request, res: Response, next: NextFunction) {
             throw Error(jwtNotPresentErr);
         }
         // Make sure user role is an admin
-        console.log(jwt);
+        logger.info(jwt);
         const clientData = await jwtUtil.decode(jwt);
         
         if (typeof clientData === 'object' && clientData.role === UserRoles.Admin) {

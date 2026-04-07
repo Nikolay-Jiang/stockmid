@@ -3,6 +3,7 @@ import { Stock } from '@repos/sinastock-repo';
 import simService, { txtOP } from '@services/simtrade-service';
 import { isMpatton, stockOP } from '@services/simtrade-service';
 import predictService from '@services/predict-service';
+import logger from 'jet-logger';
 
 
 const titleSize = "36px";
@@ -33,7 +34,7 @@ async function getRealTxt(mStock: Stock, boll: bolldata, rsi: rsidata, dayrpts: 
     if (await simService.isAdd(dayrpts, dayrpts.length - 1)) { myoper = stockOP.add; }
 
     if (simService.isReduce(dayrpts, dayrpts.length - 1)) { myoper = stockOP.reduce }
-    console.log(myoper, isMpatton, dayrpts[dayrpts.length - 1].RSI7, dayrpts[dayrpts.length - 1].RSI14)
+    logger.info([myoper, isMpatton, dayrpts[dayrpts.length - 1].RSI7, dayrpts[dayrpts.length - 1].RSI14].join(' '))
 
     txtresult += `[size=${titleSize}][B]实时数据：[/B][/size] \r\n`;
     if (await simService.isNegativeEvent(mStock.stockcode)) {
@@ -117,7 +118,7 @@ async function GetRateData(dayrpts: t_StockDayReport[]): Promise<rateAnalysis[]>
         rateanalysisdata[index].rateprice = Number(element.RatePrice);
         rateanalysisdata[index].maxvalue = Number((Number(element.RatePrice) * MaxDay).toFixed(2));
         rateanalysisdata[index].reportday = element.ReportDay;
-        // console.log(element.RatePrice + "|" + MaxDay + "|" );
+        // logger.info(element.RatePrice + "|" + MaxDay + "|" );
 
         MaxDay--;
     }
@@ -228,7 +229,7 @@ async function rsiCalc(dayrpts: t_StockDayReport[]): Promise<rsidata> {
 
         }
     }
-    // console.log(mRsiData.rsi14expect);
+    // logger.info(mRsiData.rsi14expect);
     //  文字结论
     if (mRsiData.rsi14 == -1) {
         return mRsiData;
@@ -260,7 +261,7 @@ async function bollCalc(dayrpts: t_StockDayReport[]): Promise<bolldata> {
         dayrptsCopy = dayrptsCopy.slice(dayrptsCopy.length - 20, dayrptsCopy.length);
     }
 
-    // console.log(dayrptsCopy.length + "|" + dayrptsCopy[dayrptsCopy.length-1].ReportDay.toUTCString());
+    // logger.info(dayrptsCopy.length + "|" + dayrptsCopy[dayrptsCopy.length-1].ReportDay.toUTCString());
 
     var sumClose = dayrptsCopy.reduce((c, R) => c + Number(R.TodayClosePrice), 0)
     mBollData.ma = Number((sumClose / dayrptsCopy.length).toFixed(2));

@@ -1,3 +1,4 @@
+import logger from 'jet-logger';
 
 async function sendPostRequest(postmessage:string) {
     const url = 'http://jp.minigeek.cn:9180/stock';
@@ -9,7 +10,7 @@ async function sendPostRequest(postmessage:string) {
         },
     });
     const data = await response.text();
-    console.log('Response:', data);
+    logger.info(['Response:', data].join(' '));
 }
 
 export default {

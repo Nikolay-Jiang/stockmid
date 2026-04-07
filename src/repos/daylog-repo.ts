@@ -1,4 +1,5 @@
 import { PrismaClient, t_StockDayLog } from '@prisma/client'
+import logger from 'jet-logger';
 const prisma = new PrismaClient();
 
 
@@ -20,7 +21,7 @@ async function getDaylogbyCondition(startdate: Date, enddate: Date, stockcode: s
 
     results.map((item) => ({ ...item, SearchTime: item.SearchTime?.setHours(item.SearchTime.getHours() - 8) }));
 
-    // console.log(myresults)
+    // logger.info(myresults)
 
     return results;
 
