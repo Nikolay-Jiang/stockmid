@@ -381,7 +381,10 @@ export async function isHoliday(checkDay: Date): Promise<boolean> {
     try {
         var result = Number(await GetHolidayWebData(checkDay));
         if (result > 0) { return true }    
-    } catch (error) {return false;}
+    } catch (error) {
+        console.log("isHoliday check failed:", error instanceof Error ? error.message : String(error));
+        return false;
+    }
     
     return false;
 }

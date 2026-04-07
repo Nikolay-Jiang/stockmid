@@ -19,7 +19,8 @@ async function callQwen(prompt:string) {
     return completion.choices[0].message.content;
     
   } catch (error) {
-    console.error('API请求失败:', error.response ? error.response.data : error.message);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('API请求失败:', errMsg);
     throw error;
   }
 }
