@@ -28,6 +28,7 @@ export const cookieProps = Object.freeze({
         maxAge: Number(process.env.COOKIE_EXP),
         domain: (process.env.COOKIE_DOMAIN),
         secure: (process.env.SECURE_COOKIE === 'true'),
+        sameSite: 'strict' as const,
     },
 });
 
@@ -48,8 +49,8 @@ router.post(p.login, async (req: Request, res: Response) => {
         const jwt = await authService.login(username, password);
         token = jwt;
         // Add jwt to cookie
-        // const { key, options } = cookieProps;
-        // res.cookie(key, jwt, options);
+        const { key, options } = cookieProps;
+        res.cookie(key, jwt, options);
     } catch (error) {
         throw error;
     }
