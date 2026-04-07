@@ -152,7 +152,7 @@ router.get(p.getbyday2, async (req: Request, res: Response) => {
         //const Wpredicts=predictsAll.filter(n=>n.Type=="W");
 
         if (type.toUpperCase()=="YZM-SIM1") {    
-            let YZMsim1=sim1(YZMpredicts);
+            let YZMsim1=predictService.sim1(YZMpredicts);
             console.log("sim1:",YZMsim1,YZMpredicts.length);
             if (YZMsim1=== "") {
                 return res.status(OK).json('');
@@ -265,7 +265,7 @@ router.get(p.backtest, async (req: Request, res: Response) => {
                   `平均获益时间：${iDayDiffAvg}天，最低获益金额：${iMiniBenfit}元`;
         YZMText += hs300;
         YZMText += '  yzm-sim1:';
-        YZMText += sim1(YZMpredicts);
+        YZMText += predictService.sim1(YZMpredicts);
         console.log(iSumDayDiff, iCountGood, iDayDiffAvg);
     }
 
@@ -291,7 +291,7 @@ router.get(p.qmt, async (req: Request, res: Response) => {
         
         const Wcount = Wpredicts.length;
         const YZMcount = YZMpredicts.length;
-        const YZMsim1 = sim1(YZMpredicts);
+        const YZMsim1 = predictService.sim1(YZMpredicts);
         const YSim1predicts = YZMpredicts.filter(x => YZMsim1.includes(x.StockCode));
         
         return res.status(OK).json({ Wcount, Wpredicts, YZMcount, YZMsim1, YSim1predicts });
@@ -387,7 +387,7 @@ router.get(p.aYZM, async (req: Request, res: Response) => {
 
                 // console.log("end:",startdate.toDateString())
                 console.log("-----------------")
-                sim1(predicts.sort((a, b) => b.evalrate - a.evalrate));
+                predictService.sim1(predicts.sort((a, b) => b.evalrate - a.evalrate));
                 startdate.setDate(startdate.getDate() + 1);
             }
             return res.status(OK).end();
@@ -396,7 +396,7 @@ router.get(p.aYZM, async (req: Request, res: Response) => {
             const predicts = await predictService.getPredictByDay(startdate);
             const predictsfilter = predicts.filter(x => x.evalrate > rate && x.Type == "YZM").sort((a, b) => b.evalrate - a.evalrate);
             an1(predictsfilter)
-            // sim1(predicts);
+            // predictService.sim1(predicts);
             return res.status(OK).json({ predictsfilter });
         }
     } catch (error) {
@@ -428,7 +428,7 @@ router.get(p.backtestQMT, async (req: Request, res: Response) => {
             const predicts = await predictService.getPredictByDay(tempday);
             const Wpredicts = predicts.filter(x => x.Type === "W");
             const YZMpredicts = predicts.filter(x => x.Type === "YZM");
-            const YZMsim1 = sim1(YZMpredicts);
+            const YZMsim1 = predictService.sim1(YZMpredicts);
             const YSim1predicts = YZMpredicts.filter(x => YZMsim1.includes(x.StockCode));
 
             console.log("YZM总数:" + YZMpredicts.length + ";W总数：" + Wpredicts.length + ";YZMsim1：" + YSim1predicts.length);
@@ -489,7 +489,7 @@ router.get(p.backtestQMT, async (req: Request, res: Response) => {
             }
 
             console.log("-----------------")
-            // sim1(predicts.sort((a, b) => b.evalrate - a.evalrate));
+            // predictService.sim1(predicts.sort((a, b) => b.evalrate - a.evalrate));
             startdate.setDate(startdate.getDate() + 1);
         }
 
@@ -501,34 +501,14 @@ router.get(p.backtestQMT, async (req: Request, res: Response) => {
         // const predicts = await predictService.getPredictByDay(startdate);
         // var predictsfilter = predicts.filter(x => x.evalrate > rate && x.Type == "YZM").sort((a, b) => b.evalrate - a.evalrate);
         // an1(predictsfilter)
-        // sim1(predicts);
+        // predictService.sim1(predicts);
         return res.status(OK).end("accomplish");
     }
 
 });
 
 
-//YZM-SIM1 筛选
-function sim1(predicts: predictresult[]): string {
-    const { SIM1_THRESHOLDS } = PREDICT_CONSTANTS;
-    let s1 = "";
-    
-    for (const element of predicts) {
-        const evelstrs = element.eval.split("|");
-        const strChong = evelstrs[evelstrs.length - 1];
-        const rsiCompare = element.CatchRsi7 - element.CatchRsi14;
-        
-        if (strChong !== "重4") continue;
-        if (rsiCompare < SIM1_THRESHOLDS.MIN_RSI_DIFF) continue;
-        if (element.CatchRsi7 > SIM1_THRESHOLDS.MAX_RSI7) continue;
-        if (element.CatchPrice < SIM1_THRESHOLDS.MIN_PRICE) continue;
-        
-        console.log("sim1:", element.StockCode, element.evalprice, element.evalrate);
-        s1 += element.StockCode + ";";
-    }
-    
-    return s1;
-}
+// sim1 consolidated into predict-service.ts
 
 //YZM专门分析1
 function an1(predicts: predictresult[]) {

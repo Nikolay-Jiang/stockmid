@@ -1,4 +1,5 @@
 import predictRepo from '@repos/predict-repo';
+import { PREDICT_CONSTANTS } from '@shared/constants/predict-constants';
 import { Prisma, t_Predict } from '@prisma/client'
 import simtradeService, { rdType } from '@services/simtrade-service';
 import analService from '@services/analysis-service';
@@ -241,25 +242,22 @@ async function backtestol(startdate: Date) {
 }
 
 function sim1(predicts: predictresult[]): string {
+    const { SIM1_THRESHOLDS } = PREDICT_CONSTANTS;
     let s1 = "";
-    for (let index = 0; index < predicts.length; index++) {
-        const element = predicts[index];
-
-        var evelstrs = element.eval.split("|");
-        var strChong = evelstrs[evelstrs.length - 1];
-        var rsiCompare = element.CatchRsi7 - element.CatchRsi14;
-
-        if (strChong != "重4") { continue; }//重4
-        if (rsiCompare < 10) { continue; }//rsi7-rsi14 <10 波动不大
-        if (element.CatchRsi7 > 90) { continue; } //rsi7 <90 最好 70-80
-        if (element.CatchPrice < 15) { continue } //价格 >=15
-        //判断是否从高点回落，正确状态：连续1周从低位往上
-
-        //需要加入交易量分析
-        //console.log("sim1:", element.StockCode, element.evalprice, element.evalrate);
+    
+    for (const element of predicts) {
+        const evelstrs = element.eval.split("|");
+        const strChong = evelstrs[evelstrs.length - 1];
+        const rsiCompare = element.CatchRsi7 - element.CatchRsi14;
+        
+        if (strChong !== "重4") continue;
+        if (rsiCompare < SIM1_THRESHOLDS.MIN_RSI_DIFF) continue;
+        if (element.CatchRsi7 > SIM1_THRESHOLDS.MAX_RSI7) continue;
+        if (element.CatchPrice < SIM1_THRESHOLDS.MIN_PRICE) continue;
+        
         s1 += element.StockCode + ";";
-
     }
+    
     return s1;
 }
 
@@ -268,7 +266,7 @@ function sim1(predicts: predictresult[]): string {
 export default {
     getPredictByPredictTime, getPredictByDay,
     addOne, backtestol, getPredictByCode, isRepeat,
-    getYZMsim1,
+    getYZMsim1, sim1,
 
 } as const;
 
