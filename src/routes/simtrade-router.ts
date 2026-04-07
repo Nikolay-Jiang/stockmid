@@ -1,6 +1,6 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response, Router } from 'express';
-import simService from '@services/simtrade-service';
+import simService from '@services/simtrade';
 
 // Constants
 const router = Router();

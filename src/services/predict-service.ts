@@ -1,7 +1,7 @@
 import predictRepo from '@repos/predict-repo';
 import { PREDICT_CONSTANTS } from '@shared/constants/predict-constants';
 import { Prisma, t_Predict } from '@prisma/client'
-import simtradeService, { rdType } from '@services/simtrade-service';
+import simtradeService, { rdType } from '@services/simtrade';
 import analService from '@services/analysis-service';
 import dayrptService from '@services/dayrpt-service';
 import tencentService from '@services/tencentstock-service';

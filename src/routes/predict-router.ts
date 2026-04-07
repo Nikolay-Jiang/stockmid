@@ -17,7 +17,7 @@ import {
     PREDICT_CONSTANTS, 
     MAGIC_NUMBERS 
 } from '@shared/constants/predict-constants';
-import simtradeService, { rdType } from '@services/simtrade-service';
+import simtradeService, { rdType } from '@services/simtrade';
 import logger from 'jet-logger';
 
 

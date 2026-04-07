@@ -1,7 +1,7 @@
 import { t_StockDayReport, Prisma } from '@prisma/client'
 import { Stock } from '@repos/sinastock-repo';
-import simService, { txtOP } from '@services/simtrade-service';
-import { isMpatton, stockOP } from '@services/simtrade-service';
+import simService, { txtOP } from '@services/simtrade';
+import { isMpatton, stockOP } from '@services/simtrade';
 import predictService from '@services/predict-service';
 import logger from 'jet-logger';
 

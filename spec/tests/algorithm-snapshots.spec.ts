@@ -2,12 +2,13 @@ import analysisService from '@services/analysis-service';
 import dayrptService from '@services/dayrpt-service';
 import tencentService from '@services/tencentstock-service';
 
-type SimtradeModule = typeof import('@services/simtrade-service');
+type SimtradeModule = typeof import('@services/simtrade');
 
 function loadSimtrade(): SimtradeModule {
-    const resolvedPath = require.resolve('@services/simtrade-service');
-    delete require.cache[resolvedPath];
-    return require('@services/simtrade-service') as SimtradeModule;
+    Object.keys(require.cache).forEach(key => {
+        if (key.includes('simtrade')) delete require.cache[key];
+    });
+    return require('@services/simtrade') as SimtradeModule;
 }
 
 function makeDayRpt(args: {
