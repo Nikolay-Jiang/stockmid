@@ -5,6 +5,7 @@ import userService from '@services/user-service';
 import { ParamMissingError } from '@shared/errors';
 import authService from '@services/auth-service';
 import jwtUtil from '@util/jwt-util';
+import { GetUserIDByHeader } from './middleware';
 
 
 
@@ -26,7 +27,10 @@ export const p = {
 /**
  * Get all users.
  */
-router.get(p.get, async (_: Request, res: Response) => {
+router.get(p.get, async (req: Request, res: Response) => {
+    const { authorization } = req.headers;
+    if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
+    await GetUserIDByHeader(String(authorization));
     const users = await userService.getAll();
     return res.status(OK).json({ users });
 });
@@ -52,6 +56,9 @@ router.get(p.getone, async (req: Request, res: Response) => {
  * Add one user.
  */
 router.post(p.add, async (req: Request, res: Response) => {
+    const { authorization } = req.headers;
+    if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
+    await GetUserIDByHeader(String(authorization));
     const { user } = req.body;
     user.Password = await authService.ChangePwd(user.Password);
     console.log(user);
@@ -69,6 +76,9 @@ router.post(p.add, async (req: Request, res: Response) => {
  * Update one user.
  */
 router.put(p.update, async (req: Request, res: Response) => {
+    const { authorization } = req.headers;
+    if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
+    await GetUserIDByHeader(String(authorization));
     const { user } = req.body;
     // Check param
     if (!user) {
@@ -84,6 +94,9 @@ router.put(p.update, async (req: Request, res: Response) => {
  * Delete one user.
  */
 router.delete(p.delete, async (req: Request, res: Response) => {
+    const { authorization } = req.headers;
+    if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
+    await GetUserIDByHeader(String(authorization));
     const { id } = req.params;
     // Check param
     if (!id) {
