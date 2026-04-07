@@ -8,7 +8,7 @@ import tencentstockRouter from './tencentstock-router';
 import daylogRouter from './daylog-router';
 import stocknameRouter from './stockname-router';
 import analysisRouter from './analysis-router';
-import simRouter from './simtrade-router';
+import simRouter from './simtrade';
 import preRouter from './predict-router';
 import qwen from './qwen-router';
 import ntfyRouter from './ntfy-router';
