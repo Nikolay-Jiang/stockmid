@@ -1,4 +1,4 @@
-import randomString from 'randomstring';
+
 import jsonwebtoken, { JwtPayload } from 'jsonwebtoken';
 
 
@@ -8,8 +8,14 @@ const errors = {
 } as const;
 
 // Constants
-const secret = (process.env.JWT_SECRET || randomString.generate(100)),
-    options = {expiresIn: process.env.COOKIE_EXP};
+const secret: string = (() => {
+    const s = process.env.JWT_SECRET;
+    if (!s) {
+        throw new Error('FATAL: JWT_SECRET environment variable is not set. Server cannot start without it.');
+    }
+    return s;
+})();
+const options = {expiresIn: process.env.COOKIE_EXP};
 
 
 // Types
