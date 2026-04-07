@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model t_User {
+  UserID    String    @id
+  UserName  String
+  Password  String
+  RoleID    Int       @default(0)
+  IsEnabled Boolean   @default(true)
+  UpdateAt  DateTime?
+}
+
+model t_Observer {
+  StockCode String
+  UserID    String
+  Rate      Decimal?
+  RatePrice Decimal?
+  TradeVol  Decimal?
+  PlanID    String?
+  CreateAt  DateTime?
+
+  @@id([StockCode, UserID])
+}
+
+model t_StockDayReport {
+  StockCode        String
+  ReportDay        DateTime
+  TodayOpenPrice   Decimal?
+  TodayMaxPrice    Decimal?
+  TodayMinPrice    Decimal?
+  TodayClosePrice  Decimal?
+  Rate             Decimal?
+  RatePrice        Decimal?
+  Memo             String?   @default("")
+  TradingVol       Decimal?
+  TradingPrice     Decimal?
+  TradingPriceAvg  Decimal?
+  MA               Decimal?
+  bollUP           Decimal?
+  bollDown         Decimal?
+  RSI7             Decimal?
+  RSI14            Decimal?
+  WIDTH            Decimal?
+  BB               Decimal?
+
+  @@id([StockCode, ReportDay])
+}
+
+model t_Predict {
+  PredictKey   String    @id
+  StockCode    String?
+  PredictTime  DateTime?
+  Type         String?
+  CurrentPrice Decimal?
+  RSI7         Decimal?
+  RSI14        Decimal?
+  BackTest     String?
+  Memo         String?
+}
+
+model t_StockNameList {
+  StockCode String  @id @unique
+  StockName String?
+}
+
+model t_StockDayLog {
+  id           Int       @id @default(autoincrement())
+  StockCode    String?
+  SearchTime   DateTime?
+  CurrentPrice Decimal?
+}

@@ -8,7 +8,7 @@ import userRepo from '@repos/user-repo';
 export const pwdSaltRounds = 12;
 
 const creds = {
-    email: 'jsmith@gmail.com',
+    username: 'jsmith@gmail.com',
     password: 'Password@1',
 } as const;
 
@@ -23,7 +23,7 @@ function login(beforeAgent: SuperTest<Test>, done: (arg: string) => void) {
     // Setup dummy data
     const role = UserRoles.Admin;
     const pwdHash = bcrypt.hashSync(creds.password, pwdSaltRounds);
-    const loginUser = User.new('john smith', creds.email, role, pwdHash);
+    const loginUser = User.new('john smith', creds.username, role, pwdHash);
     spyOn(userRepo, 'getOne').and.returnValue(Promise.resolve(loginUser));
     // Call Login API
     beforeAgent
@@ -34,7 +34,7 @@ function login(beforeAgent: SuperTest<Test>, done: (arg: string) => void) {
             if (err) {
                 throw err;
             }
-            done(res.headers['set-cookie']);
+            done(res.body.token);
         });
 };
 

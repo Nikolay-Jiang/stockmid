@@ -24,12 +24,12 @@ describe('user-router', () => {
     const { BAD_REQUEST, CREATED, OK } = StatusCodes;
 
     let agent: SuperTest<Test>;
-    let jwtCookie: string;
+    let jwtToken: string;
 
     beforeAll((done) => {
         agent = supertest.agent(app);
-        loginAgent.login(agent, (cookie: string) => {
-            jwtCookie = cookie;
+        loginAgent.login(agent, (token: string) => {
+            jwtToken = token;
             done();
         });
     });
@@ -42,7 +42,7 @@ describe('user-router', () => {
      describe(`"GET:${getUsersPath}"`, () => {
 
         const callApi = () => {
-            return agent.get(getUsersPath).set('Cookie', jwtCookie);
+            return agent.get(getUsersPath).set('Authorization', jwtToken);
         };
 
 
@@ -92,7 +92,7 @@ describe('user-router', () => {
     describe(`"POST:${addUsersPath}"`, () => {
 
         const callApi = (reqBody: TReqBody) => {
-            return agent.post(addUsersPath).set('Cookie', jwtCookie).type('form').send(reqBody);
+            return agent.post(addUsersPath).set('Authorization', jwtToken).type('form').send(reqBody);
         };
 
         const userData = {
@@ -144,7 +144,7 @@ describe('user-router', () => {
     describe(`"PUT:${updateUserPath}"`, () => {
 
         const callApi = (reqBody: TReqBody) => {
-            return agent.put(updateUserPath).set('Cookie', jwtCookie).type('form').send(reqBody);
+            return agent.put(updateUserPath).set('Authorization', jwtToken).type('form').send(reqBody);
         };
         const userData = {
             user: User.new('Gordan Freeman', 'gordan.freeman@gmail.com'),
@@ -209,7 +209,7 @@ describe('user-router', () => {
 
         const callApi = (id: number) => {
             const path = deleteUserPath.replace(':id', id.toString());
-            return agent.delete(path).set('Cookie', jwtCookie);
+            return agent.delete(path).set('Authorization', jwtToken);
         };
 
         it(`should return a status code of "${OK}" if the request was successful.`, (done) => {

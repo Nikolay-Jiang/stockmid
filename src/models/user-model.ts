@@ -4,59 +4,43 @@ export enum UserRoles {
     Standard,
 }
 
-// export interface IUser {
-//     id: string;
-//     name: string;
-//     email: string;
-//     pwdHash: string;
-//     role: UserRoles;
-// }
+export interface IUser {
+    UserID: string;
+    UserName: string;
+    Password: string;
+    RoleID: number;
+    IsEnabled: boolean;
+    UpdateAt: Date | null;
+}
+function getNew(
+    name: string,
+    email: string,
+    role?: UserRoles,
+    pwdHash?: string,
+): IUser {
+    void email;
+    return {
+        UserID: '-1',
+        UserName: name,
+        Password: pwdHash ?? '',
+        RoleID: role ?? UserRoles.Standard,
+        IsEnabled: true,
+        UpdateAt: null,
+    };
+}
 
 
-// /**
-//  * Get a new User object.
-//  * 
-//  * @param name 
-//  * @param email 
-//  * @param role 
-//  * @param pwdHash 
-//  * @returns 
-//  */
-// function getNew(
-//     name: string,
-//     email: string,
-//     role?: UserRoles,
-//     pwdHash?: string,
-// ): IUser {
-//     return {
-//         id: "-1",
-//         email,
-//         name,
-//         role: role ?? UserRoles.Standard,
-//         pwdHash: pwdHash ?? '',
-//     };
-// }
-
-
-// /**
-//  * Copy a user object.
-//  * 
-//  * @param user 
-//  * @returns 
-//  */
-// function copy(user: IUser): IUser {
-//     return {
-//         id: user.id,
-//         email: user.email,
-//         name: user.name,
-//         role: user.role,
-//         pwdHash: user.pwdHash,
-//     }
-// }
-
-
-// // Export default
-// export default {
-//     new: getNew,
-//     copy,
-// }
+function copy(user: IUser): IUser {
+    return {
+        UserID: user.UserID,
+        UserName: user.UserName,
+        Password: user.Password,
+        RoleID: user.RoleID,
+        IsEnabled: user.IsEnabled,
+        UpdateAt: user.UpdateAt,
+    };
+}
+export default {
+    new: getNew,
+    copy,
+} as const;

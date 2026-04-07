@@ -83,7 +83,7 @@ router.get(p.simtradebypredict, async (req: Request, res: Response) => {
 
         for (let index = 0; index < tempdaylogs.length; index++) {
             const elementDayLog = tempdaylogs[index];
-            var currentHour = elementDayLog.SearchTime.getHours();
+            var currentHour = elementDayLog.SearchTime!.getHours();
             var currentPrice = elementDayLog.CurrentPrice!;
             if (currentHour == 9) { continue } //9:35 时刚开盘
             if (currentPrice < bestbuyPrice) {//监测是否有低于

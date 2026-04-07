@@ -1,7 +1,7 @@
 import superagent, { parse } from 'superagent';
 import { t_StockDayReport, t_StockNameList } from '@prisma/client'
 import commonService from '@services/common-service';
-import { Decimal } from '@prisma/client/runtime';
+import { Decimal } from '@prisma/client/runtime/library';
 
 
 

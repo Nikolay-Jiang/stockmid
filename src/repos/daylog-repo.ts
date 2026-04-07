@@ -18,7 +18,7 @@ async function getDaylogbyCondition(startdate: Date, enddate: Date, stockcode: s
         }
     });
 
-    results.map((item) => ({ ...item, SearchTime: item.SearchTime.setHours(item.SearchTime.getHours() - 8) }));
+    results.map((item) => ({ ...item, SearchTime: item.SearchTime?.setHours(item.SearchTime.getHours() - 8) }));
 
     // console.log(myresults)
 

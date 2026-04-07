@@ -5,7 +5,7 @@ import supertest, { SuperTest, Test, Response } from 'supertest';
 import app from '@server';
 import userRepo from '@repos/user-repo';
 import User, { UserRoles } from '@models/user-model';
-import { cookieProps, p as paths } from '@routes/auth-router';
+import { p as paths } from '@routes/auth-router';
 import { pErr } from '@shared/functions';
 import { pwdSaltRounds } from 'spec/support/login-agent';
 import { UnauthorizedError } from '@shared/errors';
@@ -40,19 +40,20 @@ describe('auth-router', () => {
             was successful.`, (done) => {
             // Setup Dummy Data
             const creds = {
-                email: 'jsmith@gmail.com',
+                username: 'jsmith@gmail.com',
                 password: 'Password@1',
             };
             const role = UserRoles.Standard;
             const pwdHash = hashPwd(creds.password);
-            const loginUser = User.new('john smith', creds.email, role, pwdHash);
+            const loginUser = User.new('john smith', creds.username, role, pwdHash);
             spyOn(userRepo, 'getOne').and.returnValue(Promise.resolve(loginUser));
             // Call API
             callApi(creds)
                 .end((err: Error, res: Response) => {
                     pErr(err);
                     expect(res.status).toBe(OK);
-                    expect(res.headers['set-cookie'][0]).toContain(cookieProps.key);
+                    expect(res.body.token).toBeDefined();
+                    expect(typeof res.body.token).toBe('string');
                     done();
                 });
         });
@@ -62,7 +63,7 @@ describe('auth-router', () => {
             "${UnauthorizedError.Msg}" if the email was not found.`, (done) => {
             // Setup Dummy Data
             const creds = {
-                email: 'jsmith@gmail.com',
+                username: 'jsmith@gmail.com',
                 password: 'Password@1',
             };
             spyOn(userRepo, 'getOne').and.returnValue(Promise.resolve(null));
@@ -81,12 +82,12 @@ describe('auth-router', () => {
             "${UnauthorizedError.Msg}" if the password failed.`, (done) => {
             // Setup Dummy Data
             const creds = {
-                email: 'jsmith@gmail.com',
+                username: 'jsmith@gmail.com',
                 password: 'someBadPassword',
             };
             const role = UserRoles.Standard;
             const pwdHash = hashPwd('Password@1');
-            const loginUser = User.new('john smith', creds.email, role, pwdHash);
+            const loginUser = User.new('john smith', creds.username, role, pwdHash);
             spyOn(userRepo, 'getOne').and.returnValue(Promise.resolve(loginUser));
             // Call API
             callApi(creds)
@@ -103,7 +104,7 @@ describe('auth-router', () => {
             for all other bad responses.`, (done) => {
             // Setup Dummy Data
             const creds = {
-                email: 'jsmith@gmail.com',
+                username: 'jsmith@gmail.com',
                 password: 'someBadPassword',
             };
             spyOn(userRepo, 'getOne').and.throwError('Database query failed.');
@@ -136,4 +137,3 @@ describe('auth-router', () => {
         return bcrypt.hashSync(pwd, pwdSaltRounds);
     }
 });
-
