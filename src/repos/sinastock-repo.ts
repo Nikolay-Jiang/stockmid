@@ -1,6 +1,6 @@
 import superagent, { parse } from 'superagent';
 import { t_StockDayReport, t_StockNameList } from '@prisma/client'
-import commonService from '@services/common-service';
+import commonUtils from '@shared/common-utils';
 import { Decimal } from '@prisma/client/runtime/library';
 
 
@@ -338,8 +338,8 @@ async function GetDayRptWebData(startdate: Date, enddate: Date, stockcode: strin
         concurrent: 2     // how many requests can be sent concurrently
     })
 
-    var startstr = commonService.convertDatetoStr(startdate);
-    var endstr = commonService.convertDatetoStr(enddate);
+    var startstr = commonUtils.convertDatetoStr(startdate);
+    var endstr = commonUtils.convertDatetoStr(enddate);
 
     startstr = startstr.replace(/-/g, "");
     endstr = endstr.replace(/-/g, "");
@@ -384,7 +384,7 @@ async function GetHolidayWebData(checkDay: Date): Promise<string> {
         concurrent: 2     // how many requests can be sent concurrently
     })
 
-    var checkstr = commonService.convertDatetoStr(checkDay);
+    var checkstr = commonUtils.convertDatetoStr(checkDay);
 
     checkstr = checkstr.replace(/-/g, "");
 
