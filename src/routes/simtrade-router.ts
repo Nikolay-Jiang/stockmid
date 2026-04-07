@@ -8,6 +8,7 @@ import predictService from '@services/predict-service';
 import dayLogService from '@services/daylog-service';
 import ntfyService from '@services/ntfy-service'
 import commService from '@services/common-service'
+import { PORTFOLIO_DEFAULTS } from '@shared/constants/trading-constants';
 
 
 
@@ -23,9 +24,9 @@ var iCountGood = 0;
 var iCountBad = 0;
 var iCountBadForAdd = 0;
 var iCountBadForReduce = 0;
-const initMoney = 100000;
-const initVol = 5000;
-const onceVol = 1000;
+const initMoney: number = PORTFOLIO_DEFAULTS.INIT_MONEY;
+const initVol: number = PORTFOLIO_DEFAULTS.INIT_VOL;
+const onceVol: number = PORTFOLIO_DEFAULTS.ONCE_VOL;
 var initTotalMoney = 0;
 const k = 2;
 var CurrentVol = initVol;//当前持股数

@@ -4,6 +4,7 @@ import dayrptService from '@services/dayrpt-service';
 import analService, { rsidata } from '@services/analysis-service';
 import tencentService from '@services/tencentstock-service';
 import commonService from '@services/common-service';
+import { RSI_THRESHOLDS, PRICE_THRESHOLDS, BOLLINGER_THRESHOLDS, TIME_WINDOWS, W_DETECT_LOOSE } from '@shared/constants/trading-constants';
 
 export var isMpatton: boolean = false;
 export var isWpatton: boolean = false;
@@ -225,7 +226,7 @@ function isM(dayrpts: t_StockDayReport[], index: number): boolean {
 * RsiAvg:Rsi RSI7平均值
 * isIgnoreTremor 忽略振荡
 */
-async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: number, RSIavg: number = 21, isIgnoreTremor: boolean = true): Promise<boolean> {
+async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: number, RSIavg: number = RSI_THRESHOLDS.DEFAULT_AVG, isIgnoreTremor: boolean = true): Promise<boolean> {
     wStr = "";
     var eleCurr = dayrpts[index];
     var eleYesterday = dayrpts[index - 1];
@@ -249,8 +250,8 @@ async function isW(dayrpts: t_StockDayReport[], index: number, iRSIDecide: numbe
 
 
     // console.log(RSIavg, yesRSI7, last3rsiavg)
-    if (RSIavg > 21 && yesRSI7 < 20) {
-        if (last3rsiavg <= 21) { return false; }
+    if (RSIavg > RSI_THRESHOLDS.DEFAULT_AVG && yesRSI7 < RSI_THRESHOLDS.OVERSOLD) {
+        if (last3rsiavg <= RSI_THRESHOLDS.DEFAULT_AVG) { return false; }
     }
 
     if (last3rsiavg <= RSIavg) { return false }//波动幅度太小
@@ -418,13 +419,13 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
     if (dayrptsYes.length == 0) { return wresults; }
     //console.log(yesdate.toDateString())
 
-    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < 30 && x.RSI7 != null && Number(x.TodayClosePrice) >= 15 && Number(x.RSI7) >= 0);
+    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) < RSI_THRESHOLDS.WEAK_ZONE && x.RSI7 != null && Number(x.TodayClosePrice) >= PRICE_THRESHOLDS.MIN_W_CANDIDATE && Number(x.RSI7) >= 0);
     // dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= 20 && x.RSI7 != null && Number(x.TodayClosePrice) >= 12 && Number(x.RSI7) >= 0);
 
     if (dayrptsYes.length == 0) { return wresults; }
 
     var startdate = new Date(enddate);
-    startdate.setDate(enddate.getDate() - 21);
+    startdate.setDate(enddate.getDate() - TIME_WINDOWS.W_LOOKBACK_DAYS);
     var dayrpts = await dayrptService.getDayrptByReportDay2(startdate, enddate);
 
     if (dayrpts.length == 0) { return wresults; }
@@ -478,13 +479,13 @@ async function findW(enddate: Date, needtoday: boolean = false): Promise<wresult
         var bestRate = ratedatas[ratedatas.length - 1].rateprice;
 
 
-        if (todayWidth > 0.22) { continue; }
-        if (todayBB > 0.55) { continue; }
+        if (todayWidth > BOLLINGER_THRESHOLDS.MAX_WIDTH) { continue; }
+        if (todayBB > BOLLINGER_THRESHOLDS.MAX_BB) { continue; }
         if (bestRate < 0.2) { continue; }
 
 
 
-        if (await isW(dayrptsTemp, dayrptsTemp.length - 1, 30, 29, false)) {
+        if (await isW(dayrptsTemp, dayrptsTemp.length - 1, W_DETECT_LOOSE.RSI_DECIDE, W_DETECT_LOOSE.RSI_AVG, false)) {
             if (Number(element.RSI7) <= todayRSI7) {
                 mResult.stockcode = element.StockCode
                 mResult.rsi7 = todayRSI7;
@@ -526,7 +527,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
 
     if (dayrptsYes.length == 0) { return wresults; }
 
-    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= 60 && x.RSI7 != null && Number(x.RSI14) >= 60 && Number(x.TodayClosePrice) > 12);
+    dayrptsYes = dayrptsYes.filter(x => Number(x.RSI7) >= RSI_THRESHOLDS.DUAL_STRONG && x.RSI7 != null && Number(x.RSI14) >= RSI_THRESHOLDS.DUAL_STRONG && Number(x.TodayClosePrice) > PRICE_THRESHOLDS.MIN_YZM_CANDIDATE);
 
     if (dayrptsYes.length == 0) { return wresults; }
 
@@ -615,7 +616,7 @@ async function findYZM(enddate: Date): Promise<wresult[]> {
                 mResult.eval += iCountRise.toString();
                 if (isVolUpPriceUp) { mResult.eval += "|量价齐升"; }
                 if (isDoubleStrong) { mResult.eval += "|双强"; }
-                if (mResult.rsi7 >= 60 && mResult.rsi7 < 70 && mResult.rsi14 >= 60 && mResult.rsi14 < 70) {
+                if (mResult.rsi7 >= RSI_THRESHOLDS.DUAL_STRONG && mResult.rsi7 < RSI_THRESHOLDS.STRONG && mResult.rsi14 >= RSI_THRESHOLDS.DUAL_STRONG && mResult.rsi14 < RSI_THRESHOLDS.STRONG) {
                     mResult.eval += '|双6';
                 }
                 wresults.push(mResult)
@@ -661,7 +662,7 @@ async function isNegativeEvent(stockcode: string): Promise<boolean> {
     today.setHours(8, 0, 0, 0);
 
     var daylimit = new Date();
-    daylimit.setDate(today.getDate() - 30);
+    daylimit.setDate(today.getDate() - TIME_WINDOWS.NOTICE_CHECK_DAYS);
     // console.log("daylim",daylimit.toDateString());
     notices = notices.filter(x => {
         let itemdate = new Date(x.notice_date).getTime();
