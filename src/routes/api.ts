@@ -10,7 +10,7 @@ import stocknameRouter from './stockname-router';
 import analysisRouter from './analysis-router';
 import simRouter from './simtrade-router';
 import preRouter from './predict-router';
-import deepseek from './deepseek-router';
+import qwen from './qwen-router';
 import ntfyRouter from './ntfy-router';
 import { adminMw } from './middleware';
 
@@ -30,7 +30,7 @@ apiRouter.use('/stockname', stocknameRouter);//股票名称
 apiRouter.use('/analysis', analysisRouter);//分析
 apiRouter.use('/sim', simRouter);//模拟
 apiRouter.use('/predict', preRouter);//预测
-apiRouter.use('/ai', deepseek);//AI
+apiRouter.use('/ai', qwen);//AI
 apiRouter.use('/ntfy', ntfyRouter);//ntfy.sh
 
 // Export default

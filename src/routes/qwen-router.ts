@@ -1,5 +1,5 @@
 import StatusCodes from 'http-status-codes';
-import deepseekService from '@services/deepseek-service';
+import qwenService from '@services/qwen-service';
 import { Request, Response, Router } from 'express';
 
 // Constants
@@ -18,7 +18,7 @@ export const p = {
 router.get(p.getds, async (req: Request, res: Response) => {
 
     const { stockcode } = req.params;
-    const dscontent = await deepseekService.getds (stockcode);
+    const dscontent = await qwenService.getds (stockcode);
     return res.status(OK).json({ dscontent });
 });
 

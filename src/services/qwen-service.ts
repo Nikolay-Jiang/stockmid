@@ -1,4 +1,4 @@
-import deepseekRepo from '@repos/deepseek-repo';
+import qwenRepo from '@repos/qwen-repo';
 import commonService from '@services/common-service';
 
 //缓存保留12小时
@@ -18,7 +18,7 @@ async function getds(stockcode: string): Promise<string | null> {
         return cacheresult;
     }
     console.log("no cache",cacheKey);
-    const content = await deepseekRepo.callDeepSeek(prompt);
+    const content = await qwenRepo.callQwen(prompt);
 
     if (commonService.checkCache()) {
             cache.put(cacheKey, content, cacheTTL);
