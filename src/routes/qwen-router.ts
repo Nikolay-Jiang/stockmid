@@ -18,10 +18,11 @@ export const p = {
 router.get(p.getds, async (req: Request, res: Response) => {
     const { stockcode } = req.params;
     const content = await qwenService.getds(stockcode);
+    const dscontent = content;
     if (content !== null) {
-        return res.status(OK).json({ content, status: 'ready' });
+        return res.status(OK).json({ dscontent, status: 'ready' });
     }
-    return res.status(OK).json({ content: '报告正在生成，请稍候', status: 'generating' });
+    return res.status(OK).json({ dscontent: '报告正在生成，请稍候', status: 'generating' });
 });
 
 export default router;
