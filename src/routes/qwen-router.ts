@@ -4,22 +4,24 @@ import { Request, Response, Router } from 'express';
 
 // Constants
 const router = Router();
-const { CREATED, OK } = StatusCodes;
+const { OK } = StatusCodes;
 
 // Paths
 export const p = {
     getds: '/callds/:stockcode',
-    
 } as const;
 
 /**
- * Get all dayrpt by day.
+ * Get AI analysis report for a stock.
+ * Returns cached report if available, or triggers async generation.
  */
 router.get(p.getds, async (req: Request, res: Response) => {
-
     const { stockcode } = req.params;
-    const dscontent = await qwenService.getds (stockcode);
-    return res.status(OK).json({ dscontent });
+    const content = await qwenService.getds(stockcode);
+    if (content !== null) {
+        return res.status(OK).json({ content, status: 'ready' });
+    }
+    return res.status(OK).json({ content: '报告正在生成，请稍候', status: 'generating' });
 });
 
 export default router;
