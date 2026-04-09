@@ -1,7 +1,6 @@
 import superagent, { parse } from 'superagent';
-import { t_StockDayReport, t_StockNameList } from '@prisma/client'
+import { t_StockDayReport, t_StockNameList, Prisma } from '@prisma/client'
 import commonUtils from '@shared/common-utils';
-import { Decimal } from '@prisma/client/runtime/library';
 import logger from 'jet-logger';
 
 
@@ -301,15 +300,15 @@ export async function GetStockDayRpt(startdate: Date, enddate: Date, stockcode: 
         var mDayRpt: t_StockDayReport = {
             StockCode: stockcode,
             ReportDay: new Date(element[0]),
-            TodayOpenPrice: new Decimal(element[1]),
-            TodayClosePrice: new Decimal(element[2]),
-            RatePrice: new Decimal(element[3]),
-            Rate: new Decimal(rate),
-            TodayMinPrice: new Decimal(element[5]),
-            TodayMaxPrice: new Decimal(element[6]),
-            TradingVol: new Decimal(tradevol),
-            TradingPrice: new Decimal(tradeprice),
-            TradingPriceAvg: new Decimal((Number(tradeprice) / Number(tradevol)).toFixed(2)),
+            TodayOpenPrice: new Prisma.Decimal(element[1]),
+            TodayClosePrice: new Prisma.Decimal(element[2]),
+            RatePrice: new Prisma.Decimal(element[3]),
+            Rate: new Prisma.Decimal(rate),
+            TodayMinPrice: new Prisma.Decimal(element[5]),
+            TodayMaxPrice: new Prisma.Decimal(element[6]),
+            TradingVol: new Prisma.Decimal(tradevol),
+            TradingPrice: new Prisma.Decimal(tradeprice),
+            TradingPriceAvg: new Prisma.Decimal((Number(tradeprice) / Number(tradevol)).toFixed(2)),
             RSI7: null,
             RSI14: null,
             MA: null,
