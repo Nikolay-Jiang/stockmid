@@ -10,7 +10,7 @@ const { OK } = StatusCodes;
 
 // 支持的K线周期
 const ALLOWED_PERIODS: ReadonlySet<string> = new Set([
-    'day', 'week', 'month', '5m', '15m', '60m',
+    '1d', '1w', '1M', '5m', '15m', '60m',
 ]);
 
 const MAX_RECENT_COUNT = 2000;
