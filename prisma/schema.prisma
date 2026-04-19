@@ -75,3 +75,22 @@ model t_StockDayLog {
   SearchTime   DateTime?
   CurrentPrice Decimal?
 }
+
+model t_StockKLine {
+  StockCode    String   @db.NVarChar(50)
+  Period       String   @db.NVarChar(10)
+  TradeTime    DateTime @db.DateTime
+  OpenPrice    Decimal? @db.Decimal(10, 2)
+  ClosePrice   Decimal? @db.Decimal(10, 2)
+  HighPrice    Decimal? @db.Decimal(10, 2)
+  LowPrice     Decimal? @db.Decimal(10, 2)
+  Volume       Decimal? @db.Decimal(18, 2)
+  Turnover     Decimal? @db.Decimal(18, 2)
+  Amplitude    Decimal? @db.Decimal(8, 4)
+  ChangeRate   Decimal? @db.Decimal(8, 4)
+  ChangeAmount Decimal? @db.Decimal(10, 2)
+  TurnoverRate Decimal? @db.Decimal(8, 4)
+
+  @@id([StockCode, Period, TradeTime], map: "PK_t_StockKLine")
+  @@index([StockCode, Period, TradeTime], map: "IX_t_StockKLine_Query")
+}

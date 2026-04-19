@@ -158,6 +158,12 @@ npx tsc --noEmit
 - `GET /api/stock/sina/:code` - Sina stock data
 - `GET /api/stock/dayreport` - Daily stock reports
 
+### K-Line (OHLCV)
+Reads from `t_StockKLine`. `:period` must be one of `day | week | month | 5m | 15m | 60m`.
+- `GET /api/kline/allbycondition/:startday/:endday/:stockcode/:period` - K-line bars for stock + period in date range (returns `{ stockname, klines }`)
+- `GET /api/kline/allbycode/:stockcode/:period` - all K-line bars for stock + period
+- `GET /api/kline/recent/:stockcode/:period/:count` - most recent N bars (count capped at 2000, defaults to 100 if invalid)
+
 ### Analysis & Prediction
 - `POST /api/simtrade/scan` - Scan for trading patterns
 - `POST /api/simtrade/sim` - Run trading simulation

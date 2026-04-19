@@ -4,6 +4,7 @@ import userRouter from './user-router';
 import mylistRouter from './mylist-router';
 import observerRouter from './observer-router';
 import dayrptRouter from './dayrpt-router';
+import klineRouter from './kline-router';
 import tencentstockRouter from './tencentstock-router';
 import daylogRouter from './daylog-router';
 import stocknameRouter from './stockname-router';
@@ -24,6 +25,7 @@ apiRouter.use('/users', userRouter);//用户管理
 apiRouter.use('/observers', observerRouter);//观察列表
 apiRouter.use('/mylist', mylistRouter);//我的列表
 apiRouter.use('/dayrpt', dayrptRouter);//日报
+apiRouter.use('/kline', klineRouter);//K线数据
 apiRouter.use('/stock', tencentstockRouter);
 apiRouter.use('/daylog', daylogRouter);
 apiRouter.use('/stockname', stocknameRouter);//股票名称
