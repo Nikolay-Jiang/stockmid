@@ -1,6 +1,6 @@
-import { PrismaClient, t_StockDayLog } from '@prisma/client'
+import { t_StockDayLog } from '@prisma/client'
+import prisma from '@repos/prisma';
 import logger from 'jet-logger';
-const prisma = new PrismaClient();
 
 
 /**

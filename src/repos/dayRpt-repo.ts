@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
-import { PrismaClient, t_StockDayReport } from '@prisma/client'
-const prisma = new PrismaClient();
+import { t_StockDayReport } from '@prisma/client'
+import prisma from '@repos/prisma';
 
 /**
  * Get one Observer.
@@ -132,16 +132,29 @@ async function getAllbyCondition(startdate: Date, enddate: Date, stockcode: stri
 }
 
 async function getdayRptCountByDayAfter(endday: Date, stockcode: string, count: number): Promise<t_StockDayReport[]> {
-    const dateStr = `${endday.getFullYear()}-${endday.getMonth() + 1}-${endday.getDate()} 00:00:00`;
-    const result = await prisma.$queryRaw<t_StockDayReport[]>`SELECT top(${count}) * FROM t_StockDayReport WHERE ReportDay >= ${dateStr} and stockcode=${stockcode}`;
-    return result;
+    const end = new Date(endday);
+    end.setHours(8, 0, 0, 0);
+    return prisma.t_StockDayReport.findMany({
+        where: {
+            StockCode: stockcode,
+            ReportDay: { gte: end },
+        },
+        orderBy: { ReportDay: 'asc' },
+        take: Math.max(1, Math.trunc(count)),
+    });
 }
 
 async function getdayRptCountByDayBefore(endday: Date, stockcode: string, count: number): Promise<t_StockDayReport[]> {
-    endday.setHours(8, 0, 0, 0);
-    const dateStr = `${endday.getFullYear()}-${endday.getMonth() + 1}-${endday.getDate()} 00:00:00`;
-    const result = await prisma.$queryRaw<t_StockDayReport[]>`SELECT top(${count}) * FROM t_StockDayReport WHERE ReportDay <= ${dateStr} and stockcode=${stockcode} order by ReportDay desc`;
-    return result;
+    const end = new Date(endday);
+    end.setHours(8, 0, 0, 0);
+    return prisma.t_StockDayReport.findMany({
+        where: {
+            StockCode: stockcode,
+            ReportDay: { lte: end },
+        },
+        orderBy: { ReportDay: 'desc' },
+        take: Math.max(1, Math.trunc(count)),
+    });
 }
 
 

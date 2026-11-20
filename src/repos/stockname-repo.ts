@@ -1,5 +1,5 @@
-import { PrismaClient, t_StockNameList } from '@prisma/client'
-const prisma = new PrismaClient();
+import { t_StockNameList } from '@prisma/client'
+import prisma from '@repos/prisma';
 
 
 /**

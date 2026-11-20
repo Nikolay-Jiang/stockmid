@@ -12,7 +12,6 @@ import analysisRouter from './analysis-router';
 import simRouter from './simtrade';
 import preRouter from './predict-router';
 import qwen from './qwen-router';
-import ntfyRouter from './ntfy-router';
 import { adminMw } from './middleware';
 
 
@@ -33,7 +32,6 @@ apiRouter.use('/analysis', analysisRouter);//分析
 apiRouter.use('/sim', simRouter);//模拟
 apiRouter.use('/predict', preRouter);//预测
 apiRouter.use('/ai', qwen);//AI
-apiRouter.use('/ntfy', ntfyRouter);//ntfy.sh
 
 // Export default
 export default apiRouter;

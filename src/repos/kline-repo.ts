@@ -1,6 +1,5 @@
-import { PrismaClient, t_StockKLine } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { t_StockKLine } from '@prisma/client';
+import prisma from '@repos/prisma';
 
 
 async function getAllbyCondition(

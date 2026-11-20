@@ -9,13 +9,12 @@ StockMid is a TypeScript-based stock market analysis middleware that provides re
 - **AI-Powered Predictions**: Integration with Alibaba Qwen (formerly DeepSeek) AI models
 - **Portfolio Simulation**: Backtesting and simulation of trading strategies
 - **Security**: JWT authentication, bcrypt password hashing, secure cookie handling
-- **Notifications**: Real-time alerts via ntfy.sh push notifications
 - **Comprehensive Testing**: 87+ test specifications with algorithm snapshot testing
 
 ## Technology Stack
 - **Runtime**: Node.js + Express 4.18
 - **Language**: TypeScript 4.9
-- **Database**: Prisma 6.0 + SQL Server
+- **Database**: Prisma 6.0 + MariaDB 10.11 (`mysql` provider)
 - **Authentication**: JWT + bcrypt + Signed Cookies
 - **External APIs**: Tencent Stock, Sina Stock, Alibaba Qwen AI
 - **Testing**: Jasmine 4.1 + Supertest 6.2
@@ -42,7 +41,7 @@ stockmid/
 ```
 
 ## Security Improvements (Completed)
-1. **SQL Injection Protection**: Replaced `$queryRawUnsafe` with `$queryRaw` in dayRpt-repo.ts
+1. **SQL Injection Protection**: Replaced raw SQL with Prisma queries in dayRpt-repo.ts
 2. **API Key Management**: Moved hardcoded API keys to environment variables
 3. **Route Protection**: Added authentication middleware to `/api/users` routes
 4. **JWT Security**: Removed random fallback keys, using environment variable only
@@ -64,8 +63,8 @@ stockmid/
 ## Setup Instructions
 
 ### Prerequisites
-- Node.js 16+ and npm
-- SQL Server database
+- Node.js 18.18+ and npm（Prisma 6 要求）
+- MariaDB 10.11
 - Alibaba Qwen API key (for AI predictions)
 
 ### Installation
@@ -91,8 +90,8 @@ stockmid/
 4. Database setup:
    ```bash
    npx prisma generate
-   # Update prisma/schema.prisma with your database connection
    ```
+   > 数据库结构由外部迁移脚本维护，本项目只使用 `prisma db pull` / `prisma generate`，不要执行 `prisma migrate`。
 
 5. Build the project:
    ```bash
@@ -100,14 +99,15 @@ stockmid/
    ```
 
 ### Configuration
-Required environment variables in `.env`:
+
+`DATABASE_URL` 放在项目根目录的 `.env`（Prisma Client 会自动加载）：
 ```
-DATABASE_URL="sqlserver://..."
-JWT_SECRET="your-jwt-secret-key"
-DASHSCOPE_API_KEY="your-alibaba-qwen-api-key"
-PORT=3000
-NODE_ENV=development
+DATABASE_URL="mysql://user:password@host:3306/TechReadyDB"
 ```
+
+应用配置（`PORT`、`JWT_SECRET`、`COOKIE_SECRET`、`DASHSCOPE_API_KEY` 等）位于 `src/pre-start/env/<env>.env`，由 `src/pre-start/index.ts` 根据 `--env` 参数加载；也可以由 systemd 的 `Environment` / `EnvironmentFile` 注入。
+
+生产建议使用只授权 `TechReadyDB` 的专用账号，权限 `SELECT/INSERT/UPDATE/DELETE` 即可，不需要 DDL。
 
 ## Development Workflow
 
