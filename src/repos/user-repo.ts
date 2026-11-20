@@ -1,6 +1,6 @@
 import { GetID } from '@shared/functions';
-import { PrismaClient, t_User } from '@prisma/client'
-const prisma = new PrismaClient();
+import { t_User } from '@prisma/client'
+import prisma from '@repos/prisma';
 
 /**
  * Get one user.

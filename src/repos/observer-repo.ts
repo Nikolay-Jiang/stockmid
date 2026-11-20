@@ -1,5 +1,5 @@
-import { PrismaClient, t_Observer } from '@prisma/client'
-const prisma = new PrismaClient();
+import { t_Observer } from '@prisma/client'
+import prisma from '@repos/prisma';
 
 /**
  * Get one Observer.

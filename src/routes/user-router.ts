@@ -61,12 +61,12 @@ router.post(p.add, async (req: Request, res: Response) => {
     if (authorization == undefined || authorization == "") { throw new ParamMissingError(); }
     await GetUserIDByHeader(String(authorization));
     const { user } = req.body;
-    user.Password = await authService.ChangePwd(user.Password);
-    logger.info(user);
     // Check param
     if (!user) {
         throw new ParamMissingError();
     }
+    user.Password = await authService.ChangePwd(user.Password);
+    logger.info(user);
     // Fetch data
     await userService.addOne(user);
     return res.status(CREATED).end();

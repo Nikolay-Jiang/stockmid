@@ -8,7 +8,6 @@ import tencentstockService from '@services/tencentstock-service';
 import dayrptService from '@services/dayrpt-service';
 import analService from '@services/analysis-service';
 import qwenService from '@services/qwen-service';
-import ntfyService from '@services/ntfy-service';
 import daylogService from '@services/daylog-service';
 import loginAgent from '../support/login-agent';
 import * as middleware from '@routes/middleware';
@@ -214,27 +213,6 @@ describe('misc-modules', () => {
                     .end((err: Error, res: Response) => {
                         expect(res.status).toBe(OK);
                         expect(res.body.dscontent).toBe(mockContent);
-                        done();
-                    });
-            });
-        });
-    });
-
-    // ========== Ntfy Routes ==========
-
-    describe('ntfy-routes (/api/ntfy)', () => {
-
-        const ntfyPath = '/api/ntfy';
-
-        describe('GET /sendnotice/:postmessage', () => {
-
-            it('should send notification successfully', (done) => {
-                spyOn(ntfyService, 'sendPostRequest').and.returnValue(Promise.resolve());
-
-                agent.get(`${ntfyPath}/sendnotice/test-notification-message`)
-                    .end((err: Error, res: Response) => {
-                        expect(res.status).toBe(OK);
-                        expect(ntfyService.sendPostRequest).toHaveBeenCalledWith('test-notification-message');
                         done();
                     });
             });

@@ -10,6 +10,7 @@ export interface IUser {
     Password: string;
     RoleID: number;
     IsEnabled: boolean;
+    CreateAt: Date | null;
     UpdateAt: Date | null;
 }
 function getNew(
@@ -25,6 +26,7 @@ function getNew(
         Password: pwdHash ?? '',
         RoleID: role ?? UserRoles.Standard,
         IsEnabled: true,
+        CreateAt: null,
         UpdateAt: null,
     };
 }
@@ -37,6 +39,7 @@ function copy(user: IUser): IUser {
         Password: user.Password,
         RoleID: user.RoleID,
         IsEnabled: user.IsEnabled,
+        CreateAt: user.CreateAt,
         UpdateAt: user.UpdateAt,
     };
 }

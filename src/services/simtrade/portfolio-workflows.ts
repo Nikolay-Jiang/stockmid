@@ -2,7 +2,6 @@ import { t_StockDayReport, t_Predict, Prisma } from '@prisma/client'
 import dayrptService from '@services/dayrpt-service';
 import predictService from '@services/predict-service';
 import dayLogService from '@services/daylog-service';
-import ntfyService from '@services/ntfy-service';
 import commonService from '@services/common-service';
 import logger from 'jet-logger';
 import { wresult, EvalResultBase } from './index';
@@ -199,7 +198,6 @@ export async function findAndSaveYZMOnline(): Promise<{ count: number; message: 
             predictService.addOne(predicts[index]);
         }
     }
-    await ntfyService.sendPostRequest(message);
     return { count: predicts.length, message };
 }
 
@@ -264,14 +262,10 @@ export async function findAndSaveWOnline(): Promise<{ enddate: Date; txtresult: 
         txtresult += `| ${element.stockcode}: ${element.price} ${element.rsi7} W  |`;
     }
 
-    var message = commonService.convertDatetoStr(enddate) + "W算法今日生成:" + preresults.length;
     if (preresults.length > 0) {
         for (let index = 0; index < preresults.length; index++) {
             predictService.addOne(preresults[index]);
         }
-        if (preresults.length <= 5) { message += "; 数量较少建议减仓或者观望"; }
-        if (preresults.length >= 15) { message += "; 建议增仓!"; }
     }
-    await ntfyService.sendPostRequest(message);
     return { enddate, txtresult };
 }

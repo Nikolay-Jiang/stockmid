@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import { GetID } from '@shared/functions';
-import { PrismaClient, t_Predict } from '@prisma/client'
-const prisma = new PrismaClient();
+import { t_Predict } from '@prisma/client'
+import prisma from '@repos/prisma';
 
 
 
